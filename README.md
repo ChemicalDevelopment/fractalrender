@@ -38,7 +38,7 @@ A few flags you can set add:
 
 ### Animation
 
-*All flags after `-a` mean nothing if you aren't using `-a`. Make sure to use `-a`*
+*All flags after `-a` mean nothing if you aren't using `-a`. Make sure to use `-a` for gifs*
 
 `-a` use it with no arguments after it to enable animated gif.
     If you are making an animated gif, use `-a`
@@ -47,4 +47,4 @@ A few flags you can set add:
 
 `-fps frames` frames per second of animation
 
-`-zps zoomps` zoom per second. More specifically, `CURRENT_ZOOM = BASE_ZOOM * (ZOOMPS) ** (t)`
+`-zps zoomps` zoom per second. More specifically, `CURRENT_ZOOM = BASE_ZOOM * (ZOOMPS) ** (t)`, where `t` is the time in seconds
