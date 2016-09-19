@@ -54,7 +54,7 @@ if (args.animate):
         t.join()
     i = 0
     #Save to file
-    imageio.mimsave(args.output + '.gif', ARR_ARR)
+    imageio.mimsave(args.output + '.gif', ARR_ARR, fps=args.framespersecond)
 
 else:
     #Run in this thread, it will be too much hassle to use threads for one image.

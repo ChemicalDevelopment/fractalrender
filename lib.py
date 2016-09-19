@@ -16,3 +16,6 @@ def colorize(pattern, iter, maxIterations):
     if pattern == "MOCHA":
         piter = (iter + 0.0) / maxIterations
         return (int(256 * piter), int(256 * piter * piter), int(256 * piter * piter * piter))
+    else:
+        cbit = int(256 * iter / maxIterations)
+        return (cbit, cbit, cbit)
