@@ -41,42 +41,37 @@ ITER = args.iterations
 #Color pattern
 PATTERN = args.pattern
 
+FI = args.output.split(".")[0]
+FMT = args.output.split(".")[1]
+FIN = FI + "." + FMT
+
 #If they want an animated gif, run in lots of threads to maximize resources
 if (args.animate):
-    FRAMES = args.framespersecond * args.seconds
+    #How many frames?
+    FRAMES = int(args.framespersecond * args.seconds)
     ARR_ARR = [None] * FRAMES
     THREADS = int(args.threads)
-    if os.path.exists("./tmp/"):
-        shutil.rmtree('./tmp/')
-    os.makedirs("./tmp/")
-    #import sys
-    #sys.exit()
     def threadCallback(res):
-        imageio.imsave("./tmp/" + str(res[1]) + ".png", res[0], 'PNG')
+        ARR_ARR[res[1]] = res[0]
+    #This limits the number of executed threads
     pool = Pool(THREADS)
-    ADJ_ZOOM = ZOOM
+    ADJ_ZOOM = float(ZOOM)
     ADJ_ITER = ITER
-    #loop through and create threads to run
+    #loop through and create threads to run, only calling threads at a time
     for i in range(0, FRAMES, THREADS):
+        #Create threads
         for j in range(0, THREADS):
-            pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ADJ_ZOOM), copy.copy(ADJ_ITER), copy.copy(PATTERN), copy.copy(i + j)), callback=threadCallback)
+            #Start a thread in the pool.
+            pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ADJ_ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(i + j), FRAMES), callback=threadCallback)
+            #Adjust the ZOOM
             ADJ_ZOOM = ADJ_ZOOM * (args.zoompersecond ** (1.0 / args.framespersecond))
+    #Close and wait
     pool.close()
     pool.join()
-    IMAGES = [None] * FRAMES
-    #imageio.mimsave(args.output + '.gif', ARR_ARR, float(fps=args.framespersecond))
-    #kargs = { 'fps': 15 }
-    #kargs = { 'duration': .1 }
-    #imageio.mimsave(args.output + '.gif', ARR_ARR, 'GIF', **kargs)
-    for f in listdir("./tmp/"):
-        if isfile(join("./tmp/", f)):
-            framenum = int(''.join([c for c in f if c in '1234567890']))
-            IMAGES[framenum] = imageio.imread("./tmp/" + str(f))
-
-    imageio.mimsave(args.output + ".gif", IMAGES, format='GIF', fps=args.framespersecond)
-    print("Done")
-
+    #Save to file
+    imageio.mimsave(FIN, ARR_ARR, format=FMT, fps=args.framespersecond)
 else:
     #Run in this thread, it will be too much hassle to use threads for one image.
-    res = imagethread.run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, 0)
-    imageio.imsave(args.output + '.png', res[0])
+    res = imagethread.run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, 0, 1)
+    imageio.imsave(FIN, res[0], format=FMT)
+print("\nFile saved: " + FIN)

@@ -1,9 +1,11 @@
 from lib import *
 import numpy
+import sys
 
 #Runs with set paramaters and stores in arr
-def run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, FRAME_NUM):
-    print("Running frame: " + str(FRAME_NUM))
+def run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, FRAME_NUM, FRAME_MAX):
+    sys.stdout.write("\r %" + str(int(100 * (FRAME_NUM + 1) / FRAME_MAX)) + " Done  ")
+    sys.stdout.flush()
     arr = numpy.zeros((DIMENSIONS[1], DIMENSIONS[0], 3), dtype=numpy.uint8)
     x = CENTER[0] - 1.0 / (ZOOM)
     px = 0
