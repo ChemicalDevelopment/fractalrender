@@ -63,6 +63,11 @@ You can change properties using these flags:
 `-t threads` number of threads to run. Default is your number of cores in your CPU, but if you want to use your computer, you should set it to less.
     Example: `-t 2`
 
+`-f function` a function. By default, it uses the mandelbrot set of power 2.
+    It supports the `cmath` library in python, which unfortunately uses `j` as complex numbers.
+    `1+2j` is `1+2i` in normal math. The mandelbrot set is `-f 'z**2+c'`. `**` is pow, `+-*/` all work.
+    You can use `pi` `e` in your calculations to use those constants. See more on the wiki.
+
 #### Examples
     `python run.py -d 1920 1080 -c 0 0 -z 0.25 -o wholeimage.png -i 12 -p MOCHA`
         Generates a low iteration count render of the whole mandelbrot set

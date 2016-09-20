@@ -2,7 +2,7 @@ from lib import *
 import numpy
 import sys
 import cmath
-
+from math import *
 #Runs with set paramaters and stores in arr
 def run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, FRAME_NUM, FRAME_MAX, func=None):
     sys.stdout.write("\r %" + str(int(100 * (FRAME_NUM + 1) / FRAME_MAX)) + " Done  ")
