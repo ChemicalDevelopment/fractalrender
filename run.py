@@ -26,8 +26,9 @@ parser.add_argument('-a', '--animate', action='store_true', default=False, help=
 parser.add_argument('-s', '--seconds', default=4, type=int, help='Seconds, only matters if using -a. Default: 2')
 parser.add_argument('-fps', '--framespersecond', default=8, type=int, help='Frames per second, only matters if using -a. Default: 12')
 parser.add_argument('-zps', '--zoompersecond', default=2, type=float, help='Zoom per second, only matters if using -a. Default: 3.5')
-parser.add_argument('-o', '--output', default="out", help='Output file. Don\'t put `.png` or any other extension. Default: out')
+parser.add_argument('-o', '--output', default="out.png", help='Output file. Don\'t put `.png` or any other extension. Default: out')
 parser.add_argument('-t', '--threads', default=multiprocessing.cpu_count(), help='Number of thread. Default: Number of CPU cores')
+parser.add_argument('-f', '--function', default=None, help='Function to compute. Default is mandelbrot set')
 args = parser.parse_args()
 
 #Pixel dimensions
@@ -35,7 +36,7 @@ DIMENSIONS = tuple(args.dimensions)
 #Center of image, in real coordinates
 CENTER = tuple(args.center)
 #Scale ofimage
-ZOOM = args.zoom
+ZOOM = float(args.zoom)
 #Iterations
 ITER = args.iterations
 #Color pattern
@@ -62,7 +63,7 @@ if (args.animate):
         #Create threads
         for j in range(0, THREADS):
             #Start a thread in the pool.
-            pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ADJ_ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(i + j), FRAMES), callback=threadCallback)
+            pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ADJ_ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(i + j), copy.copy(FRAMES), copy.copy(args.function)), callback=threadCallback)
             #Adjust the ZOOM
             ADJ_ZOOM = ADJ_ZOOM * (args.zoompersecond ** (1.0 / args.framespersecond))
     #Close and wait
@@ -72,6 +73,6 @@ if (args.animate):
     imageio.mimsave(FIN, ARR_ARR, format=FMT, fps=args.framespersecond)
 else:
     #Run in this thread, it will be too much hassle to use threads for one image.
-    res = imagethread.run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, 0, 1)
+    res = imagethread.run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, 0, 1, args.function)
     imageio.imsave(FIN, res[0], format=FMT)
 print("\nFile saved: " + FIN)

@@ -64,4 +64,5 @@ You can change properties using these flags:
     Example: `-t 2`
 
 #### Examples
-    
+    `python run.py -d 1920 1080 -c 0 0 -z 0.25 -o wholeimage.png -i 12 -p MOCHA`
+        Generates a low iteration count render of the whole mandelbrot set

@@ -1,5 +1,7 @@
+import cmath
+
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
-def rawIterations(x, y, maxIterations):
+def rawIterations_mand(x, y, maxIterations):
     re = x
     im = y
     iter = 0
@@ -7,6 +9,22 @@ def rawIterations(x, y, maxIterations):
         tmp = 2 * re * im
         re = re * re - im * im + x
         im = tmp + y
+        iter += 1
+    return iter
+
+#Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
+def rawIterations(x, y, maxIterations, func):
+    z = 0 + 0j
+    c = x + y*1j
+    iter = 0
+    while z.imag * z.imag + z.real * z.real < 4 and iter < maxIterations:
+        try:
+            z = eval(func)
+        except:
+            z = c
+        #tmp = 2 * re * im
+        #re = re * re - im * im + x
+        #im = tmp + y
         iter += 1
     return iter
 
