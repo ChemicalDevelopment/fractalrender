@@ -62,3 +62,6 @@ You can change properties using these flags:
 
 `-t threads` number of threads to run. Default is your number of cores in your CPU, but if you want to use your computer, you should set it to less.
     Example: `-t 2`
+
+#### Examples
+    
