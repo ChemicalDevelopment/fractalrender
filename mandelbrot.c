@@ -76,7 +76,7 @@ void init(char *argv[]) {
 	zoomps = strtod(argv[9], NULL);
 	updateBufs();
 }
-inline void setRGB(png_byte *ptr, double val)
+void setRGB(png_byte *ptr, double val)
 {
 	int v = (int)(val * 767);
 	if (v < 0) v = 0;

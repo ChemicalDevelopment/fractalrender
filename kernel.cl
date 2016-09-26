@@ -11,7 +11,7 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
     double cy = meta[1];
     double zoom = meta[2];
     double x = cx - 1.0 / zoom + 2 * (px + 0.0) / (zoom * width);
-    double y = cy + 1.0 / zoom - 2 * (py + 0.0) / (zoom * height);
+    double y = cy + (1.0 / zoom - 2 * (py + 0.0) / (zoom * height)) * (height + 0.0) / (width + 0.0);
 
     double sx = x;
     double sy = y;
