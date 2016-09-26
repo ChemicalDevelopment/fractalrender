@@ -68,6 +68,9 @@ You can change properties using these flags:
     `1+2j` is `1+2i` in normal math. The mandelbrot set is `-f 'z**2+c'`. `**` is pow, `+-*/` all work.
     You can use `pi` `e` in your calculations to use those constants. See more on the wiki.
 
+`-cl` uses OpenCL to grant a large (roughly 20x) speed boost. This only works with mandelbrot set, and has lots of limitations
+    See the wiki to see how to set this up.
+
 #### Examples
     `python run.py -d 1920 1080 -c 0 0 -z 0.25 -o wholeimage.png -i 12 -p MOCHA`
         Generates a low iteration count render of the whole mandelbrot set
