@@ -26,8 +26,8 @@ cl_mem imgMeta_buf = NULL;
 cl_mem meta_buf = NULL;
 cl_mem data_buf = NULL;
 
-size_t global_item_size;
-size_t local_item_size;
+size_t *global_item_size;
+size_t *local_item_size;
 
 //Buffers
 int * imgMeta;
@@ -196,14 +196,14 @@ int *returnIterArray(int frame) {
 	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_buf);
 	int i;
 	/* Execute OpenCL Kernel */
-	ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
+	ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL);
 	/* Copy results from the memory buffer */
 	ret = clEnqueueReadBuffer(command_queue, data_buf, CL_TRUE, 0, width * height * sizeof(int), data, 0, NULL, NULL);
 	float *data_png = (float *)malloc(height * width * sizeof(float));
 	
 	for (i = 0; i < height * width; ++i) {
 		data_png[i] = .75 + .25 * ((8 * (maxIter - data[i] + 256)) % 256) / 256.0;
-	}
+	}	
 	char fn[120];
 	snprintf(fn, sizeof fn, "./output/tmp/file%d.png", frame);
 	writeImage(fn, width, height, data_png, "Mandelbrot");
@@ -251,8 +251,14 @@ int main(int argc, char *argv[])
 	/* Create OpenCL Kernel */
 	kernel = clCreateKernel(program, "mand", &ret);\
 
-	global_item_size = width * height;
-	local_item_size = 1;
+	//global_item_size = width * height;
+	//local_item_size = 1;
+	global_item_size = (size_t *)malloc(sizeof(size_t) * 2);
+	local_item_size = (size_t *)malloc(sizeof(size_t) * 2);
+	global_item_size[0] = width;
+	global_item_size[1] = height;
+	local_item_size[0] = 2;
+	local_item_size[1] = 2;
 
 	int i;
 	double time = 0;

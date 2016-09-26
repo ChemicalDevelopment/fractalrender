@@ -4,9 +4,8 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
     int height = imgMeta[1];
     int maxIter = imgMeta[2];
     
-    int i = get_global_id(0);
-    int px = i % width;
-    int py = i / width;
+    int px = get_global_id(0);
+    int py = get_global_id(1);
 
     double cx = meta[0];
     double cy = meta[1];
@@ -17,9 +16,7 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
     double sx = x;
     double sy = y;
     double tmp;
-
     
-    //printf("%f, %f\n", x, y);
     int iter = 0;
     while (x * x + y * y <= 4) {
         tmp = 2 * x * y;
@@ -28,5 +25,5 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
         iter += 1;
         if (iter >= maxIter) break; 
     }
-    data[i] = iter;
+    data[py * width + px] = iter;
 }
