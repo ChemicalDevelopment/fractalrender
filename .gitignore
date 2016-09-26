@@ -1,4 +1,5 @@
 *.pyc
+compileopencl.sh
 
 *.png
 *.jpg

@@ -12,15 +12,6 @@
 
 #define MAX_SOURCE_SIZE (0x100000)
 
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
-
 cl_device_id device_id = NULL;
 cl_context context = NULL;
 cl_command_queue command_queue = NULL;
@@ -38,16 +29,25 @@ cl_mem data_buf = NULL;
 size_t global_item_size;
 size_t local_item_size;
 
+//Buffers
 int * imgMeta;
 double * meta;
 int * data;
 
+//Constants
+int frames;
 int width;
 int height;
 int maxIter;
 double centerX;
 double centerY;
+double zoomps;
+
+
+//Things that will change
 double zoom;
+double seconds;
+
 
 void updateBufs() {
 	imgMeta = (int *)malloc(3 * sizeof(int));
@@ -63,13 +63,17 @@ void updateBufs() {
 	meta[2] = zoom;
 }
 
+//Call this with ./mandelbrot.o seconds frames width height maxIter centerX centerY zoom zoomps
 void init(char *argv[]) {
-	width = strtol(argv[1], NULL, 0);
-	height = strtol(argv[2], NULL, 0);
-	maxIter = strtol(argv[3], NULL, 0);
-	centerX = strtof(argv[4], NULL);
-	centerY = strtof(argv[5], NULL);
-	zoom = strtof(argv[6], NULL);
+	seconds = strtol(argv[1], NULL, 0);
+	frames = strtol(argv[2], NULL, 0);
+	width = strtol(argv[3], NULL, 0);
+	height = strtol(argv[4], NULL, 0);
+	maxIter = strtol(argv[5], NULL, 0);
+	centerX = strtod(argv[6], NULL);
+	centerY = strtod(argv[7], NULL);
+	zoom = strtod(argv[8], NULL);
+	zoomps = strtod(argv[9], NULL);
 	updateBufs();
 }
 inline void setRGB(png_byte *ptr, double val)
@@ -201,7 +205,7 @@ int *returnIterArray(int frame) {
 		data_png[i] = .75 + .25 * ((8 * (maxIter - data[i] + 256)) % 256) / 256.0;
 	}
 	char fn[120];
-	snprintf(fn, sizeof fn, "./output/output%d.png", frame);
+	snprintf(fn, sizeof fn, "./output/tmp/file%d.png", frame);
 	writeImage(fn, width, height, data_png, "Mandelbrot");
 }
 
@@ -251,11 +255,14 @@ int main(int argc, char *argv[])
 	local_item_size = 1;
 
 	int i;
+	double time = 0;
+	double base_zoom = zoom;
 
-	for (i = 0; i < 25; ++i) {
+	for (i = 0; i < frames; ++i) {
+		time = (i * seconds) / (frames - 1);
+		zoom = base_zoom * pow(zoomps, time);
 		updateBufs();
 		returnIterArray(i);
-		zoom = zoom * 1.2;
 	}
 
 	/* Finalization */

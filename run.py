@@ -1,6 +1,6 @@
 import argparse
 import threading
-#from threading import Thread
+import subprocess
 from multiprocessing import Pool
 import multiprocessing
 from PIL import Image
@@ -12,6 +12,7 @@ from os import listdir
 from os.path import isfile, join
 import shutil
 from math import *
+import time
 
 import imagethread
 
@@ -20,10 +21,11 @@ import imagethread
 parser = argparse.ArgumentParser(description='Generate fractal images with FractalRenderPy')
 parser.add_argument('-d', '--dimensions', default=[800, 800], nargs=2, type=int, help='Dimensions of the image. Default is: 800 800')
 parser.add_argument('-c', '--center', default=[0, 0], nargs=2, type=float, help='Center of the image. Default is 0 0')
-parser.add_argument('-z', '--zoom', default=1, help='Scale. Default is 1')
+parser.add_argument('-z', '--zoom', default=1.0, help='Scale. Default is 1')
 parser.add_argument('-i', '--iterations', default='12',help='Iterations: default is 12')
 parser.add_argument('-p', '--pattern', default='MOCHA', help='Color pattern. Default is MOCHA. Check wiki for more')
 parser.add_argument('-a', '--animate', action='store_true', default=False, help="Use this flag to use an animated gif")
+parser.add_argument('-cl', '--opencl', action='store_true', default=False, help="Use this flag to use OpenCL")
 parser.add_argument('-s', '--seconds', default=4, type=int, help='Seconds, only matters if using -a. Default: 2')
 parser.add_argument('-fps', '--framespersecond', default=8, type=int, help='Frames per second, only matters if using -a. Default: 12')
 parser.add_argument('-zps', '--zoompersecond', default=2, type=float, help='Zoom per second, only matters if using -a. Default: 3.5')
@@ -53,32 +55,48 @@ FI = args.output.split(".")[0]
 FMT = args.output.split(".")[1]
 FIN = FI + "." + FMT
 
+start_time = time.time()
+
 #If they want an animated gif, run in lots of threads to maximize resources
 if (args.animate):
-    BASE_ZOOM = ZOOM + 0.0
-    #How many frames?
-    FRAMES = int(args.framespersecond * args.seconds)
-    ARR_ARR = [None] * FRAMES
-    THREADS = int(args.threads)
-    def threadCallback(res):
-        ARR_ARR[res[1]] = res[0]
-    #This limits the number of executed threads
-    pool = Pool(THREADS)
-    #loop through and create threads to run, only calling threads at a time
-    for FRAME in range(0, FRAMES):
-        TIME = (FRAME + 0.0) / args.framespersecond
-        #Adjust the ZOOM
-        ZOOM = BASE_ZOOM * (args.zoompersecond ** TIME)
-        LGZOOM = log(ZOOM)
-        #Evaluate iteration
-        ADJ_ITER = eval(ITER)
-        #Create threads
-        pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(FRAME), copy.copy(FRAMES), copy.copy(args.function)), callback=threadCallback)
-    #Close and wait
-    pool.close()
-    pool.join()
-    #Save to file
-    imageio.mimsave(FIN, ARR_ARR, format=FMT, fps=args.framespersecond)
+    if args.opencl:
+        FRAMES = int(args.framespersecond * args.seconds)
+        #./mandelbrot.o seconds frames width height maxIter centerX centerY zoom zoomps
+        commandA = ["./mandelbrot.o", args.seconds, FRAMES, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond]
+        commandA = map(str, commandA)
+        command = " ".join(commandA)
+        print command
+        process = subprocess.Popen(command, shell=True)
+        process.wait()
+        arr = []
+        for i in range(0, FRAMES):
+            arr.append(imageio.imread("./output/tmp/file" + str(i) + ".png"))
+        imageio.mimsave(FIN, arr, format=FMT, fps=args.framespersecond)
+    else:
+        BASE_ZOOM = ZOOM + 0.0
+        #How many frames?
+        FRAMES = int(args.framespersecond * args.seconds)
+        ARR_ARR = [None] * FRAMES
+        THREADS = int(args.threads)
+        def threadCallback(res):
+            ARR_ARR[res[1]] = res[0]
+        #This limits the number of executed threads
+        pool = Pool(THREADS)
+        #loop through and create threads to run, only calling threads at a time
+        for FRAME in range(0, FRAMES):
+            TIME = (FRAME + 0.0) / args.framespersecond
+            #Adjust the ZOOM
+            ZOOM = BASE_ZOOM * (args.zoompersecond ** TIME)
+            LGZOOM = log(ZOOM)
+            #Evaluate iteration
+            ADJ_ITER = eval(ITER)
+            #Create threads
+            pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(FRAME), copy.copy(FRAMES), copy.copy(args.function)), callback=threadCallback)
+        #Close and wait
+        pool.close()
+        pool.join()
+        #Save to file
+        imageio.mimsave(FIN, ARR_ARR, format=FMT, fps=args.framespersecond)
 else:
     if not args.output:
         args.output = "out.png"
@@ -86,4 +104,9 @@ else:
     FRAME = 0
     res = imagethread.run(DIMENSIONS, CENTER, ZOOM, eval(ITER), PATTERN, 0, 1, args.function)
     imageio.imsave(FIN, res[0], format=FMT)
+end_time = time.time()
 print("\nFile saved: " + FIN)
+time_took = end_time - start_time
+print("Took " + str(time_took) + "s")
+print("Which is " + str(time_took / 3600) + "hr")
+print("Which is " + str((time_took / 3600) / 24) + " days")
