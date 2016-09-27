@@ -257,19 +257,24 @@ int main(int argc, char *argv[])
 	local_item_size = (size_t *)malloc(sizeof(size_t) * 2);
 	global_item_size[0] = width;
 	global_item_size[1] = height;
-	local_item_size[0] = 4;
-	local_item_size[1] = 4;
+	local_item_size[0] = 16;
+	local_item_size[1] = 16;
 
 	int i;
 	double time = 0;
 	double base_zoom = zoom;
+
+	printf("Running OpenCL\n");
 
 	for (i = 0; i < frames; ++i) {
 		time = (i * seconds) / (frames - 1);
 		zoom = base_zoom * pow(zoomps, time);
 		updateBufs();
 		returnIterArray(i);
+		printf("%%%d Done\r", (100 * i) / (frames - 1));
 	}
+
+	printf("\nDone.\n");
 
 	/* Finalization */
 	ret = clFlush(command_queue);
