@@ -68,7 +68,7 @@ try:
 except:
     pass
 if (args.animate):
-    WRITER = imageio.get_writer(FIN, fps=int(args.framespersecond))
+    WRITER = imageio.get_writer(FIN, fps=int(args.framespersecond), macro_block_size=1)
 
 def combineFrames():
     for i in range(0, FRAMES):
