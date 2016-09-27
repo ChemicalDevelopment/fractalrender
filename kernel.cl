@@ -10,20 +10,24 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
     double cx = meta[0];
     double cy = meta[1];
     double zoom = meta[2];
-    double x = cx - 1.0 / zoom + 2 * (px + 0.0) / (zoom * width);
-    double y = cy + (1.0 / zoom - 2 * (py + 0.0) / (zoom * height)) * (height + 0.0) / (width + 0.0);
+    double x = cx + (2 * px - width) / (zoom * width);
+    double y = cy + (height - 2 * py) / (zoom * width);
 
     double sx = x;
     double sy = y;
+    double xs = x * x;
+    double ys = y * y;
     double tmp;
     
     int iter = 0;
-    while (x * x + y * y <= 4) {
+    while (xs + ys <= 4) {
         tmp = 2 * x * y;
-        x = x * x - y * y + sx;
+        x = xs - ys + sx;
         y = tmp + sy;
         iter += 1;
-        if (iter >= maxIter) break; 
+        if (iter >= maxIter) break;
+        xs = x * x;
+        ys = y * y;
     }
     data[py * width + px] = iter;
 }

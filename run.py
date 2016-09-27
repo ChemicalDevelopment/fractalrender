@@ -54,6 +54,10 @@ if not args.output:
 FI = args.output.split(".")[0]
 FMT = args.output.split(".")[1]
 FIN = FI + "." + FMT
+try:
+    os.remove(FIN)
+except:
+    pass
 
 start_time = time.time()
 

@@ -257,8 +257,8 @@ int main(int argc, char *argv[])
 	local_item_size = (size_t *)malloc(sizeof(size_t) * 2);
 	global_item_size[0] = width;
 	global_item_size[1] = height;
-	local_item_size[0] = 2;
-	local_item_size[1] = 2;
+	local_item_size[0] = 4;
+	local_item_size[1] = 4;
 
 	int i;
 	double time = 0;
