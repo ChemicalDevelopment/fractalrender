@@ -82,12 +82,19 @@ if (args.combine):
 else:
     if args.animate:
         if args.opencl:
-            commandA = ["./mandelbrot.o", args.seconds, FRAMES, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond]
+            frame_split = int(FRAMES / 2)
+            commandA = ["./mandelbrot.o", 0, frame_split, FRAMES, args.seconds, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond]
+            commandB = ["./mandelbrot.o", frame_split, FRAMES, FRAMES, args.seconds, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond]
             commandA = map(str, commandA)
-            command = " ".join(commandA)
-            print command
-            process = subprocess.Popen(command, shell=True)
-            process.wait()
+            commandB = map(str, commandB)
+            command1 = " ".join(commandA)
+            command2 = " ".join(commandB)
+            print command1
+            print command2
+            process1 = subprocess.Popen(command1, shell=True)
+            process2 = subprocess.Popen(command2, shell=True)
+            process1.wait()
+            process2.wait()
         else:
             def threadCallback(res):
                 imageio.imsave("./output/tmp/file" + str(res[1]) + ".png", res[0])

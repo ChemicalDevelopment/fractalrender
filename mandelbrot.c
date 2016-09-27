@@ -35,7 +35,9 @@ double * meta;
 int * data;
 float * data_png;
 //Constants
-int frames;
+int start_frame;
+int end_frame;
+int max_frame;
 int width;
 int height;
 int maxIter;
@@ -48,17 +50,19 @@ double zoomps;
 double zoom;
 double seconds;
 
-//Call this with ./mandelbrot.o seconds frames width height maxIter centerX centerY zoom zoomps
+//Call this with ./mandelbrot.o startframe endframe maxframe seconds width height maxIter centerX centerY zoom zoomps
 void init(char *argv[]) {
-	seconds = strtol(argv[1], NULL, 0);
-	frames = strtol(argv[2], NULL, 0);
-	width = strtol(argv[3], NULL, 0);
-	height = strtol(argv[4], NULL, 0);
-	maxIter = strtol(argv[5], NULL, 0);
-	centerX = strtod(argv[6], NULL);
-	centerY = strtod(argv[7], NULL);
-	zoom = strtod(argv[8], NULL);
-	zoomps = strtod(argv[9], NULL);
+	start_frame = strtol(argv[1], NULL, 0);
+	end_frame = strtol(argv[2], NULL, 0);
+	max_frame = strtol(argv[3], NULL, 0);
+	seconds = strtol(argv[4], NULL, 0);
+	width = strtol(argv[5], NULL, 0);
+	height = strtol(argv[6], NULL, 0);
+	maxIter = strtol(argv[7], NULL, 0);
+	centerX = strtod(argv[8], NULL);
+	centerY = strtod(argv[9], NULL);
+	zoom = strtod(argv[10], NULL);
+	zoomps = strtod(argv[11], NULL);
 }
 void setRGB(png_byte *ptr, double val)
 {
@@ -261,13 +265,13 @@ int main(int argc, char *argv[])
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgMeta_buf);
 	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_buf);
 
-	for (i = 0; i < frames; ++i) {
-		time = (i * seconds) / (frames - 1);
+	for (i = start_frame; i < end_frame; ++i) {
+		time = (i * seconds) / (max_frame - 1);
 		meta[2] = base_zoom * pow(zoomps, time);
 		clEnqueueWriteBuffer(command_queue, meta_buf, CL_TRUE, 0, 3 * sizeof(double), meta, 0, NULL, NULL);
 		ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&meta_buf);
 		returnIterArray(i);
-		printf("%%%d Done\r", (100 * i) / (frames - 1));
+		printf("%%%d Done\r", (100 * (i - start_frame)) / (end_frame - start_frame - 1));
 		fflush(stdout);
 	}
 
