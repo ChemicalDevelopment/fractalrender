@@ -67,8 +67,8 @@ try:
     os.remove(FIN)
 except:
     pass
-
-WRITER = imageio.get_writer(FIN, fps=int(args.framespersecond))
+if (args.animate):
+    WRITER = imageio.get_writer(FIN, fps=int(args.framespersecond))
 
 def combineFrames():
     for i in range(0, FRAMES):
@@ -107,7 +107,8 @@ else:
             pool.join()
         combineFrames()
     else:
-        imagethread.run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, 0)
+        ret = imagethread.run(DIMENSIONS, CENTER, ZOOM, eval(ITER), PATTERN, 0, 1, args.function)
+        imageio.imsave(FIN, ret[0], FMT)
 
 end_time = time.time()
 print("\nFile saved: " + FIN)

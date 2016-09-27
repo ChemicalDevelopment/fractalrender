@@ -30,6 +30,6 @@ def run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, FRAME_NUM, FRAME_MAX, func=None
             py += 1
         x += d
         px += 1
-    sys.stdout.write("\r %" + str(int(100 * (FRAME_NUM + 1) / FRAME_MAX)) + " Done  ")
+    sys.stdout.write("\r%" + str(int(100 * (FRAME_NUM + 1) / FRAME_MAX)) + " Done  ")
     sys.stdout.flush()
     return (arr, FRAME_NUM)
