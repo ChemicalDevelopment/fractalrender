@@ -16,3 +16,4 @@ compileopencl.sh
 *.wmv
 *.jp2
 *.tif
+.vscode/
