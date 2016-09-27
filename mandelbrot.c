@@ -33,7 +33,7 @@ size_t *local_item_size;
 int * imgMeta;
 double * meta;
 int * data;
-
+float * data_png;
 //Constants
 int frames;
 int width;
@@ -48,21 +48,6 @@ double zoomps;
 double zoom;
 double seconds;
 
-
-void updateBufs() {
-	imgMeta = (int *)malloc(3 * sizeof(int));
-	meta = (double *)malloc(3 * sizeof(double));
-	data = (int *)malloc(width * height * sizeof(int));
-	//width, height, maxiter
-	imgMeta[0] = width;
-	imgMeta[1] = height;
-	imgMeta[2] = maxIter;
-	//center x, y, zoom
-	meta[0] = centerX;
-	meta[1] = centerY;
-	meta[2] = zoom;
-}
-
 //Call this with ./mandelbrot.o seconds frames width height maxIter centerX centerY zoom zoomps
 void init(char *argv[]) {
 	seconds = strtol(argv[1], NULL, 0);
@@ -74,7 +59,6 @@ void init(char *argv[]) {
 	centerY = strtod(argv[7], NULL);
 	zoom = strtod(argv[8], NULL);
 	zoomps = strtod(argv[9], NULL);
-	updateBufs();
 }
 void setRGB(png_byte *ptr, double val)
 {
@@ -181,26 +165,14 @@ int writeImage(char* filename, int width, int height, float *buffer, char* title
 	return code;
 }
 
-int *returnIterArray(int frame) {
-	int * data = (int *)malloc(width * height * sizeof(int));
-	data_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, width * height * sizeof(int), NULL, &ret);
-	meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(double), NULL, &ret);
+void returnIterArray(int frame) {
 	
-	/* Write all buffers */
-	clEnqueueWriteBuffer(command_queue, imgMeta_buf, CL_TRUE, 0, 3 * sizeof(int), imgMeta, 0, NULL, NULL);
-	clEnqueueWriteBuffer(command_queue, meta_buf, CL_TRUE, 0, 3 * sizeof(double), meta, 0, NULL, NULL);
-	clEnqueueWriteBuffer(command_queue, data_buf, CL_TRUE, 0, width * height * sizeof(int), data, 0, NULL, NULL);
-
-	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgMeta_buf);
-	ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&meta_buf);
-	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_buf);
-	int i;
 	/* Execute OpenCL Kernel */
 	ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL);
 	/* Copy results from the memory buffer */
 	ret = clEnqueueReadBuffer(command_queue, data_buf, CL_TRUE, 0, width * height * sizeof(int), data, 0, NULL, NULL);
-	float *data_png = (float *)malloc(height * width * sizeof(float));
-	
+
+	int i;
 	for (i = 0; i < height * width; ++i) {
 		data_png[i] = .75 + .25 * ((8 * (maxIter - data[i] + 256)) % 256) / 256.0;
 	}	
@@ -231,16 +203,13 @@ int main(int argc, char *argv[])
 	ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
 	
 	//Get device ID's'
-	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, &ret_num_devices);
+	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_CPU, 1, &device_id, &ret_num_devices);
 	
 	/* Create OpenCL context */
 	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
 	
 	/* Create Command Queue */
 	command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &ret);
-
-	/* Create Buffers */
-	imgMeta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(int), NULL, &ret);
 
 	/* Create Kernel Program from the source */
 	program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret);
@@ -266,12 +235,40 @@ int main(int argc, char *argv[])
 
 	printf("Running OpenCL\n");
 
+	imgMeta = (int *)malloc(3 * sizeof(int));
+	meta = (double *)malloc(3 * sizeof(double));
+	data = (int *)malloc(width * height * sizeof(int));
+	data_png = (float *)malloc(height * width * sizeof(float));
+
+	//width, height, maxiter
+	imgMeta[0] = width;
+	imgMeta[1] = height;
+	imgMeta[2] = maxIter;
+	//center x, y, zoom
+	meta[0] = centerX;
+	meta[1] = centerY;
+	meta[2] = zoom;
+
+	/* Create Buffers */
+	imgMeta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(int), NULL, &ret);
+	data_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, width * height * sizeof(int), NULL, &ret);
+	meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(double), NULL, &ret);
+	
+	/* Write all buffers */
+	clEnqueueWriteBuffer(command_queue, imgMeta_buf, CL_TRUE, 0, 3 * sizeof(int), imgMeta, 0, NULL, NULL);
+	clEnqueueWriteBuffer(command_queue, data_buf, CL_TRUE, 0, width * height * sizeof(int), data, 0, NULL, NULL);
+
+	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgMeta_buf);
+	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_buf);
+
 	for (i = 0; i < frames; ++i) {
 		time = (i * seconds) / (frames - 1);
-		zoom = base_zoom * pow(zoomps, time);
-		updateBufs();
+		meta[2] = base_zoom * pow(zoomps, time);
+		clEnqueueWriteBuffer(command_queue, meta_buf, CL_TRUE, 0, 3 * sizeof(double), meta, 0, NULL, NULL);
+		ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&meta_buf);
 		returnIterArray(i);
 		printf("%%%d Done\r", (100 * i) / (frames - 1));
+		fflush(stdout);
 	}
 
 	printf("\nDone.\n");
