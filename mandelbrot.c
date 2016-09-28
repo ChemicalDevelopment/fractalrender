@@ -24,7 +24,7 @@ cl_int ret;
 
 cl_mem imgMeta_buf = NULL;
 cl_mem meta_buf = NULL;
-cl_mem data_buf = NULL;
+cl_mem data_png_buf = NULL;
 
 size_t *global_item_size;
 size_t *local_item_size;
@@ -151,8 +151,6 @@ int writeImage(char* filename, int width, int height, float *buffer, char* title
 			setRGB(&(row[x*3]), v);
 			setRGB(&(row[x*3+1]), v*v);
 			setRGB(&(row[x*3+2]), v*v*v);
-			//setRGB(&(row[x*3+1]), v );
-			//setRGB(&(row[x*3+2]), v );
 		}
 		png_write_row(png_ptr, row);
 	}
@@ -174,12 +172,8 @@ void returnIterArray(int frame) {
 	/* Execute OpenCL Kernel */
 	ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL);
 	/* Copy results from the memory buffer */
-	ret = clEnqueueReadBuffer(command_queue, data_buf, CL_TRUE, 0, width * height * sizeof(int), data, 0, NULL, NULL);
+	ret = clEnqueueReadBuffer(command_queue, data_png_buf, CL_TRUE, 0, width * height * sizeof(float), data_png, 0, NULL, NULL);
 
-	int i;
-	for (i = 0; i < height * width; ++i) {
-		data_png[i] = .75 + .25 * ((8 * (maxIter - data[i] + 256)) % 256) / 256.0;
-	}	
 	char fn[120];
 	snprintf(fn, sizeof fn, "./tmp/file%d.png", frame);
 	writeImage(fn, width, height, data_png, "Mandelbrot");
@@ -255,15 +249,15 @@ int main(int argc, char *argv[])
 
 	/* Create Buffers */
 	imgMeta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(int), NULL, &ret);
-	data_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, width * height * sizeof(int), NULL, &ret);
+	data_png_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, width * height * sizeof(float), NULL, &ret);
 	meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(double), NULL, &ret);
 	
 	/* Write all buffers */
 	clEnqueueWriteBuffer(command_queue, imgMeta_buf, CL_TRUE, 0, 3 * sizeof(int), imgMeta, 0, NULL, NULL);
-	clEnqueueWriteBuffer(command_queue, data_buf, CL_TRUE, 0, width * height * sizeof(int), data, 0, NULL, NULL);
+	clEnqueueWriteBuffer(command_queue, data_png_buf, CL_TRUE, 0, width * height * sizeof(float), data_png, 0, NULL, NULL);
 
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgMeta_buf);
-	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_buf);
+	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_png_buf);
 
 	for (i = start_frame; i < end_frame; ++i) {
 		time = (i * seconds) / (max_frame - 1);
@@ -282,7 +276,7 @@ int main(int argc, char *argv[])
 	ret = clFinish(command_queue);
 	ret = clReleaseKernel(kernel);
 	ret = clReleaseProgram(program);
-	ret = clReleaseMemObject(data_buf);
+	ret = clReleaseMemObject(data_png_buf);
 	ret = clReleaseMemObject(meta_buf);
 	ret = clReleaseMemObject(imgMeta_buf);
 	ret = clReleaseCommandQueue(command_queue);

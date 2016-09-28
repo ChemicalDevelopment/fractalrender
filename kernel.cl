@@ -1,4 +1,4 @@
-__kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global int * data)
+__kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global float * data)
 {
     int width = imgMeta[0];
     int height = imgMeta[1];
@@ -29,5 +29,6 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
         xs = x * x;
         ys = y * y;
     }
-    data[py * width + px] = iter;
+    float end = ((16 * (maxIter - iter)) % 256) / 256.0;
+    data[py * width + px] = .75 + .25 * end;
 }
