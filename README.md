@@ -74,3 +74,6 @@ You can change properties using these flags:
 #### Examples
     `python run.py -d 1920 1080 -c 0 0 -z 0.25 -o wholeimage.png -i 12 -p MOCHA`
         Generates a low iteration count render of the whole mandelbrot set
+
+    `python run.py -d 1920 1080 -c .28235999949914 .01022499933843 -z 1.0 -i 600 -a -cl -zps 1.6182 -fps 30 -s 60`
+        High quality render that for a deep zoom.
