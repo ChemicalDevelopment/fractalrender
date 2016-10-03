@@ -1,6 +1,12 @@
 # FractalRender
 
-A python program to generate images of the mandelbrot set.
+A python program to generate a image, video, gif, etc of a fractal (which you can input the equation for).
+
+To use the mandelbrot set (which is default), you can use `z**2+c`
+
+For a similar set, you can use `z**z+c`
+
+You can type in any python statement to execute. See `Flags` section below for info.
 
 Multithreaded, animated with support for:
 `.png`, `.jpg`, `.mov`, `.avi`, `.mp4`, `.bmp` and more!
