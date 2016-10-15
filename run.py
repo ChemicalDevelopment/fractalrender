@@ -77,24 +77,28 @@ def combineFrames():
 
 start_time = time.time()
 
+def split_frames(MAX_FRAMES, n):
+    ret = [["./mandelbrot.o", i, i + n, FRAMES, args.seconds, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond] for i in range(0, MAX_FRAMES, n)]
+    for i in range(0, len(ret)):
+        tmp = ""
+        for j in range(0, len(ret[i])):
+            tmp += " " + str(ret[i][j])
+        ret[i] = tmp
+    return ret
+
 if (args.combine):
     combineFrames()
 else:
     if args.animate:
         if args.opencl:
-            frame_split = int(FRAMES / 2)
-            commandA = ["./mandelbrot.o", 0, frame_split, FRAMES, args.seconds, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond]
-            commandB = ["./mandelbrot.o", frame_split, FRAMES, FRAMES, args.seconds, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond]
-            commandA = map(str, commandA)
-            commandB = map(str, commandB)
-            command1 = " ".join(commandA)
-            command2 = " ".join(commandB)
-            print command1
-            print command2
-            process1 = subprocess.Popen(command1, shell=True)
-            process2 = subprocess.Popen(command2, shell=True)
-            process1.wait()
-            process2.wait()
+            frame_split = int(FRAMES / 8)
+            cmds = split_frames(FRAMES, frame_split)
+            procs = []
+            for cmd in cmds:
+                print cmd
+                procs.append(subprocess.Popen(cmd, shell=True))
+            for proc in procs:
+                proc.wait()
         else:
             def threadCallback(res):
                 imageio.imsave("./output/tmp/file" + str(res[1]) + ".png", res[0])
