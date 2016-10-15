@@ -78,6 +78,7 @@ def combineFrames():
 start_time = time.time()
 
 def split_frames(MAX_FRAMES, n):
+    MAX_FRAMES = int(floor(MAX_FRAMES / n)) * n
     ret = [["./mandelbrot.o", i, i + n, FRAMES, args.seconds, DIMENSIONS[0], DIMENSIONS[1], ITER, CENTER[0], CENTER[1], ZOOM, args.zoompersecond] for i in range(0, MAX_FRAMES, n)]
     for i in range(0, len(ret)):
         tmp = ""
