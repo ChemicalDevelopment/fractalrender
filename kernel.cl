@@ -29,6 +29,6 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
         xs = x * x;
         ys = y * y;
     }
-    float end = ((16 * (maxIter - iter)) % 256) / 256.0;
-    data[py * width + px] = .75 + .25 * end;
+    float end = ((4 * (maxIter - iter)) % 256) / 256.0;
+    data[py * width + px] = .6 + .4 * end;
 }

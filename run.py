@@ -92,7 +92,7 @@ if (args.combine):
 else:
     if args.animate:
         if args.opencl:
-            frame_split = int(FRAMES / 8)
+            frame_split = int(FRAMES / 4)
             cmds = split_frames(FRAMES, frame_split)
             procs = []
             for cmd in cmds:
