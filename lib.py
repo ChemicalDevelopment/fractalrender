@@ -34,7 +34,7 @@ def rawIterations(x, y, maxIterations, func):
 def colorize(pattern, iter, maxIterations):
     pattern = pattern.upper()
     if pattern == "MOCHA":
-        piter = (16*(maxIterations - iter) % 256) / 256.0
+        piter = .6 * (8*(maxIterations - iter) % 256) / 256.0 + .4
         return (int(256 * piter), int(256 * piter * piter), int(256 * piter * piter * piter))
     else:
         cbit = int(256 * iter / maxIterations)
