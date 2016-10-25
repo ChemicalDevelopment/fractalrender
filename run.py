@@ -105,7 +105,7 @@ else:
                 proc.wait()
         else:
             def threadCallback(res):
-                imageio.imsave("./output/tmp/file" + str(res[1]) + ".png", res[0])
+                imageio.imsave("./tmp/file" + str(res[1]) + ".png", res[0])
             #This limits the number of executed threads
             pool = Pool(THREADS)
             #loop through and create threads to run, only calling threads at a time
