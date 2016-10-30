@@ -1,3 +1,4 @@
 Pillow
 imageio
 numpy
+mpmath
