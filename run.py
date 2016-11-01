@@ -116,11 +116,12 @@ else:
                 #Evaluate iteration
                 ADJ_ITER = eval(ITER)
                 #Create threads
-                threadCallback(imagethread.run(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(FRAME), copy.copy(FRAMES), copy.copy(args.function)))
-            #Close and wait
+                threadCallback(imagethread.run(DIMENSIONS, CENTER, ZOOM, int(ADJ_ITER), PATTERN, FRAME, FRAMES, args.function, THREADS))
+                #pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(FRAME), copy.copy(FRAMES), copy.copy(args.function)), callback=threadCallback)
+            print "\n"
         combineFrames()
     else:
-        ret = imagethread.run(DIMENSIONS, CENTER, ZOOM, eval(ITER), PATTERN, 0, 1, args.function)
+        ret = imagethread.run(DIMENSIONS, CENTER, ZOOM, int(eval(ITER)), PATTERN, 0, 1, args.function, THREADS)
         imageio.imsave(FIN, ret[0], FMT)
 
 end_time = time.time()

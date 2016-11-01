@@ -1,6 +1,6 @@
 #Currently testing
 import cmath
-from mpmath import *
+import random
 
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
 def rawIterations_mand(x, y, maxIterations):
@@ -16,12 +16,14 @@ def rawIterations_mand(x, y, maxIterations):
 
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
 def rawIterations(x, y, maxIterations, func):
+    if not func:
+        func = "z**2+c"
     z = 0 + 0j
     c = x + y*1j
     iter = 0
     while z.imag * z.imag + z.real * z.real <= 4 and iter < maxIterations:
         try:
-            z = complex(eval(func))
+            z = eval(func)
         except:
             z = c
         #tmp = 2 * re * im
