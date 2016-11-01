@@ -31,7 +31,7 @@ parser.add_argument('-s', '--seconds', default=4, type=int, help='Seconds, only 
 parser.add_argument('-fps', '--framespersecond', default=8, type=int, help='Frames per second, only matters if using -a. Default: 12')
 parser.add_argument('-zps', '--zoompersecond', default=2, type=float, help='Zoom per second, only matters if using -a. Default: 3.5')
 parser.add_argument('-o', '--output', help='Output file. Make sure to use correct output extension')
-parser.add_argument('-t', '--threads', default=multiprocessing.cpu_count(), help='Number of thread. Default: Number of CPU cores')
+parser.add_argument('-t', '--threads', default=multiprocessing.cpu_count() - 1, help='Number of thread. Default: Number of CPU cores')
 parser.add_argument('-f', '--function', default=None, help='Function to compute. Default is mandelbrot set')
 args = parser.parse_args()
 
@@ -108,6 +108,7 @@ else:
             def threadCallback(res):
                 imageio.imsave("./tmp/file" + str(res[1]) + ".png", res[0])
             #This limits the number of executed threads
+            pool = Pool(THREADS)
             #loop through and create threads to run, only calling threads at a time
             for FRAME in range(0, FRAMES):
                 TIME = (FRAME + 0.0) / args.framespersecond
@@ -116,8 +117,10 @@ else:
                 #Evaluate iteration
                 ADJ_ITER = eval(ITER)
                 #Create threads
-                threadCallback(imagethread.run(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(FRAME), copy.copy(FRAMES), copy.copy(args.function)))
+                pool.apply_async(imagethread.run, args=(copy.copy(DIMENSIONS), copy.copy(CENTER), copy.copy(ZOOM), copy.copy(int(ADJ_ITER)), copy.copy(PATTERN), copy.copy(FRAME), copy.copy(FRAMES), copy.copy(args.function)), callback=threadCallback)
             #Close and wait
+            pool.close()
+            pool.join()
         combineFrames()
     else:
         ret = imagethread.run(DIMENSIONS, CENTER, ZOOM, eval(ITER), PATTERN, 0, 1, args.function)
