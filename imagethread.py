@@ -30,9 +30,9 @@ def run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, FRAME_NUM, FRAME_MAX, func, cor
     #We use this to save time
     #Loop through x pixels
     pool = Pool(cores)
-    def cb(x):
-        if (x[1] >= 0 and x[1] < DIMENSIONS[1]):
-            arr[x[0]] = x[1]
+    def cb(rr):
+        if (rr[0] >= 0) and (rr[0] < DIMENSIONS[1]):
+            arr[rr[0]] = rr[1]
     while (py < DIMENSIONS[0]):
         pool.apply_async(run_row, args=(copy.copy(y), copy.copy(py)), callback=cb)
         y -= ch
