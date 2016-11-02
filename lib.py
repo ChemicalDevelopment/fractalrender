@@ -2,6 +2,10 @@
 import cmath
 import random
 
+
+def get_color(pattern, x, y, maxIterations, func):
+    return colorize(pattern, rawIterations(x, y, maxIterations, func), maxIterations)
+
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
 def rawIterations_mand(x, y, maxIterations):
     re = x
@@ -16,8 +20,8 @@ def rawIterations_mand(x, y, maxIterations):
 
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
 def rawIterations(x, y, maxIterations, func):
-    if not func:
-        func = "z**2+c"
+    if not func or func == "z**2+c":
+        return rawIterations_mand(x, y, maxIterations)
     z = 0 + 0j
     c = x + y*1j
     iter = 0
