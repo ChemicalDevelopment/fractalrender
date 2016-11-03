@@ -1,5 +1,9 @@
 #Currently testing
-from mpmath import *
+try:
+    from mpmath import *
+except:
+    print "mpmath not found, going along as normal"
+
 import random
 
 def get_color(pattern, x, y, maxIterations, func):
