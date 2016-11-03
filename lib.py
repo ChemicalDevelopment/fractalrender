@@ -1,7 +1,6 @@
 #Currently testing
-import cmath
+from mpmath import *
 import random
-
 
 def get_color(pattern, x, y, maxIterations, func):
     return colorize(pattern, rawIterations(x, y, maxIterations, func), maxIterations)
