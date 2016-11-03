@@ -28,7 +28,6 @@ class Context():
         t = (frame + 0.0) / (self.frames)
         self.zoom = eval(self.zoom_eq)
         z = self.zoom
-        print z
         self.start_y = self.center[1] + 1.0 / (z) * ((self.dim[1] + 0.0) / self.dim[0])
         self.start_x = self.center[0] - 1.0 / z
         self.change = 2.0 / (z * self.dim[0])
