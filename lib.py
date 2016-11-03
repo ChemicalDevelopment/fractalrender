@@ -2,9 +2,36 @@
 try:
     from mpmath import *
 except:
+    from math import *
     print "mpmath not found, going along as normal"
 
 import random
+
+class Context():
+    def __init__(self, dim, center, zoom, zps,iter, pattern, func, threads, sec, fps):
+        self.dim = dim
+        self.center = center
+        self.zoom = zoom
+        self.zps = zps
+        self.iter = int(iter)
+        self.pattern = pattern
+        self.func = func
+        self.threads = threads
+        self.fps = fps
+        self.sec = sec
+
+        self.zoom_eq = "%s*(%s**t)" % (zoom, zps)
+        self.frames = int(fps * sec)
+        self.get_val(0)
+
+    def get_val(self, frame):
+        t = (frame + 0.0) / (self.frames)
+        self.zoom = eval(self.zoom_eq)
+        z = self.zoom
+        print z
+        self.start_y = self.center[1] + 1.0 / (z) * ((self.dim[1] + 0.0) / self.dim[0])
+        self.start_x = self.center[0] - 1.0 / z
+        self.change = 2.0 / (z * self.dim[0])
 
 def get_color(pattern, x, y, maxIterations, func):
     return colorize(pattern, rawIterations(x, y, maxIterations, func), maxIterations)

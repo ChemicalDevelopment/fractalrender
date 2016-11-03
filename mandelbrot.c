@@ -177,6 +177,7 @@ void returnIterArray(int frame) {
 	char fn[120];
 	snprintf(fn, sizeof fn, "./tmp/file%d.png", frame);
 	writeImage(fn, width, height, data_png, "Mandelbrot");
+
 }
 
 int main(int argc, char *argv[])
@@ -258,6 +259,7 @@ int main(int argc, char *argv[])
 
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgMeta_buf);
 	ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&data_png_buf);
+
 
 	for (i = start_frame; i < end_frame; ++i) {
 		time = (i * seconds) / (max_frame - 1);

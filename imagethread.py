@@ -10,53 +10,40 @@ import copy
 d_arr = 0#numpy.zeros((d[0], 3), dtype=numpy.uint8)
 
 #Runs with set paramaters and stores in arr
-def run(DIMENSIONS, CENTER, ZOOM, ITER, PATTERN, FRAME_NUM, FRAME_MAX, func, cores):
-    global d
-    global c
-    global z
-    global i
-    global p
-    global f
-    global ch
+def run(_context):
+    global context
+    context = _context
+
+    arr = numpy.zeros((context.dim[1], context.dim[0], 3), dtype=numpy.uint8)
 
     global d_arr
-    d = DIMENSIONS
-    c = CENTER
-    z = ZOOM
-    i = ITER
-    p = PATTERN
-    f = func
-    ch = 2.0 / (ZOOM * DIMENSIONS[0])
+    d_arr = numpy.zeros((context.dim[0], 3), dtype=numpy.uint8)
 
-    arr = numpy.zeros((DIMENSIONS[1], DIMENSIONS[0], 3), dtype=numpy.uint8)
-    d_arr = numpy.zeros((d[0], 3), dtype=numpy.uint8)
-
-    y = CENTER[1] + 1.0 / (ZOOM) * ((DIMENSIONS[1] + 0.0) / DIMENSIONS[0])
+    y = context.start_y
     py = 0
     #We use this to save time
     #Loop through x pixels
-    pool = Pool(cores)
+    pool = Pool(context.threads)
     def cb(rr):
-        if (rr[0] >= 0) and (rr[0] < DIMENSIONS[1]):
-            arr[rr[0]] = rr[1]
+        arr[rr[0]] = rr[1]
 
-    while (py < DIMENSIONS[0]):
+    while (py < context.dim[1]):
         pool.apply_async(run_row, args=(copy.copy(y), copy.copy(py)), callback=cb)
-        y -= ch
+        y -= context.change
         py += 1
+
     pool.close()
     pool.join()
-    sys.stdout.write("\r%" + str(int(100 * (FRAME_NUM + 1) / FRAME_MAX)) + " Done  ")
-    sys.stdout.flush()
-    print ""
-    return (arr, FRAME_NUM)
+    return arr
 
 def run_row(y, py):
     global d_arr
-    x = c[0] - 1.0 / (z)
+    global context
+    c_arr = copy.copy(d_arr)
+    x = context.start_x
     px = 0
-    while (px < d[0]):
-        d_arr[px] = colorize(p, rawIterations(x, y, i, f), i)
-        x += ch
+    while (px < context.dim[0]):
+        c_arr[px] = get_color(context.pattern, x, y, context.iter, context.func)
+        x += context.change
         px += 1
-    return py, d_arr
+    return (py, c_arr)
