@@ -43,7 +43,7 @@ def run_row(y, py):
     x = context.start_x
     px = 0
     while (px < context.dim[0]):
-        c_arr[px] = get_color(context.pattern, x, y, context.iter, context.func)
+        c_arr[px] = get_color(context, x, y)
         x += context.change
         px += 1
     return (py, c_arr)

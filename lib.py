@@ -25,22 +25,23 @@ class Context():
         self.get_val(0)
 
     def get_val(self, frame):
-        t = (frame + 0.0) / (self.frames)
+        self.time = (frame + 0.0) / (self.frames)
+        t = self.time
         self.zoom = eval(self.zoom_eq)
         z = self.zoom
         self.start_y = self.center[1] + 1.0 / (z) * ((self.dim[1] + 0.0) / self.dim[0])
         self.start_x = self.center[0] - 1.0 / z
         self.change = 2.0 / (z * self.dim[0])
 
-def get_color(pattern, x, y, maxIterations, func):
-    return colorize(pattern, rawIterations(x, y, maxIterations, func), maxIterations)
+def get_color(context, x, y):
+    return colorize(context, rawIterations(context, x, y))
 
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
-def rawIterations_mand(x, y, maxIterations):
+def rawIterations_mand(context, x, y):
     re = x
     im = y
     iter = 0
-    while re * re + im * im < 4 and iter < maxIterations:
+    while re * re + im * im < 4 and iter < context.iter:
         tmp = 2 * re * im
         re = re * re - im * im + x
         im = tmp + y
@@ -48,15 +49,16 @@ def rawIterations_mand(x, y, maxIterations):
     return iter
 
 #Returns the iterations of (x+iy). Returns 0 through maxIterations inclusive
-def rawIterations(x, y, maxIterations, func):
-    if not func or func == "z**2+c":
-        return rawIterations_mand(x, y, maxIterations)
+def rawIterations(context, x, y):
+    if not context.func or context.func == "z**2+c":
+        return rawIterations_mand(context, x, y)
     z = 0 + 0j
     c = x + y*1j
     iter = 0
-    while z.imag * z.imag + z.real * z.real <= 4 and iter < maxIterations:
+    t = context.time
+    while z.imag * z.imag + z.real * z.real <= 4 and iter < context.iter:
         try:
-            z = eval(func)
+            z = eval(context.func)
         except:
             z = c
         #tmp = 2 * re * im
@@ -66,11 +68,11 @@ def rawIterations(x, y, maxIterations, func):
     return iter
 
 #Colorizes based on pattern
-def colorize(pattern, iter, maxIterations):
-    pattern = pattern.upper()
-    if pattern == "MOCHA":
-        piter = .6 * (4*(maxIterations - iter) % 256) / 256.0 + .4
+def colorize(context, iter):
+    context.pattern = context.pattern.upper()
+    if context.pattern == "MOCHA":
+        piter = .6 * (4*(context.iter - iter) % 256) / 256.0 + .4
         return (int(256 * piter), int(256 * piter * piter), int(256 * piter * piter * piter))
     else:
-        cbit = int(256 * iter / maxIterations)
+        cbit = int(256 * iter / context.iter)
         return (cbit, cbit, cbit)
