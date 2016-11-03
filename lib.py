@@ -25,7 +25,7 @@ class Context():
         self.get_val(0)
 
     def get_val(self, frame):
-        self.time = (frame + 0.0) / (self.frames)
+        self.time = self.sec * ((frame + 0.0) / (self.frames))
         t = self.time
         self.zoom = eval(self.zoom_eq)
         z = self.zoom
