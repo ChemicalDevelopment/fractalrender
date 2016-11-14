@@ -25,7 +25,7 @@ parser.add_argument('-d', '--dimensions', default=[800, 800], nargs=2, type=int,
 parser.add_argument('-c', '--center', default=[0, 0], nargs=2, type=float, help='Center of the image. Default is 0 0')
 parser.add_argument('-z', '--zoom', default=".5", help='Scale. Default is .5')
 parser.add_argument('-zps', '--zoompersecond', default="2.0", help='Scale. Default is 2.0')
-parser.add_argument('-i', '--iterations', default='16',help='Iterations: default is 16')
+parser.add_argument('-i', '--iterations', default='50',help='Iterations: default is 16')
 parser.add_argument('-p', '--pattern', default='MOCHA', help='Color pattern. Default is MOCHA. Check wiki for more')
 parser.add_argument('-a', '--animate', action='store_true', default=False, help="Use this flag to use an animated gif")
 parser.add_argument('-com', '--combine', action='store_true', default=False, help="Use this flag to combine currently computed frames.")
