@@ -1,10 +1,9 @@
 __kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global float * data)
 {
-    int px = get_global_id(0), py = get_global_id(1);
 
-    double x = meta[0] + (2 * px - imgMeta[0]) / (meta[2] * imgMeta[0]), y = meta[1] + (imgMeta[1] - 2 * py) / (meta[2] * imgMeta[0]);
+    double x = meta[0] + (2 * get_global_id(0) - imgMeta[0]) / (meta[2] * imgMeta[0]), y = meta[1] + (imgMeta[1] - 2 * get_global_id(1)) / (meta[2] * imgMeta[0]);
 
-    double sx = x, sy = y, xs = x * x, ys = y *y, tmp;
+    double sx = x, sy = y, xs = x * x, ys = y * y, tmp;
     
     int iter = 0;
     while (xs + ys <= 4) {
@@ -16,5 +15,5 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
         xs = x * x;
         ys = y * y;
     }
-    data[py * imgMeta[0] + px] = .6 + .4 * ((4 * (imgMeta[2] - iter)) % 256) / 256.0;
+    data[get_global_id(1) * imgMeta[0] + get_global_id(0)] = .6 + .0015625 * (((imgMeta[2] - iter)<<2) & 0xff);
 }
