@@ -31,7 +31,7 @@ parser.add_argument('-a', '--animate', action='store_true', default=False, help=
 parser.add_argument('-com', '--combine', action='store_true', default=False, help="Use this flag to combine currently computed frames.")
 parser.add_argument('-cl', '--opencl', action='store_true', default=False, help="Use this flag to use OpenCL")
 parser.add_argument('-s', '--seconds', default=4, type=int, help='Seconds, only matters if using -a. Default: 2')
-parser.add_argument('-fps', '--framespersecond', default=6, type=int, help='Frames per second, only matters if using -a. Default: 6')
+parser.add_argument('-fps', '--framespersecond', default=6, type=float, help='Frames per second, only matters if using -a. Default: 6')
 parser.add_argument('-o', '--output', help='Output file. Make sure to use correct output extension')
 parser.add_argument('-t', '--threads', default=multiprocessing.cpu_count(), help='Number of thread. Default: Number of CPU cores')
 parser.add_argument('-f', '--function', default=None, help='Function to compute. Default is mandelbrot set')
