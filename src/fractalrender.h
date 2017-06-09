@@ -29,10 +29,31 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#undef malloc
+
+
+#define USE_ENGINE_C
+
+#ifdef USE_GMP
+#include <gmp.h>
+#endif
+
+#ifdef USE_MPFR
+#include <mpfr.h>
+#endif
+
+#ifdef USE_MPC
+#define USE_ENGINE_MPC
+#include <mpc.h>
+#endif
+
+
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -99,6 +120,12 @@ int mpi_err, mpi_rank, mpi_numprocs;
 #define FR_32BIT_MAX                (0xFFFFFFFF)
 #define FR_64BIT_MAX        (0xFFFFFFFFFFFFFFFF)
 
+#define FR_1BIT_SCALE                        (1)
+#define FR_8BIT_SCALE                (1.0/256.0)
+#define FR_16BIT_SCALE             (1.0/65536.0)
+#define FR_32BIT_SCALE        (1.0/4294967296.0)
+#define FR_64BIT_SCALE        (1.84467440737e-19)
+
 
 
 #ifdef __APPLE__
@@ -114,12 +141,23 @@ int mpi_err, mpi_rank, mpi_numprocs;
 typedef struct fractal_img_t {
     long px, py, max_iter;
 
-    double cX, cY;
+    long prec;
 
-    double Z;
+    char *engine;
+
+
+    // whether it is a binary map
+    bool is_binary;
+
+    
+    char *cX, *cY;
+
+    char *Z;
 
     // data depth
     // .data is depth * px * py bytes long
+
+    // depth is created based on max_iter, so that it can hold it
 
     // depth = 1, each datapoint is a single bit, so a binary mask of points that haven't
     // been ruled out
@@ -142,9 +180,16 @@ typedef struct fractal_img_t {
 
 // engine code
 
-//#ifdef USE_ENGINE_C
+#ifdef USE_ENGINE_C
 #include "engine_c/engine_c.h"
-//#endif
+#include "engine_c/color_c.h"
+#endif
+
+
+#ifdef USE_ENGINE_MPC
+#include "engine_mpc/engine_mpc.h"
+#endif
+
 
 
 

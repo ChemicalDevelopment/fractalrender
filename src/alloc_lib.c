@@ -24,21 +24,28 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 
 
-void init_frit(fractal_img_t *ret, double cx, double cy, double zoom, long px, long py, long max_iter, long depth) {
+void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
     ret->px = px;
     ret->py = py;
-    ret->depth = depth;
-
-    ret->cX = cx;
-    ret->cY = cy;
-
-    ret->Z = zoom;
 
     ret->max_iter = max_iter;
 
-    assert(FR_VALID_DEPTH(depth));
+    if (max_iter > FR_32BIT_MAX) {
+        ret->depth = 64;
+    } else if (max_iter > FR_16BIT_MAX) {
+        ret->depth = 32;
+    } else if (max_iter > FR_8BIT_MAX) {
+        ret->depth = 16;
+    } else if (max_iter > FR_1BIT_MAX) {
+        ret->depth = 8;
+    } else {
+        // 1 bit right now just uses a char anyway
+        ret->depth = 8;
+    }
 
-    ret->data = (void *)malloc(px * py * depth);
+    assert(FR_VALID_DEPTH(ret->depth));
+
+    ret->data = (void *)malloc(px * py * ret->depth / 8);
     
     assert(ret->data != NULL);
 

@@ -1,4 +1,4 @@
-/* alloc_lib.c -- allocates for fractal images
+/* engine_mpc/engine_mpc.h -- header file for MPC engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,12 +20,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __ALLOC_LIB_H__
-#define __ALLOC_LIB_H__
-
-#include "fractalrender.h"
+#ifndef __ENGINE_MPC_H__
+#define __ENGINE_MPC_H__
 
 
-void init_frit(fractal_img_t *ret, long px, long py, long max_iter);
+void engine_mpc_fulltest(fractal_img_t * ret);
 
 #endif
+

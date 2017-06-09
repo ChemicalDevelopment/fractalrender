@@ -58,6 +58,7 @@ LIBS="-lcargs -lpng -lm $LIBS"
 
 
 use_opencl=false
+use_mpc=false
 
 AC_ARG_WITH(
   opencl, 
@@ -86,7 +87,6 @@ AC_ARG_WITH(
 
 
 AM_CONDITIONAL([ENGINE_OPENCL], [test x$use_opencl = xtrue])
-
 
 
 # mpi for multiprocessing
@@ -187,7 +187,51 @@ AC_ARG_WITH(
 ], [ ])
 
 
-AH_TEMPLATE(USE_GMP,[GMP support is available])
+AC_ARG_WITH(
+  mpfr, 
+  AS_HELP_STRING([--with-mpfr],
+  [Use MPFR for multiprecision]), [
+  case "$with_mpfr" in
+    yes)
+      withval=/usr/local
+      ;;
+  esac
+  LIBS="$LIBS -lmpfr"
+  LDFLAGS="$LDFLAGS -L$withval/lib"
+  CFLAGS="$CFLAGS -I$withval/include"
+
+  AC_CHECK_HEADER(mpfr.h, [], [
+    AC_MSG_ERROR(MPFR header not found (looking for mpfr.h))
+  ])
+  AC_MSG_CHECKING(MPFR)
+  AC_MSG_RESULT(yes ($withval))
+
+  AC_DEFINE([USE_MPFR], [1], [Use MPFR library code])
+], [ ])
+
+AC_ARG_WITH(
+  mpc, 
+  AS_HELP_STRING([--with-mpc],
+  [Use MPC for multiprecision]), [
+  case "$with_mpc" in
+    yes)
+      withval=/usr/local
+      ;;
+  esac
+  LIBS="$LIBS -lmpc"
+  LDFLAGS="$LDFLAGS -L$withval/lib"
+  CFLAGS="$CFLAGS -I$withval/include"
+
+  AC_CHECK_HEADER(mpc.h, [], [
+    AC_MSG_ERROR(MPC header not found (looking for mpc.h))
+  ])
+  AC_MSG_CHECKING(MPC)
+  AC_MSG_RESULT(yes ($withval))
+  use_mpc=true
+  AC_DEFINE([USE_MPC], [1], [Use MPC library code])
+], [ ])
+
+AM_CONDITIONAL([ENGINE_MPC], [test x$use_mpc = xtrue])
 
 
 AC_ARG_ENABLE([static], AS_HELP_STRING([--enable-static], [Enable static building]))
@@ -199,8 +243,8 @@ AS_IF([test "x$enable_static" = "xyes"], [
 
 
 # Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
+#AC_FUNC_MALLOC
+#AC_FUNC_REALLOC
 
 
 # todo, add tests

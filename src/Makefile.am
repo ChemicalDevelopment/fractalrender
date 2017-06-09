@@ -28,11 +28,19 @@ bin_PROGRAMS = fractalrender
 
 
 
-engine_c_src = engine_c/engine_c.c engine_c/engine_c.h
+engine_c_src = engine_c/engine_c.h engine_c/color_c.h engine_c/engine_c.c engine_c/color_c.c
+
+engine_mpc_src = engine_mpc/engine_mpc.h engine_mpc/engine_mpc.c
+
 
 engine_src = 
 
 engine_src += $(engine_c_src)
+
+
+if ENGINE_MPC
+engine_src += $(engine_mpc_src)
+endif
 
 if ENGINE_OPENCL
 engine_src += 

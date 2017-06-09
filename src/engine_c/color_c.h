@@ -1,4 +1,4 @@
-/* alloc_lib.c -- allocates for fractal images
+/* c_engine/color_c.h -- header file for C color engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -19,13 +19,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 */
 
+#ifndef __COLOR_C_H__
+#define __COLOR_C_H__
 
-#ifndef __ALLOC_LIB_H__
-#define __ALLOC_LIB_H__
-
-#include "fractalrender.h"
-
-
-void init_frit(fractal_img_t *ret, long px, long py, long max_iter);
+void tofile_c(fractal_img_t * ret, png_structp * png_ptr, int fr_ctype);
 
 #endif
+

@@ -26,9 +26,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 void engine_c_fulltest(fractal_img_t * ret) {
     long x, y, ci;
 
-    double ssxd = ret->cX - 1.0 / ret->Z, ssyd = ret->cY + ret->py / (ret->px * ret->Z);
+    double ssxd = atof(ret->cX) - 1.0 / atof(ret->Z), ssyd = atof(ret->cY) + ret->py / (ret->px * atof(ret->Z));
 
-    double d_xd = 2.0 / (ret->px * ret->Z), d_yd = -2.0 / (ret->px * ret->Z);
+    double d_xd = 2.0 / (ret->px * atof(ret->Z)), d_yd = -2.0 / (ret->px * atof(ret->Z));
 
     double xd, yd, tmp, sxd, syd, xds, yds;
 
@@ -37,8 +37,8 @@ void engine_c_fulltest(fractal_img_t * ret) {
     FR_16BIT * data_16 = (FR_16BIT *)ret->data;
     FR_32BIT * data_32 = (FR_32BIT *)ret->data;
     FR_64BIT * data_64 = (FR_64BIT *)ret->data;
-
-
+    
+    //#pragma omp parallel for
     for (x = 0; x < ret->px; ++x) {
         for (y = 0; y < ret->py; ++y) {
             xd = ssxd + x * d_xd;
@@ -55,11 +55,11 @@ void engine_c_fulltest(fractal_img_t * ret) {
             //((char *)ret->data)[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter;
             switch (ret->depth) {
                 // todo optimize case 1
-                case 1: data_1[y * ret->px + x] = ci / ret->max_iter; break;
-                case 8: data_8[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter; break;
-                case 16: data_16[y * ret->px + x] = (FR_16BIT_MAX*ci) / ret->max_iter; break;
-                case 32: data_32[y * ret->px + x] = (FR_32BIT_MAX*ci) / ret->max_iter; break;
-                case 64: data_64[y * ret->px + x] = (FR_64BIT_MAX*ci) / ret->max_iter; break;
+                case 1: data_1[y * ret->px + x] = ci; break;
+                case 8: data_8[y * ret->px + x] = ci; break;
+                case 16: data_16[y * ret->px + x] = ci; break;
+                case 32: data_32[y * ret->px + x] = ci; break;
+                case 64: data_64[y * ret->px + x] = ci; break;
             }
         }
     }

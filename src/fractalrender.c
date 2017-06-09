@@ -40,16 +40,30 @@ int main(int argc, char *argv[]) {
 
     cargs_add_author("Cade Brown", "cade@chemicaldevelopment.us");
 
+    cargs_add_flag("-4k", NULL, "4k image");
+
     cargs_add_arg("-d", "--dim", 2, CARGS_ARG_TYPE_INT, "dimensions of image/video");
     cargs_add_default_i("-d", "1920", 0);
     cargs_add_default_i("-d", "1080", 1);
 
 
-    cargs_add_arg("-bd", "--bit-depth", 1, CARGS_ARG_TYPE_INT, "bit depth of tests");
-    cargs_add_default("-bd", "8");
+    cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision");
+    cargs_add_default("-p", "64");
 
+
+    cargs_add_arg("-e", "--engine", 1, CARGS_ARG_TYPE_STR, "engine (C, GMP, ...)");
+    cargs_add_default("-e", "C");
+
+    //cargs_add_arg("-bd", "--bit-depth", 1, CARGS_ARG_TYPE_INT, "bit depth of tests");
+    //cargs_add_default("-bd", "8");
+
+    cargs_add_flag("-B", "--binary", "create a binary map");
+  
     cargs_add_arg("-i", "--iter", 1, CARGS_ARG_TYPE_INT, "number of iterations to run");
     cargs_add_default("-i", "10");
+
+    cargs_add_arg("-l", "--location", 2, CARGS_ARG_TYPE_STR, "location name, opposed to coordinates");
+
 
     // the reason these is STR instead of FLOAT is to support multiprecision
     cargs_add_arg("-c", "--center", 2, CARGS_ARG_TYPE_STR, "x, y coordinates of middle of image");
@@ -65,12 +79,111 @@ int main(int argc, char *argv[]) {
     cargs_parse();
 
 
+    long d0 = 0, d1 = 0;
+    if (cargs_get_flag("-4k") + cargs_get_flag("-d") > 1) {
+        printf("Error: more than 1 size specifier (-4k, -d) used\n");
+        exit(3);
+    }
+    if (cargs_get_flag("-4k")) {
+        d0 = 1920 * 2;
+        d1 = 1080 * 2;
+    } else if (cargs_get_flag("-d")) {
+        d0 = cargs_get_int_idx("-d", 0);
+        d1 = cargs_get_int_idx("-d", 1);
+    } else {
+        // still default to -d defaults
+        d0 = cargs_get_int_idx("-d", 0);
+        d1 = cargs_get_int_idx("-d", 1);
+    }
+
+
+    char * c0 = "", * c1 = "";
+    if (cargs_get_flag("-l") + cargs_get_flag("-c") > 1) {
+        printf("Error: more than 1 position specifier (-l, -c) used\n");
+        exit(3);
+    }
+  
+    if (cargs_get_flag("-l")) {
+        char * loc = cargs_get("-l");
+        if (strcmp(loc, "elephantvalley") == 0) {
+            c0 = ".2821";
+            c1 = ".01";
+        } else {
+            printf("Unknown location: '%s'\n", loc);
+            exit(3);
+        }
+    } else if (cargs_get_flag("-c")) {
+        c0 = cargs_get_idx("-c", 0);
+        c1 = cargs_get_idx("-c", 1);
+    } else {
+        // still default to -c defaults
+        c0 = cargs_get_idx("-c", 0);
+        c1 = cargs_get_idx("-c", 1);
+    }
+
+    char * zoom;
+
+    if (cargs_get_flag("-z")) {
+        zoom = cargs_get("-z");
+    } else {
+        // still default to -z defaults
+        zoom = cargs_get("-z");
+    }
+
+    long iter;
+    if (cargs_get_flag("-i")) {
+        iter = cargs_get_int("-i");
+    } else {
+        // still default to -z defaults
+        iter = cargs_get_int("-i");
+    }
+
+    long prec;
+    if (cargs_get_flag("-p")) {
+        prec = cargs_get_int("-p");
+    } else {
+        // still default to -z defaults
+        prec = cargs_get_int("-p");
+    }
+
+
+    char * engine = cargs_get("-e");
+
+    if (strcmp(engine, "C") == 0) {
+        #ifndef USE_ENGINE_C
+        printf("ERROR: not compiled with support for engine: '%s'\n", engine);
+        #endif
+    } else if (strcmp(engine, "MPC") == 0) {
+        #ifndef USE_ENGINE_MPC
+        printf("ERROR: not compiled with support for engine: '%s'\n", engine);
+        #endif
+    } else {
+        printf("Unkown engine: '%s'\n", engine);
+    }
+
+
     fractal_img_t res;
-    init_frit(&res, atof(cargs_get_idx("-c", 0)), atof(cargs_get_idx("-c", 1)), atof(cargs_get_idx("-z", 0)), atof(cargs_get_idx("-d", 0)), atof(cargs_get_idx("-d", 1)), atoi(cargs_get("-i")), atoi(cargs_get("-bd")));
-    engine_c_fulltest(&res);
+
+    res.prec = prec;
+    res.engine = engine;
+    res.is_binary = cargs_get_flag("-B");
+
+    res.cX = c0;
+    res.cY = c1;
+
+    res.Z = zoom;
+
+    init_frit(&res, d0, d1, iter);
+    
+    if (strcmp(res.engine, "C") == 0) {
+        engine_c_fulltest(&res);
+    } else if (strcmp(res.engine, "MPC") == 0) {
+        engine_mpc_fulltest(&res);
+    } else {
+        printf("Don't know how to use engine: '%s'\n", res.engine);
+    }
+
     fractal_to_file(&res, cargs_get(""));
-
-
 
 }
 
