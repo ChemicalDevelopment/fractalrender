@@ -5,6 +5,20 @@
 
 A program that generates images and videos of the mandelbrot fractals
 
+
+## TODO
+
+Lots to be done!
+
+  * Create more engines [started: C] [future: OpenCL, GMP_C, MPFR_C, MPC_C, CUDA]
+  * Create more precisions for C engine to handle without GMP/etc (emulating 256 bit, and possibly up to 2048 or so).
+  * Create some color formats swappable at runtime.
+  * Find out why and bfix bit depths > 8 being buggy
+  * Add videos, gifs, and other output formats (including raw results to read back at another time)
+
+
+
+
 ## Running
 
 Once compiled, run `fractalrender -h` to view help.
