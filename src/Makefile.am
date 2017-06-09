@@ -27,5 +27,18 @@ AM_LDFLAGS =
 bin_PROGRAMS = fractalrender
 
 
-fractalrender_SOURCES = fractalrender.h fractalrender.c
+
+engine_c_src = engine_c/engine_c.c engine_c/engine_c.h
+
+engine_src = 
+
+engine_src += $(engine_c_src)
+
+if ENGINE_OPENCL
+engine_src += 
+endif
+
+
+fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h fractalrender.c alloc_lib.c tofile.c $(engine_src)
+fractalrender_CFLAGS = -I./engine_c/
 fractalrender_LDADD =

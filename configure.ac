@@ -20,7 +20,7 @@
 
 
 AC_PREREQ([2.55])
-AC_INIT([STEMprime], [0.0.1], [group@chemicaldevelopment.us])
+AC_INIT([FractalRender], [0.0.1], [group@chemicaldevelopment.us])
 AM_INIT_AUTOMAKE()
 
 AC_CONFIG_SRCDIR([src/fractalrender.h])
@@ -39,10 +39,25 @@ AC_CHECK_LIB(m, log)
 UNAME_S=$(uname)
 
 
+AC_CHECK_SIZEOF([unsigned char])
+AC_CHECK_SIZEOF([unsigned short])
+AC_CHECK_SIZEOF([unsigned int])
+AC_CHECK_SIZEOF([unsigned long])
+AC_CHECK_SIZEOF([unsigned long long])
+
+
+
+# always use C engine
+
+AC_DEFINE([USE_ENGINE_C], [], [Use C engine])
+
+
 # these are all required
 
-LIBS="-lcargs -lm $LIBS"
+LIBS="-lcargs -lpng -lm $LIBS"
 
+
+use_opencl=false
 
 AC_ARG_WITH(
   opencl, 
@@ -62,10 +77,15 @@ AC_ARG_WITH(
   LDFLAGS="$LDFLAGS -L$withval/lib"
   CFLAGS="$CFLAGS -I$withval/include"
 
-  AC_DEFINE([USE_OPENCL], [], [Use OpenCL])
+  use_opencl=true
+  
+  AC_DEFINE([USE_OPENCL_ENGINE], [], [Use OpenCL])
   AC_MSG_CHECKING(OpenCL)
   AC_MSG_RESULT(yes ($withval))
 ], [ ])
+
+
+AM_CONDITIONAL([ENGINE_OPENCL], [test x$use_opencl = xtrue])
 
 
 
@@ -93,6 +113,27 @@ AC_ARG_WITH(
 AC_CHECK_HEADER(cargs.h, [], [
   AC_MSG_ERROR(cargs header not found (looking for cargs.h))
 ])
+
+# libpng is required
+
+AC_ARG_WITH(
+  png, 
+  AS_HELP_STRING([--with-png],
+  [Provide libpng directory]), [
+  case "$with_png" in
+    yes)
+      withval=/usr/local
+      ;;
+  esac
+
+  LDFLAGS="$LDFLAGS -L$withval/lib"
+  CFLAGS="$CFLAGS -I$withval/include"
+
+  AC_MSG_CHECKING(libpng)
+  AC_MSG_RESULT(yes ($withval))
+], [ ])
+
+
 
 # cargs is required
 
