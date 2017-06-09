@@ -33,8 +33,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define FR_COLOR_BINARY                  (0x0005)
 
 
+int fractal_to_raw(fractal_img_t *ret);
 
-int fractal_to_file(fractal_img_t *ret, char * filename);
+int fractal_to_png(fractal_img_t *ret);
+
+int fractal_to_file(fractal_img_t *ret);
 
 
 #endif

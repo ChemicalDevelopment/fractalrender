@@ -22,7 +22,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifndef __COLOR_C_H__
 #define __COLOR_C_H__
 
-void tofile_c(fractal_img_t * ret, png_structp * png_ptr, int fr_ctype);
+void tofile_c_png(fractal_img_t * ret, png_structp * png_ptr);
+
+void tofile_c_raw(fractal_img_t * ret, FILE *fp);
 
 #endif
 

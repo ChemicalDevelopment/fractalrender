@@ -32,20 +32,11 @@ void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
 
     if (max_iter > FR_32BIT_MAX) {
         ret->depth = 64;
-    } else if (max_iter > FR_16BIT_MAX) {
-        ret->depth = 32;
-    } else if (max_iter > FR_8BIT_MAX) {
-        ret->depth = 16;
-    } else if (max_iter > FR_1BIT_MAX) {
-        ret->depth = 8;
     } else {
-        // 1 bit right now just uses a char anyway
-        ret->depth = 8;
+        ret->depth = 32;
     }
 
-    assert(FR_VALID_DEPTH(ret->depth));
-
-    ret->data = (void *)malloc(px * py * ret->depth / 8);
+    ret->data = (void *)malloc(px * py * ret->depth / 8 + 1);
     
     assert(ret->data != NULL);
 

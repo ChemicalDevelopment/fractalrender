@@ -22,14 +22,42 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
+void tofile_c_raw(fractal_img_t * ret, FILE *fp) {
+    int x, y;
+
+    FR_32BIT * data_32 = (FR_32BIT *)ret->data;
+    FR_64BIT * data_64 = (FR_64BIT *)ret->data;
 
 
-void tofile_c(fractal_img_t * ret, png_structp * png_ptr, int fr_ctype) {
+    FR_64BIT dataxy;
+
+    fprintf(fp, "fractalrender_raw_file\n");
+    fprintf(fp, "px %ld\n", ret->px);
+    fprintf(fp, "py %ld\n", ret->py);
+
+    fprintf(fp, "engine %s\n", ret->engine);
+
+    fprintf(fp, "prec %ld\n", ret->prec);
+    fprintf(fp, "depth %ld\n", ret->depth);
+    fprintf(fp, "max_iter %ld\n", ret->max_iter);
+
+    fprintf(fp, "cX %s\n", ret->cX);
+    fprintf(fp, "cY %s\n", ret->cY);
+    fprintf(fp, "Z %s\n", ret->Z);
+
+    if (ret->depth == 32) {
+        fwrite(data_32, ret->depth/8, ret->px*ret->py, fp);
+    } else if (ret->depth == 64) {
+        fwrite(data_64, ret->depth/8, ret->px*ret->py, fp);
+    } else {
+        printf("Unknown depth: %ld\n", ret->depth);
+    }
+}
+
+void tofile_c_png(fractal_img_t * ret, png_structp * png_ptr) {
+    long fr_ctype = ret->imgfmt;
 	png_bytep row = (png_bytep) malloc(3 * ret->px * sizeof(png_byte));
 
-    FR_1BIT * data_1 = (FR_1BIT *)ret->data;
-    FR_8BIT * data_8 = (FR_8BIT *)ret->data;
-    FR_16BIT * data_16 = (FR_16BIT *)ret->data;
     FR_32BIT * data_32 = (FR_32BIT *)ret->data;
     FR_64BIT * data_64 = (FR_64BIT *)ret->data;
 
@@ -39,9 +67,6 @@ void tofile_c(fractal_img_t * ret, png_structp * png_ptr, int fr_ctype) {
     for (y = 0; y < ret->py; y++) {
         for (x = 0; x < ret->px; x++) {
             switch (ret->depth) {
-                case 1: dataxy = data_1[y * ret->px + x]; break;
-                case 8: dataxy = data_8[y * ret->px + x]; break;
-                case 16: dataxy = data_16[y * ret->px + x]; break;
                 case 32: dataxy = data_32[y * ret->px + x]; break;
                 case 64: dataxy = data_64[y * ret->px + x]; break;
             }
@@ -55,7 +80,7 @@ void tofile_c(fractal_img_t * ret, png_structp * png_ptr, int fr_ctype) {
                     row[3*x + 0] = 0;
                     row[3*x + 1] = (int)floor(255 * c_xy);
                     row[3*x + 2] = 0;
-                } else if (fr_ctype == FR_COLOR_GREEN_ONLY) {
+                } else if (fr_ctype == FR_COLOR_BLUE_ONLY) {
                     row[3*x + 0] = 0;
                     row[3*x + 1] = 0;
                     row[3*x + 2] = (int)floor(255 * c_xy);

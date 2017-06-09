@@ -1,11 +1,15 @@
 src/fractalrender
 
+.DS_Store
+
 *.zip
 *.tar*
 *.o
 *.a
 *.so
 .vscode/
+
+*.raw
 
 *.orig
 Makefile

@@ -22,11 +22,31 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-
-
-int fractal_to_file(fractal_img_t *ret, char * filename) {
-  	int code = 0;
+int fractal_to_raw(fractal_img_t *ret) {
+    int code = 0;
   	FILE *fp = NULL;
+    
+    // Open file for writing (binary mode)
+    fp = fopen(ret->out, "wb");
+    if (fp == NULL) {
+        fprintf(stderr, "Could not open file %s for writing\n", ret->out);
+        code = 1;
+        goto finalise;
+    }
+
+    tofile_c_raw(ret, fp);
+
+    finalise:
+    if (fp != NULL) fclose(fp);
+
+    return code;
+}
+
+
+int fractal_to_png(fractal_img_t *ret) {
+    int code = 0;
+  	FILE *fp = NULL;
+    char * filename = ret->out;
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
     
@@ -84,7 +104,7 @@ int fractal_to_file(fractal_img_t *ret, char * filename) {
 
     // SWITCH here:
 
-    tofile_c(ret, &png_ptr, FR_COLOR_BINARY);
+    tofile_c_png(ret, &png_ptr);
 
     // End write
     png_write_end(png_ptr, NULL);
@@ -95,5 +115,17 @@ int fractal_to_file(fractal_img_t *ret, char * filename) {
     if (png_ptr != NULL) png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 
     return code;
+}
+
+
+int fractal_to_file(fractal_img_t *ret) {
+    if (ret->outfmt == FR_PNG_FORMAT) {
+        return fractal_to_png(ret);
+    } else if (ret->outfmt == FR_RAW_FORMAT) {
+        return fractal_to_raw(ret);
+    } else {
+        printf("Unknown output format\n");
+        exit(3);
+    }
 }
 

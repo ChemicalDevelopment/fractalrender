@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
     cargs_add_default_i("-d", "1080", 1);
 
 
+
     cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision");
     cargs_add_default("-p", "64");
 
@@ -57,7 +58,16 @@ int main(int argc, char *argv[]) {
     //cargs_add_arg("-bd", "--bit-depth", 1, CARGS_ARG_TYPE_INT, "bit depth of tests");
     //cargs_add_default("-bd", "8");
 
-    cargs_add_flag("-B", "--binary", "create a binary map");
+    cargs_add_arg("-col", "--Rcolor", 1, CARGS_ARG_TYPE_STR, "red color pattern");
+    cargs_add_default("-col", "0");
+  
+    cargs_add_arg("-Rcol", "--Rcolor", 1, CARGS_ARG_TYPE_STR, "red color pattern");
+
+    cargs_add_arg("-Gcol", "--Gcolor", 1, CARGS_ARG_TYPE_STR, "green color pattern");
+
+    cargs_add_arg("-Bcol", "--Bcolor", 1, CARGS_ARG_TYPE_STR, "blue color pattern");
+
+//    cargs_add_flag("-B", "--binary", "create a binary map");
   
     cargs_add_arg("-i", "--iter", 1, CARGS_ARG_TYPE_INT, "number of iterations to run");
     cargs_add_default("-i", "10");
@@ -166,7 +176,6 @@ int main(int argc, char *argv[]) {
 
     res.prec = prec;
     res.engine = engine;
-    res.is_binary = cargs_get_flag("-B");
 
     res.cX = c0;
     res.cY = c1;
@@ -183,7 +192,20 @@ int main(int argc, char *argv[]) {
         printf("Don't know how to use engine: '%s'\n", res.engine);
     }
 
-    fractal_to_file(&res, cargs_get(""));
+    res.out = cargs_get("");
+
+    #define FR_ENDSWITH(a, b) (strlen(a) >= strlen(b) && strcmp(a + strlen(a) - strlen(b), b) == 0)
+    if (FR_ENDSWITH(res.out, ".png")) {
+        res.outfmt = FR_PNG_FORMAT;
+        // TODO: color format here
+        res.imgfmt = FR_COLOR_BLUE_ONLY;
+    } else if (FR_ENDSWITH(res.out, ".raw")) {
+        res.outfmt = FR_RAW_FORMAT;
+    } else {
+        printf("Unknown format for file: '%s'\n", res.out);
+    }
+
+    fractal_to_file(&res);
 
 }
 

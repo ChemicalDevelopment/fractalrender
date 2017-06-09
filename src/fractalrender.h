@@ -61,33 +61,6 @@ int mpi_err, mpi_rank, mpi_numprocs;
 #endif
 
 
-// engine enum
-#define ENGINE_C       (0x01)
-
-
-#if SIZEOF_UNSIGNED_CHAR == 1
-    #define FR_1BIT unsigned char
-#else
-    #error sizeof(unsigned char) is not 1
-#endif
-
-
-#if SIZEOF_UNSIGNED_CHAR == 1
-    #define FR_8BIT unsigned char
-#else
-    #error could not find suitable FR_8BIT
-#endif
-
-
-#if SIZEOF_UNSIGNED_SHORT == 2
-    #define FR_16BIT unsigned short
-#elif SIZEOF_UNSIGNED_INT == 2
-    #define FR_16BIT unsigned int
-#else
-    #error could not find suitable FR_16BIT
-#endif
-
-
 #if SIZEOF_UNSIGNED_INT == 4
     #define FR_32BIT unsigned int
 #elif SIZEOF_UNSIGNED_LONG == 4
@@ -95,37 +68,28 @@ int mpi_err, mpi_rank, mpi_numprocs;
 #elif SIZEOF_UNSIGNED_LONG_LONG == 4
     #define FR_32BIT unsigned long long
 #else
-    #error could not find suitable FR_32BIT
+    #define FR_32BIT unsigned long long
+    #warning could not find suitable FR_32BIT (defining as ull)
 #endif
 
 
 #if SIZEOF_UNSIGNED_INT == 8
     #define FR_64BIT unsigned int
-    #define FR_VALID_DEPTH(x) ((x) > 0 && ((x) == 1 || (x) == 8 || (x) == 16 || (x) == 32 || (x) == 64))
 #elif SIZEOF_UNSIGNED_LONG == 8
     #define FR_64BIT unsigned long
-    #define FR_VALID_DEPTH(x) ((x) > 0 && ((x) == 1 || (x) == 8 || (x) == 16 || (x) == 32 || (x) == 64))
 #elif SIZEOF_UNSIGNED_LONG_LONG == 8
     #define FR_64BIT unsigned long long
-    #define FR_VALID_DEPTH(x) ((x) > 0 && ((x) == 1 || (x) == 8 || (x) == 16 || (x) == 32 || (x) == 64))
 #else
     #define FR_64BIT unsigned long long
-    #define FR_VALID_DEPTH(x) ((x) > 0 && ((x) == 1 || (x) == 8 || (x) == 16 || (x) == 32))
     #warning could not find suitable FR_64BIT (defining as ull)
 #endif
 
-#define FR_1BIT_MAX                        (0x1)
-#define FR_8BIT_MAX                       (0xFF)
-#define FR_16BIT_MAX                    (0xFFFF)
-#define FR_32BIT_MAX                (0xFFFFFFFF)
-#define FR_64BIT_MAX        (0xFFFFFFFFFFFFFFFF)
 
-#define FR_1BIT_SCALE                        (1)
-#define FR_8BIT_SCALE                (1.0/256.0)
-#define FR_16BIT_SCALE             (1.0/65536.0)
-#define FR_32BIT_SCALE        (1.0/4294967296.0)
-#define FR_64BIT_SCALE        (1.84467440737e-19)
+#define FR_32BIT_MAX        ((FR_64BIT)0xFFFFFFFFFFFFFFFF)
+#define FR_64BIT_MAX        ((FR_64BIT)0xFFFFFFFFFFFFFFFF)
 
+#define FR_RAW_FORMAT                      (0x1)
+#define FR_PNG_FORMAT                      (0x2)
 
 
 #ifdef __APPLE__
@@ -137,38 +101,30 @@ int mpi_err, mpi_rank, mpi_numprocs;
 #include <cargs.h>
 #include <png.h>
 
+
 // mapping object
 typedef struct fractal_img_t {
     long px, py, max_iter;
+
+    // FR_X_FORMAT
+    long outfmt;
+    // FR_COLOR_X, in tofile.h
+    long imgfmt;
+
+    // output file
+    char * out;
 
     long prec;
 
     char *engine;
 
 
-    // whether it is a binary map
-    bool is_binary;
+    long depth;
 
-    
     char *cX, *cY;
 
     char *Z;
 
-    // data depth
-    // .data is depth * px * py bytes long
-
-    // depth is created based on max_iter, so that it can hold it
-
-    // depth = 1, each datapoint is a single bit, so a binary mask of points that haven't
-    // been ruled out
-
-    // depth = 8, each datapoint is a `char` (8 bit) that stores the fraction (out of 255)
-    // that closest resembles iter count
-
-    // depth should probably stay at 16, so that it is a `short`, although if sizeof(short) != 2,
-    // program will fail. If this happens, use `int`, it will autodetect
-    long depth;
-    
     void * data;
 
 } fractal_img_t;

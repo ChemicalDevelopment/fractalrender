@@ -65,9 +65,6 @@ void engine_mpc_fulltest(fractal_img_t * ret) {
     mpfr_init2(norm_p, ret->prec);
 
     
-    FR_1BIT * data_1 = (FR_1BIT *)ret->data;
-    FR_8BIT * data_8 = (FR_8BIT *)ret->data;
-    FR_16BIT * data_16 = (FR_16BIT *)ret->data;
     FR_32BIT * data_32 = (FR_32BIT *)ret->data;
     FR_64BIT * data_64 = (FR_64BIT *)ret->data;
     
@@ -92,9 +89,6 @@ void engine_mpc_fulltest(fractal_img_t * ret) {
             //((char *)ret->data)[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter;
             switch (ret->depth) {
                 // todo optimize case 1
-                case 1: data_1[y * ret->px + x] = ci; break;
-                case 8: data_8[y * ret->px + x] = ci; break;
-                case 16: data_16[y * ret->px + x] = ci; break;
                 case 32: data_32[y * ret->px + x] = ci; break;
                 case 64: data_64[y * ret->px + x] = ci; break;
             }
