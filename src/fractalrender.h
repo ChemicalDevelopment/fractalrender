@@ -38,24 +38,21 @@ can also find a copy at http://www.gnu.org/licenses/.
 #undef malloc
 
 
-#define USE_ENGINE_C
-
-#ifdef USE_GMP
+#ifdef HAVE_GMP
 #include <gmp.h>
 #endif
 
-#ifdef USE_MPFR
+#ifdef HAVE_MPFR
 #include <mpfr.h>
 #endif
 
-#ifdef USE_MPC
-#define USE_ENGINE_MPC
+#ifdef HAVE_MPC
 #include <mpc.h>
 #endif
 
 
 
-#ifdef USE_MPI
+#ifdef HAVE_MPI
 #include <mpi.h>
 int mpi_err, mpi_rank, mpi_numprocs;
 #endif
@@ -136,16 +133,13 @@ typedef struct fractal_img_t {
 
 // engine code
 
-#ifdef USE_ENGINE_C
 #include "engine_c/engine_c.h"
 #include "engine_c/color_c.h"
-#endif
 
 
-#ifdef USE_ENGINE_MPC
+#ifdef HAVE_MPC
 #include "engine_mpc/engine_mpc.h"
 #endif
-
 
 
 

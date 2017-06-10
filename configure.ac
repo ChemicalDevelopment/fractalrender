@@ -60,186 +60,101 @@ LIBS="-lcargs -lpng -lm $LIBS"
 use_opencl=false
 use_mpc=false
 
-AC_ARG_WITH(
-  opencl, 
-  AS_HELP_STRING([--with-opencl],
-  [Provide opencl directory]), [
-  case "$with_opencl" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
-  if [[ "$UNAME_S" == "Darwin" ]]; then
-    LIBS="$LIBS -framework OpenCL"
-  else
-    LIBS="$LIBS -lOpenCL"
-  fi
-
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
-
-  use_opencl=true
-  
-  AC_DEFINE([USE_OPENCL_ENGINE], [], [Use OpenCL])
-  AC_MSG_CHECKING(OpenCL)
-  AC_MSG_RESULT(yes ($withval))
-], [ ])
-
-
-AM_CONDITIONAL([ENGINE_OPENCL], [test x$use_opencl = xtrue])
-
-
-# mpi for multiprocessing
-
-AC_ARG_WITH(
-  mpi, 
-  AS_HELP_STRING([--with-mpi],
-  [Provide cargs directory]), [
-  case "$with_mpi" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
-
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
-
-  AC_DEFINE([USE_MPI], [], [Use MPI])
-  AC_MSG_CHECKING(mpi)
-  AC_MSG_RESULT(yes ($withval))
-], [ ])
-
-
-AC_CHECK_HEADER(cargs.h, [], [
-  AC_MSG_ERROR(cargs header not found (looking for cargs.h))
+m4_define([FR_WITH],[
+  AC_ARG_WITH([$1],
+    [AS_HELP_STRING([--with-$1],
+    [use $1 @<:@default=check@:>@])],
+    [],
+    [with_$1=check]
+  )
 ])
 
-# libpng is required
+m4_define([FR_CHECK],[
+  AS_IF([test "x${with_$1}" != xno],
+    [
+      AC_CHECK_LIB([$1], [main],
+      [
 
-AC_ARG_WITH(
-  png, 
-  AS_HELP_STRING([--with-png],
-  [Provide libpng directory]), [
-  case "$with_png" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
+        AC_CHECK_HEADERS([$1.h])
+        AC_DEFINE_UNQUOTED([HAVE_$2], [1],
+                  [Define if you have $1])
+        LIBS="-l$1 $LIBS"
 
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
-
-  AC_MSG_CHECKING(libpng)
-  AC_MSG_RESULT(yes ($withval))
-], [ ])
-
-
-
-# cargs is required
-
-AC_ARG_WITH(
-  cargs, 
-  AS_HELP_STRING([--with-cargs],
-  [Provide cargs directory]), [
-  case "$with_cargs" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
-
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
-
-  AC_MSG_CHECKING(cargs)
-  AC_MSG_RESULT(yes ($withval))
-], [ ])
-
-
-AC_CHECK_HEADER(cargs.h, [], [
-  AC_MSG_ERROR(cargs header not found (looking for cargs.h))
+        AS_IF([test "x${with_$1}" != xyes], [
+          AS_IF([test "x${with_$1}" != xno], [
+            AS_IF([test "x${with_$1}" != xcheck], [
+              LDFLAGS="$LDFLAGS -L${with_$1}/lib"
+              CFLAGS="$CFLAGS -I${with_$1}/include"
+            ])
+          ])
+        ])
+      ],
+      [
+       
+        if test "x${with_$1}" != xcheck; then
+          AC_MSG_FAILURE(
+            [--with-$1 was given, but test for $1 failed])
+        fi
+      ], [])]
+  )
 ])
 
-AC_CHECK_LIB(cargs, cargs_init)
+
+FR_WITH([cargs])
+FR_WITH([gmp])
+FR_WITH([mpfr])
+FR_WITH([mpc])
+FR_WITH([png])
+FR_WITH([mpi])
+FR_WITH([opencl])
 
 
-# GMP can be supplied to use multiprecision support
+FR_CHECK([cargs], [CARGS])
+FR_CHECK([gmp], [GMP])
+FR_CHECK([mpfr], [MPFR])
+FR_CHECK([mpc], [MPC])
+FR_CHECK([png], [PNG])
+FR_CHECK([mpi], [MPI])
 
-AC_ARG_WITH(
-  gmp, 
-  AS_HELP_STRING([--with-gmp],
-  [Use GMP for multiprecision]), [
-  case "$with_gmp" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
-  LIBS="$LIBS -lgmp"
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
+#FR_CHECK([OpenCL], [OPENCL])
 
-  AC_CHECK_HEADER(gmp.h, [], [
-    AC_MSG_ERROR(GMP header not found (looking for gmp.h))
-  ])
-  AC_MSG_CHECKING(GMP)
-  AC_MSG_RESULT(yes ($withval))
+# specially handle OpenCL
 
-  AC_DEFINE([USE_GMP], [1], [Use GMP library code])
-], [ ])
+AS_IF([test "x$with_opencl" != xno],
+  [
+    AC_CHECK_LIB([OpenCL], [main],
+    [
+      AC_CHECK_HEADERS([OpenCL/opencl.h])
+      AC_CHECK_HEADERS([CL/cl.h])
+      AC_DEFINE_UNQUOTED([HAVE_OPENCL], [1],
+                [Define if you have OpenCL])
+      LIBS="-lOpenCL $LIBS"
 
-
-AC_ARG_WITH(
-  mpfr, 
-  AS_HELP_STRING([--with-mpfr],
-  [Use MPFR for multiprecision]), [
-  case "$with_mpfr" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
-  LIBS="$LIBS -lmpfr"
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
-
-  AC_CHECK_HEADER(mpfr.h, [], [
-    AC_MSG_ERROR(MPFR header not found (looking for mpfr.h))
-  ])
-  AC_MSG_CHECKING(MPFR)
-  AC_MSG_RESULT(yes ($withval))
-
-  AC_DEFINE([USE_MPFR], [1], [Use MPFR library code])
-], [ ])
-
-AC_ARG_WITH(
-  mpc, 
-  AS_HELP_STRING([--with-mpc],
-  [Use MPC for multiprecision]), [
-  case "$with_mpc" in
-    yes)
-      withval=/usr/local
-      ;;
-  esac
-  LIBS="$LIBS -lmpc"
-  LDFLAGS="$LDFLAGS -L$withval/lib"
-  CFLAGS="$CFLAGS -I$withval/include"
-
-  AC_CHECK_HEADER(mpc.h, [], [
-    AC_MSG_ERROR(MPC header not found (looking for mpc.h))
-  ])
-  AC_MSG_CHECKING(MPC)
-  AC_MSG_RESULT(yes ($withval))
-  use_mpc=true
-  AC_DEFINE([USE_MPC], [1], [Use MPC library code])
-], [ ])
-
-AM_CONDITIONAL([ENGINE_MPC], [test x$use_mpc = xtrue])
+      AS_IF([test "x$with_opencl" != xyes], [
+        AS_IF([test "x$with_opencl" != xno], [
+          AS_IF([test "x$with_opencl" != xcheck], [
+            LDFLAGS="$LDFLAGS -L$with_opencl/lib"
+            CFLAGS="$CFLAGS -I$with_opencl/include"
+          ])
+        ])
+      ])
+    ],
+    [
+      
+      if test "x$with_opencl" != xcheck; then
+        AC_MSG_FAILURE(
+          [--with-opencl was given, but test for OpenCL failed])
+      fi
+    ], [])]
+)
 
 
-AC_ARG_ENABLE([static], AS_HELP_STRING([--enable-static], [Enable static building]))
 
-AS_IF([test "x$enable_static" = "xyes"], [
-  LDFLAGS="-static $LDFLAGS"
-], [
-])
+AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
+AM_CONDITIONAL([HAVE_MPFR], [test x$with_mpfr != xno])
+AM_CONDITIONAL([HAVE_MPC], [test x$with_mpc != xno])
+AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
+
 
 
 # Checks for library functions.

@@ -1,4 +1,4 @@
-/* alloc_lib.c -- allocates for fractal images
+/* engine_opencl/engine_opencl.h -- header file for OpenCL engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,26 +20,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#include "fractalrender.h"
+#ifndef __ENGINE_MPC_H__
+#define __ENGINE_MPC_H__
 
 
+void engine_mpc_fulltest(fractal_img_t * ret);
 
-void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
-    ret->px = px;
-    ret->py = py;
-
-    ret->max_iter = max_iter;
-
-    if (max_iter > FR_32BIT_MAX) {
-        printf("ERROR: Choose iteration < 2^32\n");
-        exit(3);
-    }
-    
-    ret->depth = 32;
-
-    ret->data = (void *)malloc(px * py * ret->depth / 8 + 1);
-    
-    assert(ret->data != NULL);
-
-}
+#endif
 

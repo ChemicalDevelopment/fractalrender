@@ -22,7 +22,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-#ifdef USE_MPI
+#ifdef HAVE_MPI
 int mpi_err, mpi_rank, mpi_numprocs;
 
 #endif
@@ -30,7 +30,7 @@ int mpi_err, mpi_rank, mpi_numprocs;
 
 
 int main(int argc, char *argv[]) {
-    #ifdef USE_MPI
+    #ifdef HAVE_MPI
     mpi_err = MPI_Init(&argc, &argv);
     mpi_err = MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
     mpi_err = MPI_Comm_size(MPI_COMM_WORLD, &mpi_numprocs);
@@ -82,6 +82,9 @@ int main(int argc, char *argv[]) {
 
     cargs_add_arg("-z", "--zoom", 1, CARGS_ARG_TYPE_STR, "zoom level");
     cargs_add_default("-z", "0.4");
+
+    cargs_add_arg("-CLkernel", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL engine kernel");
+
 
     cargs_add_arg("", NULL, 1, CARGS_ARG_TYPE_STR, "file to save as");
     cargs_add_default("", "out.png");
@@ -160,11 +163,12 @@ int main(int argc, char *argv[]) {
     char * engine = cargs_get("-e");
 
     if (strcmp(engine, "C") == 0) {
-        #ifndef USE_ENGINE_C
+    } else if (strcmp(engine, "MPC") == 0) {
+        #ifndef HAVE_MPC
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
         #endif
-    } else if (strcmp(engine, "MPC") == 0) {
-        #ifndef USE_ENGINE_MPC
+    } else if (strcmp(engine, "OPENCL") == 0) {
+        #ifndef HAVE_OPENCL
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
         #endif
     } else {
@@ -188,6 +192,8 @@ int main(int argc, char *argv[]) {
         engine_c_fulltest(&res);
     } else if (strcmp(res.engine, "MPC") == 0) {
         engine_mpc_fulltest(&res);
+    } else if (strcmp(res.engine, "OPENCL") == 0) {
+        engine_opencl_fulltest(&res);
     } else {
         printf("Don't know how to use engine: '%s'\n", res.engine);
     }

@@ -74,12 +74,14 @@ int fractal_to_png(fractal_img_t *ret) {
         goto finalise;
     }
 
+    /*
     // Setup Exception handling
     if (setjmp(png_jmpbuf(png_ptr))) {
         fprintf(stderr, "Error during png creation\n");
         code = 1;
         goto finalise;
     }
+    */
 
     png_init_io(png_ptr, fp);
 

@@ -32,18 +32,19 @@ engine_c_src = engine_c/engine_c.h engine_c/color_c.h engine_c/engine_c.c engine
 
 engine_mpc_src = engine_mpc/engine_mpc.h engine_mpc/engine_mpc.c
 
+engine_opencl_src = engine_opencl/engine_opencl.h engine_opencl/engine_opencl.c
 
 engine_src = 
 
 engine_src += $(engine_c_src)
 
 
-if ENGINE_MPC
+if HAVE_MPC
 engine_src += $(engine_mpc_src)
 endif
 
-if ENGINE_OPENCL
-engine_src += 
+if HAVE_OPENCL
+engine_src += $(engine_opencl_src)
 endif
 
 

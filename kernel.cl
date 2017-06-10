@@ -1,4 +1,7 @@
-__kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global float * data)
+
+
+
+__kernel void mand_32(__global __const int *imgMeta, __global __const double * meta, __global int * data)
 {
     int px = get_global_id(0), py = get_global_id(1);
 
@@ -12,9 +15,13 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
         x = xs - ys + sx;
         y = tmp + sy;
         iter += 1;
-        if (iter >= imgMeta[2]) break;
+        if (iter >= imgMeta[2] - 1) break;
         xs = x * x;
         ys = y * y;
     }
-    data[py * imgMeta[0] + px] = .6 + .0015625 * (((imgMeta[2] - iter)<<2) & 0xff);
+    data[py * imgMeta[0] + px] = iter;
 }
+
+
+
+
