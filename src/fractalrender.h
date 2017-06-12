@@ -38,23 +38,59 @@ can also find a copy at http://www.gnu.org/licenses/.
 #undef malloc
 
 
-#ifdef HAVE_GMP
+#ifdef HAVE_GMP_H
 #include <gmp.h>
 #endif
 
-#ifdef HAVE_MPFR
+#ifdef HAVE_MPFR_H
 #include <mpfr.h>
 #endif
 
-#ifdef HAVE_MPC
+#ifdef HAVE_MPC_H
 #include <mpc.h>
 #endif
 
 
-
-#ifdef HAVE_MPI
+#ifdef HAVE_MPI_H
 #include <mpi.h>
 int mpi_err, mpi_rank, mpi_numprocs;
+#endif
+
+// for apple v other implementations
+#ifdef HAVE_OPENCL_OPENCL_H
+#include <OpenCL/opencl.h>
+#endif
+
+#ifdef HAVE_CL_CL_H
+#include <CL/cl.h>
+#endif
+
+
+#ifdef HAVE_CARGS_H
+#include <cargs.h>
+#else
+#error cargs.h required!
+#endif
+
+#ifdef HAVE_PNG_H
+#include <png.h>
+#endif
+
+#define FR_FAIL exit(3);
+
+
+
+#if SIZEOF_UNSIGNED_SHORT == 2
+    #define FR_16BIT unsigned short
+#elif SIZEOF_UNSIGNED_INT == 2
+    #define FR_16BIT unsigned int
+#elif SIZEOF_UNSIGNED_LONG == 2
+    #define FR_16BIT unsigned long
+#elif SIZEOF_UNSIGNED_LONG_LONG == 2
+    #define FR_16BIT unsigned long long
+#else
+    #define FR_16BIT unsigned long long
+    #warning could not find suitable FR_32BIT (defining as ull)
 #endif
 
 
@@ -82,34 +118,34 @@ int mpi_err, mpi_rank, mpi_numprocs;
 #endif
 
 
-#define FR_32BIT_MAX        ((FR_64BIT)0xFFFFFFFFFFFFFFFF)
+#define FR_MAX_PARAMSTRLEN (0x1000)
+
+
+#define FR_16BIT_MAX        ((FR_64BIT)0xFFFF)
+#define FR_32BIT_MAX        ((FR_64BIT)0xFFFFFFFF)
 #define FR_64BIT_MAX        ((FR_64BIT)0xFFFFFFFFFFFFFFFF)
 
-#define FR_RAW_FORMAT                      (0x1)
-#define FR_PNG_FORMAT                      (0x2)
 
 
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
+// a task struct,
+// this keeps ahold of timings, and prints conclusions
+typedef struct fr_task_t {
+    char *name;
+    struct timeval stime, etime;
+    bool is_done;
+} fr_task_t;
 
-#include <cargs.h>
-#include <png.h>
 
 
 // mapping object
 typedef struct fractal_img_t {
     long px, py, max_iter;
 
-    // FR_X_FORMAT
-    long outfmt;
     // FR_COLOR_X, in tofile.h
     long imgfmt;
 
-    // output file
-    char * out;
+    // generic output format, output file
+    char *genout, * out;
 
     long prec;
 
@@ -131,17 +167,42 @@ typedef struct fractal_img_t {
 #include "tofile.h"
 
 
-// engine code
+// defaults that should always be included
+
+#include "io_raw/io_raw.h"
 
 #include "engine_c/engine_c.h"
-#include "engine_c/color_c.h"
 
+
+
+// only if support is enabled
+
+#ifdef HAVE_PNG
+#include "io_png/io_png.h"
+#endif
+
+
+#ifdef HAVE_MPF
+#include "engine_mpf/engine_mpf.h"
+#endif
 
 #ifdef HAVE_MPC
 #include "engine_mpc/engine_mpc.h"
 #endif
 
+#ifdef HAVE_OPENCL
+#include "engine_opencl/engine_opencl.h"
+#endif
 
+
+
+// fractalrender.c defines
+
+void init_fillin();
+
+void init_from_cmdline(fractal_img_t *ret);
+
+void do_engine_test(fractal_img_t * ret);
 
 int main(int argc, char *argv[]);
 

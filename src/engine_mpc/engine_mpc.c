@@ -24,7 +24,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 
 void engine_mpc_fulltest(fractal_img_t * ret) {
-    long x, y, ci;
+    FR_64BIT x, y, ci;
 
     mpfr_t cX, cY;
     mpfr_init2(cX, ret->prec);
@@ -65,8 +65,10 @@ void engine_mpc_fulltest(fractal_img_t * ret) {
     mpfr_init2(norm_p, ret->prec);
 
     
+    FR_16BIT * data_16 = (FR_16BIT *)ret->data;
     FR_32BIT * data_32 = (FR_32BIT *)ret->data;
     FR_64BIT * data_64 = (FR_64BIT *)ret->data;
+    //mpfr_printf("%Rf,%Rf\n", mpc_realref(ssp), mpc_imagref(ssp));
     
     for (x = 0; x < ret->px; ++x) {
         for (y = 0; y < ret->py; ++y) {
@@ -78,6 +80,7 @@ void engine_mpc_fulltest(fractal_img_t * ret) {
 
             mpc_set(p, sp, MPFR_RNDN);
 
+
             for (ci = 0; ci < ret->max_iter; ++ci) {
                 mpc_sqr(p, p, MPFR_RNDN);
                 mpc_sub(p, p, sp, MPFR_RNDN);
@@ -88,12 +91,22 @@ void engine_mpc_fulltest(fractal_img_t * ret) {
             }
             //((char *)ret->data)[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter;
             switch (ret->depth) {
-                // todo optimize case 1
+                case 16: data_16[y * ret->px + x] = ci; break;
                 case 32: data_32[y * ret->px + x] = ci; break;
                 case 64: data_64[y * ret->px + x] = ci; break;
             }
         }
     }
+    mpfr_clear(cX);
+    mpfr_clear(cY);
+    mpfr_clear(Z);
+    mpfr_clear(d_c);
+
+    mpc_clear(ssp);
+    mpc_clear(sp);
+    mpc_clear(p);
+
+    mpfr_clear(norm_p);
 }
 
 

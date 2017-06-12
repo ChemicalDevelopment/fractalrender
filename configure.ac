@@ -20,7 +20,7 @@
 
 
 AC_PREREQ([2.55])
-AC_INIT([FractalRender], [0.0.1], [group@chemicaldevelopment.us])
+AC_INIT([FractalRender], [0.1.0], [group@chemicaldevelopment.us])
 AM_INIT_AUTOMAKE()
 
 AC_CONFIG_SRCDIR([src/fractalrender.h])
@@ -154,6 +154,9 @@ AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
 AM_CONDITIONAL([HAVE_MPFR], [test x$with_mpfr != xno])
 AM_CONDITIONAL([HAVE_MPC], [test x$with_mpc != xno])
 AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
+
+AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
+
 
 
 

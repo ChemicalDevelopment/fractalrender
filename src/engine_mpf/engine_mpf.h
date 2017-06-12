@@ -1,4 +1,4 @@
-/* tofile.c -- outputs fractal images to files
+/* engine_mpc/engine_mpc.h -- header file for MPC engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,27 +20,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __TOFILE_H__
-#define __TOFILE_H__
+#ifndef __ENGINE_MPF_H__
+#define __ENGINE_MPF_H__
 
 
-#include "fractalrender.h"
-
-#define FR_COLOR_RED_ONLY                (0x0001)
-#define FR_COLOR_BLUE_ONLY               (0x0002)
-#define FR_COLOR_GREEN_ONLY              (0x0003)
-#define FR_COLOR_BW_LIN                  (0x0004)
-#define FR_COLOR_BINARY                  (0x0005)
-
-
-#define FR_FORMAT_RAW                    (0x0101)
-
-#define FR_FORMAT_PNG                    (0x0102)
-
-
-int get_format(char *filename);
-
-void fractal_to_file(fractal_img_t *ret);
-
+void engine_mpf_fulltest(fractal_img_t * ret);
 
 #endif
+

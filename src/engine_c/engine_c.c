@@ -24,6 +24,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 
 void engine_c_fulltest(fractal_img_t * ret) {
+    
     long x, y, ci;
 
     double ssxd = atof(ret->cX) - 1.0 / atof(ret->Z), ssyd = atof(ret->cY) + ret->py / (ret->px * atof(ret->Z));
@@ -32,9 +33,11 @@ void engine_c_fulltest(fractal_img_t * ret) {
 
     double xd, yd, tmp, sxd, syd, xds, yds;
 
+    FR_16BIT * data_16 = (FR_16BIT *)ret->data;
     FR_32BIT * data_32 = (FR_32BIT *)ret->data;
     FR_64BIT * data_64 = (FR_64BIT *)ret->data;
     
+
     //#pragma omp parallel for
     for (x = 0; x < ret->px; ++x) {
         for (y = 0; y < ret->py; ++y) {
@@ -42,6 +45,7 @@ void engine_c_fulltest(fractal_img_t * ret) {
             yd = ssyd + y * d_yd;
             sxd = xd, syd = yd;
             xds = xd * xd, yds = yd * yd;
+            
             for (ci = 0; ci < ret->max_iter && xds + yds <= 4.0; ++ci) {
                 tmp = 2 * xd * yd;
                 xd = xds - yds + sxd;
@@ -51,7 +55,7 @@ void engine_c_fulltest(fractal_img_t * ret) {
             }
             //((char *)ret->data)[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter;
             switch (ret->depth) {
-                // todo optimize case 1
+                case 16: data_16[y * ret->px + x] = ci; break;
                 case 32: data_32[y * ret->px + x] = ci; break;
                 case 64: data_64[y * ret->px + x] = ci; break;
             }

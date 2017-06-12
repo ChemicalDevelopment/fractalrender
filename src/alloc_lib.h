@@ -25,6 +25,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
+FILE * sfopen(char *fn, char *mode);
 
 void init_frit(fractal_img_t *ret, long px, long py, long max_iter);
 

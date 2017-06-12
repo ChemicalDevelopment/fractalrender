@@ -23,6 +23,15 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender.h"
 
 
+FILE * sfopen(char *fn, char *mode) {
+    FILE *ret = fopen(fn, mode);
+    if (ret == NULL) {
+        printf("ERROR: opening file: %s [mode %s]\n", fn, mode);
+        FR_FAIL
+    }
+    return ret; 
+}
+
 
 void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
     ret->px = px;
@@ -31,15 +40,18 @@ void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
     ret->max_iter = max_iter;
 
     if (max_iter > FR_32BIT_MAX) {
-        printf("ERROR: Choose iteration < 2^32\n");
-        exit(3);
+        ret->depth = 64;
+    } else if (max_iter > FR_16BIT_MAX) {
+        ret->depth = 32;
+        //printf("ERROR: max iterations must be < 2^16\n");
+        //FR_FAIL
+    } else {
+        ret->depth = 16;
     }
     
-    ret->depth = 32;
 
     ret->data = (void *)malloc(px * py * ret->depth / 8 + 1);
     
     assert(ret->data != NULL);
-
 }
 

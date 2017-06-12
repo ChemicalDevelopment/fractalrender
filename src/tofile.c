@@ -22,109 +22,35 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-int fractal_to_raw(fractal_img_t *ret) {
-    int code = 0;
-  	FILE *fp = NULL;
-    
-    // Open file for writing (binary mode)
-    fp = fopen(ret->out, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not open file %s for writing\n", ret->out);
-        code = 1;
-        goto finalise;
+#define FR_ENDSWITH(a, b) (strlen(a) >= strlen(b) && strcmp(a + strlen(a) - strlen(b), b) == 0)
+
+int get_format(char *filename) {
+    if (FR_ENDSWITH(filename, ".png")) {
+        return FR_FORMAT_PNG;
+    } else if (FR_ENDSWITH(filename, ".raw")) {
+        return FR_FORMAT_RAW;
+    } else {
+        printf("Don't know what format for file: %s\n", filename);
+        exit(3);
     }
-
-    tofile_c_raw(ret, fp);
-
-    finalise:
-    if (fp != NULL) fclose(fp);
-
-    return code;
 }
 
+void fractal_to_file(fractal_img_t *ret) {
+    int fmt = get_format(ret->out);
+    if (fmt == FR_FORMAT_RAW) {
+        FILE *fp = sfopen(ret->out, "wb");
 
-int fractal_to_png(fractal_img_t *ret) {
-    int code = 0;
-  	FILE *fp = NULL;
-    char * filename = ret->out;
-    png_structp png_ptr = NULL;
-    png_infop info_ptr = NULL;
-    
-    // Open file for writing (binary mode)
-    fp = fopen(filename, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not open file %s for writing\n", filename);
-        code = 1;
-        goto finalise;
-    }
-
-    // Initialize write structure
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (png_ptr == NULL) {
-        fprintf(stderr, "Could not allocate write struct\n");
-        code = 1;
-        goto finalise;
-    }
-
-    // Initialize info structure
-    info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == NULL) {
-        fprintf(stderr, "Could not allocate info struct\n");
-        code = 1;
-        goto finalise;
-    }
-
-    /*
-    // Setup Exception handling
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        fprintf(stderr, "Error during png creation\n");
-        code = 1;
-        goto finalise;
-    }
-    */
-
-    png_init_io(png_ptr, fp);
-
-    // Write header (8 bit colour depth)
-    png_set_IHDR(png_ptr, info_ptr, ret->px, ret->py,
-        8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-    char * title = "fractalrender";
-
-    // Set title
-    if (title != NULL) {
-        png_text title_text;
-        title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-        title_text.key = "Title";
-        title_text.text = title;
-        png_set_text(png_ptr, info_ptr, &title_text, 1);
-    }
-
-    png_write_info(png_ptr, info_ptr);
-
-
-    // SWITCH here:
-
-    tofile_c_png(ret, &png_ptr);
-
-    // End write
-    png_write_end(png_ptr, NULL);
-
-    finalise:
-    if (fp != NULL) fclose(fp);
-    if (info_ptr != NULL) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-    if (png_ptr != NULL) png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-
-    return code;
-}
-
-
-int fractal_to_file(fractal_img_t *ret) {
-    if (ret->outfmt == FR_PNG_FORMAT) {
-        return fractal_to_png(ret);
-    } else if (ret->outfmt == FR_RAW_FORMAT) {
-        return fractal_to_raw(ret);
+        io_raw_write_fractal(ret, fp);
+        fclose(fp);
+    } else if (fmt == FR_FORMAT_PNG) {
+        #ifdef HAVE_PNG
+        FILE *fp = sfopen(ret->out, "wb");
+        io_png_write_fractal(ret, fp);
+        fclose(fp);
+        #else
+        printf("ERROR: wasn't compiled with support for .png\n");
+        exit(3);
+        #endif
     } else {
         printf("Unknown output format\n");
         exit(3);

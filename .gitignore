@@ -10,6 +10,12 @@ src/fractalrender
 .vscode/
 
 *.raw
+*.meta
+*.anim
+*.mp4
+*.gif
+*.png
+
 
 *.orig
 Makefile

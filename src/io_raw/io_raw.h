@@ -1,4 +1,4 @@
-/* c_engine/color_c.h -- header file for C color engine
+/* io_raw.h -- .raw format input/output
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -19,12 +19,13 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 */
 
-#ifndef __COLOR_C_H__
-#define __COLOR_C_H__
 
-void tofile_c_png(fractal_img_t * ret, png_structp * png_ptr);
+#ifndef __IO_RAW_H__
+#define __IO_RAW_H__
 
-void tofile_c_raw(fractal_img_t * ret, FILE *fp);
+void io_raw_read_fractal(fractal_img_t * ret, FILE *fp);
+
+void io_raw_write_fractal(fractal_img_t * ret, FILE *fp);
 
 #endif
 
