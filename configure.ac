@@ -21,7 +21,7 @@
 
 AC_PREREQ([2.55])
 AC_INIT([FractalRender], [0.1.0], [group@chemicaldevelopment.us])
-AM_INIT_AUTOMAKE()
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_CONFIG_MACRO_DIRS([m4])
 

@@ -143,6 +143,13 @@ typedef struct fr_task_t {
 } fr_task_t;
 
 
+typedef struct img_t {
+    long px, py;
+
+    // len(data) = px * py * 3, and stores RGB vals
+    char *data;
+} img_t;
+
 
 // mapping object
 typedef struct fractal_img_t {
@@ -177,8 +184,11 @@ typedef struct fractal_img_t {
 // defaults that should always be included
 
 #include "io_raw/io_raw.h"
+#include "io_img/io_img.h"
 
 #include "engine_c/engine_c.h"
+
+#include "color_c/color_c.h"
 
 
 
@@ -199,7 +209,6 @@ typedef struct fractal_img_t {
 #ifdef HAVE_OPENCL
 #include "engine_opencl/engine_opencl.h"
 #endif
-
 
 
 // fractalrender.c defines

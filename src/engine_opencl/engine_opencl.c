@@ -81,16 +81,21 @@ __kernel void mand_64in_32out(__global __const int *imgMeta, __global __const do
 
 #define MAX_SOURCE_SIZE (0x100000)
 
+#define CL_MAXPLATFORMS 10
+#define CL_MAXDEVICES 10
 
 
-cl_device_id device_id = NULL;
 cl_context context = NULL;
 cl_command_queue command_queue = NULL;
 cl_program program = NULL;
 cl_kernel kernel = NULL;
-cl_platform_id platform_id = NULL;
+
+cl_device_id device_id[CL_MAXDEVICES];
 cl_uint res_num_devices;
+
+cl_platform_id platform_id[CL_MAXPLATFORMS];
 cl_uint res_num_platforms;
+
 cl_int res;
 
 cl_mem imgMeta_buf = NULL;
@@ -112,6 +117,7 @@ void engine_opencl_error_handle(char *file, int line, char *src, int code) {
     }
 }
 
+
 #define CLGLBL_HNDL(ST) ST; engine_opencl_error_handle(__FILE__, __LINE__, #ST, res);
 
 
@@ -130,23 +136,48 @@ void engine_opencl_init(int __depth, int d0, int d1) {
         source_size = strlen(source_str);
     }
 
-
-    CLGLBL_HNDL(res = clGetPlatformIDs(1, &platform_id, &res_num_platforms));
-
-    // select which device here
-    //printf("platformid: %d\n", platform_id);
-    CLGLBL_HNDL(res = clGetDeviceIDs(0, CL_DEVICE_TYPE_GPU, 1, &device_id, &res_num_devices));
-
-
-    CLGLBL_HNDL(context = clCreateContext(0, 1, &device_id, NULL, NULL, &res));
-
     
 
-    CLGLBL_HNDL(command_queue = clCreateCommandQueue(context, device_id, 0, &res));
+    CLGLBL_HNDL(res = clGetPlatformIDs(CL_MAXPLATFORMS, platform_id, &res_num_platforms));
+
+    printf("OpenCL: found %d platforms\n", res_num_platforms);
+
+    // select which device here
+
+    char * cl_dev_type = cargs_get("-CLdevice");
+    long clgdif = CL_DEVICE_TYPE_DEFAULT;
+
+    if (strcmp(cl_dev_type, "CPU") == 0) {
+        clgdif = CL_DEVICE_TYPE_CPU;
+    } else if (strcmp(cl_dev_type, "GPU") == 0) {
+        clgdif = CL_DEVICE_TYPE_GPU;
+    } else if (strcmp(cl_dev_type, "ALL") == 0) {
+        clgdif = CL_DEVICE_TYPE_ALL;
+    } else if (strcmp(cl_dev_type, "DEFAULT") == 0) {
+        clgdif = CL_DEVICE_TYPE_DEFAULT;
+    }
+
+
+    CLGLBL_HNDL(res = clGetDeviceIDs(platform_id[0], clgdif, CL_MAXDEVICES, device_id, &res_num_devices));
+
+    printf("OpenCL: found %d devices on platform[0]\n", res_num_devices);
+
+
+    //printf("platformid: %d\n", platform_id);
+
+    CLGLBL_HNDL(context = clCreateContext(0, 1, device_id, NULL, NULL, &res));
+    
+
+    CLGLBL_HNDL(command_queue = clCreateCommandQueue(context, device_id[0], 0, &res));
+
 
     CLGLBL_HNDL(program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &res));
 
-    CLGLBL_HNDL(res = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL));
+
+    CLGLBL_HNDL(res = clBuildProgram(program, 1, device_id, NULL, NULL, NULL));
+
+
+
 
     // switch based on kernel
     char *kernel_name;
@@ -174,6 +205,7 @@ void engine_opencl_init(int __depth, int d0, int d1) {
     CLGLBL_HNDL(meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(double), NULL, &res));
 
     CLGLBL_HNDL(data_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, global_item_size[0] * global_item_size[1] * sizeof(FR_16BIT), NULL, &res));
+
 
 }
 

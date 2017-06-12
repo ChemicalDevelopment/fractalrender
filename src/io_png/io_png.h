@@ -23,7 +23,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifndef __IO_PNG_H__
 #define __IO_PNG_H__
 
-void io_png_write_fractal(fractal_img_t * ret, FILE *fp);
+void io_png_write_fractal(img_t * ret, FILE *fp);
 
 #endif
 

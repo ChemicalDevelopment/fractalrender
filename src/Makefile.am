@@ -28,6 +28,15 @@ bin_PROGRAMS = fractalrender
 
 
 
+color_c_src = color_c/color_c.h color_c/color_c.c
+
+color_src = 
+
+color_src += $(color_c_src)
+
+
+
+
 engine_c_src = engine_c/engine_c.h engine_c/engine_c.c
 engine_mpf_src = engine_mpf/engine_mpf.h engine_mpf/engine_mpf.c
 engine_mpc_src = engine_mpc/engine_mpc.h engine_mpc/engine_mpc.c
@@ -51,19 +60,20 @@ engine_src += $(engine_opencl_src)
 endif
 
 
-
 io_raw_src = io_raw/io_raw.h io_raw/io_raw.c
+io_img_src = io_img/io_img.h io_img/io_img.c
 io_png_src = io_png/io_png.h io_png/io_png.c
 
 io_src =
 
 
 io_src += $(io_raw_src)
+io_src += $(io_img_src)
 
 if HAVE_PNG
 io_src += $(io_png_src)
 endif
 
-fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h fractalrender.c alloc_lib.c tofile.c $(engine_src) $(io_src)
+fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h fractalrender.c alloc_lib.c tofile.c $(engine_src) $(io_src) $(color_src)
 fractalrender_CFLAGS = @CL_CFLAGS@
 fractalrender_LDADD = @CL_LIBS@

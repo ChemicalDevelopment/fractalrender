@@ -1,0 +1,9 @@
+*.la
+*.lo
+*.orig
+.deps
+.libs
+Makefile
+Makefile.in
+configure.lineno
+get_patches.c

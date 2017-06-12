@@ -227,6 +227,13 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("-z", "--zoom", 1, CARGS_ARG_TYPE_STR, "zoom level");
     cargs_add_default("-z", "0.4");
 
+    cargs_add_arg("-CLdevice", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL device ('CPU', 'GPU', or 'ALL'");
+    cargs_add_default("-CLdevice", "GPU");
+
+    cargs_add_arg("-CLdevicenum", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL device number");
+    cargs_add_default("-CLdevicenum", "1");
+
+
     cargs_add_arg("-CLkernel", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL engine kernel");
 
     cargs_add_arg("-CLdevice", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL device number");
@@ -250,6 +257,8 @@ int main(int argc, char *argv[]) {
 
     fractal_img_t fractal;
 
+    
+
     fractal.out = cargs_get("");
     fractal.genout = cargs_get("");
 
@@ -261,6 +270,10 @@ int main(int argc, char *argv[]) {
 
     // choose image format, and maybe change name
     fractal.imgfmt = FR_COLOR_RED_ONLY;
+
+    img_t reti;
+    io_init_fractal_to_img(&fractal, &reti);
+
 
 
     if (cargs_get_flag("--from-raw")) {
@@ -296,7 +309,7 @@ int main(int argc, char *argv[]) {
                 io_raw_read_fractal(&fractal, fp);
                 //do_engine_test(&fractal);
                 fclose(fp);
-                fractal_to_file(&fractal);
+                fractal_to_file(&fractal, &reti);
             }
 
         } else {
@@ -304,7 +317,7 @@ int main(int argc, char *argv[]) {
             io_raw_read_fractal(&fractal, fp);
             fclose(fp);
             //do_engine_test(&fractal);
-            fractal_to_file(&fractal);
+            fractal_to_file(&fractal, &reti);
         }
     } else {
         if (strcmp(fractal.engine, "OPENCL") == 0) {
@@ -329,12 +342,12 @@ int main(int argc, char *argv[]) {
                 sprintf(fractal.Z, "%lf", basezoom * pow(zps, (double)i/fps));
                 sprintf(fractal.out, basefmt, i);
                 do_engine_test(&fractal);
-                fractal_to_file(&fractal);
+                fractal_to_file(&fractal, &reti);
             }
 
         } else {
             do_engine_test(&fractal);
-            fractal_to_file(&fractal);
+            fractal_to_file(&fractal, &reti);
         }
         if (strcmp(fractal.engine, "OPENCL") == 0) {
             #ifdef HAVE_OPENCL

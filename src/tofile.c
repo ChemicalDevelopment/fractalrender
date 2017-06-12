@@ -35,7 +35,7 @@ int get_format(char *filename) {
     }
 }
 
-void fractal_to_file(fractal_img_t *ret) {
+void fractal_to_file(fractal_img_t *ret, img_t *reti) {
     int fmt = get_format(ret->out);
     if (fmt == FR_FORMAT_RAW) {
         FILE *fp = sfopen(ret->out, "wb");
@@ -45,7 +45,11 @@ void fractal_to_file(fractal_img_t *ret) {
     } else if (fmt == FR_FORMAT_PNG) {
         #ifdef HAVE_PNG
         FILE *fp = sfopen(ret->out, "wb");
-        io_png_write_fractal(ret, fp);
+        img_t reti;
+        io_init_fractal_to_img(ret, &reti);
+
+        color_c_fractal_to_img(ret, &reti);
+        io_png_write_fractal(&reti, fp);
         fclose(fp);
         #else
         printf("ERROR: wasn't compiled with support for .png\n");
@@ -56,4 +60,5 @@ void fractal_to_file(fractal_img_t *ret) {
         exit(3);
     }
 }
+
 
