@@ -38,7 +38,7 @@ The `./configure` script has a number of options, such as:
 
 | Option | Description |
 |:------------- |:------------- |
-| `--with-[cargs|gmp|mpfr|mpc|mpi|opencl|png]=DIR` | Gives info about finding a library in a non standard directory |
+| `--with-[cargs\|gmp\|mpfr\|mpc\|mpi\|opencl\|png]=DIR` | Gives info about finding a library in a non standard directory |
 
 
 If you don't specify any, FractalRender will try to check if you have each piece, and if found, include and utilize it.
