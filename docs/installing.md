@@ -1,6 +1,14 @@
 
 # Installing
 
+
+This should work for most people:
+
+`./configure && make && make install`
+
+
+However, you can read ahead to find out more about compiling the program:
+
 ## Dependencies/Requirements
 
 ### Mandatory
