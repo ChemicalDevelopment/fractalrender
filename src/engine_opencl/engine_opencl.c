@@ -135,11 +135,15 @@ void engine_opencl_init(int __depth, int d0, int d1) {
     CLGLBL_HNDL(res = clGetPlatformIDs(1, &platform_id, &res_num_platforms));
 
     // select which device here
-    CLGLBL_HNDL(res = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, &res_num_devices));
-    
-    CLGLBL_HNDL(context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &res));
+    //printf("platformid: %d\n", platform_id);
+    CLGLBL_HNDL(res = clGetDeviceIDs(0, CL_DEVICE_TYPE_GPU, 1, &device_id, &res_num_devices));
 
-    CLGLBL_HNDL(command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &res));
+
+    CLGLBL_HNDL(context = clCreateContext(0, 1, &device_id, NULL, NULL, &res));
+
+    
+
+    CLGLBL_HNDL(command_queue = clCreateCommandQueue(context, device_id, 0, &res));
 
     CLGLBL_HNDL(program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &res));
 

@@ -23,6 +23,8 @@ AC_PREREQ([2.55])
 AC_INIT([FractalRender], [0.1.0], [group@chemicaldevelopment.us])
 AM_INIT_AUTOMAKE()
 
+AC_CONFIG_MACRO_DIRS([m4])
+
 AC_CONFIG_SRCDIR([src/fractalrender.h])
 AC_CONFIG_HEADERS([config.h])
 
@@ -72,22 +74,20 @@ m4_define([FR_WITH],[
 m4_define([FR_CHECK],[
   AS_IF([test "x${with_$1}" != xno],
     [
+      AS_IF([test "x${with_$1}" != xyes], [
+        AS_IF([test "x${with_$1}" != xno], [
+          AS_IF([test "x${with_$1}" != xcheck], [
+            LDFLAGS="$LDFLAGS -L${with_$1}/lib"
+            CFLAGS="$CFLAGS -I${with_$1}/include"
+          ])
+        ])
+      ])
       AC_CHECK_LIB([$1], [main],
       [
-
         AC_CHECK_HEADERS([$1.h])
         AC_DEFINE_UNQUOTED([HAVE_$2], [1],
                   [Define if you have $1])
         LIBS="-l$1 $LIBS"
-
-        AS_IF([test "x${with_$1}" != xyes], [
-          AS_IF([test "x${with_$1}" != xno], [
-            AS_IF([test "x${with_$1}" != xcheck], [
-              LDFLAGS="$LDFLAGS -L${with_$1}/lib"
-              CFLAGS="$CFLAGS -I${with_$1}/include"
-            ])
-          ])
-        ])
       ],
       [
        
@@ -122,30 +122,12 @@ FR_CHECK([mpi], [MPI])
 
 AS_IF([test "x$with_opencl" != xno],
   [
-    AC_CHECK_LIB([OpenCL], [main],
-    [
-      AC_CHECK_HEADERS([OpenCL/opencl.h])
-      AC_CHECK_HEADERS([CL/cl.h])
-      AC_DEFINE_UNQUOTED([HAVE_OPENCL], [1],
-                [Define if you have OpenCL])
-      LIBS="-lOpenCL $LIBS"
-
-      AS_IF([test "x$with_opencl" != xyes], [
-        AS_IF([test "x$with_opencl" != xno], [
-          AS_IF([test "x$with_opencl" != xcheck], [
-            LDFLAGS="$LDFLAGS -L$with_opencl/lib"
-            CFLAGS="$CFLAGS -I$with_opencl/include"
-          ])
-        ])
-      ])
-    ],
-    [
-      
-      if test "x$with_opencl" != xcheck; then
-        AC_MSG_FAILURE(
-          [--with-opencl was given, but test for OpenCL failed])
-      fi
-    ], [])]
+      AX_CHECK_CL
+      #if test "x$with_opencl" != xcheck; then
+      #  AC_MSG_FAILURE(
+      #    [--with-opencl was given, but test for OpenCL failed])
+      #fi
+    ], []
 )
 
 
@@ -166,7 +148,6 @@ AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
 # todo, add tests
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
-
 
 
 AS_IF([test x$with_png == xno],

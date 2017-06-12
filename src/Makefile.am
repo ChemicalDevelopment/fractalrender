@@ -65,5 +65,5 @@ io_src += $(io_png_src)
 endif
 
 fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h fractalrender.c alloc_lib.c tofile.c $(engine_src) $(io_src)
-fractalrender_CFLAGS =
-fractalrender_LDADD =
+fractalrender_CFLAGS = @CL_CFLAGS@
+fractalrender_LDADD = @CL_LIBS@

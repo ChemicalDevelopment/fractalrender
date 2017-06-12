@@ -37,6 +37,22 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #undef malloc
 
+// for apple v other implementations
+#ifdef HAVE_OPENCL_OPENCL_H
+#define HAVE_OPENCL
+#include <OpenCL/opencl.h>
+#endif
+
+#ifdef HAVE_CL_CL_H
+#define HAVE_OPENCL
+#include <CL/cl.h>
+#endif
+
+#ifdef HAVE_OPENCL_CL_H
+#define HAVE_OPENCL
+#include <OpenCL/cl.h>
+#endif
+
 
 #ifdef HAVE_GMP_H
 #include <gmp.h>
@@ -54,15 +70,6 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifdef HAVE_MPI_H
 #include <mpi.h>
 int mpi_err, mpi_rank, mpi_numprocs;
-#endif
-
-// for apple v other implementations
-#ifdef HAVE_OPENCL_OPENCL_H
-#include <OpenCL/opencl.h>
-#endif
-
-#ifdef HAVE_CL_CL_H
-#include <CL/cl.h>
 #endif
 
 
@@ -181,8 +188,7 @@ typedef struct fractal_img_t {
 #include "io_png/io_png.h"
 #endif
 
-
-#ifdef HAVE_MPF
+#ifdef HAVE_GMP
 #include "engine_mpf/engine_mpf.h"
 #endif
 

@@ -20,12 +20,12 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __ENGINE_MPC_H__
-#define __ENGINE_MPC_H__
+#ifndef __ENGINE_OPENCL_H__
+#define __ENGINE_OPENCL_H__
 
 void engine_opencl_init(int __depth, int d0, int d1);
 
-void engine_mpc_fulltest(fractal_img_t * ret);
+void engine_opencl_fulltest(fractal_img_t * ret);
 
 void engine_opencl_end();
 
