@@ -98,7 +98,6 @@ cl_mem meta_buf = NULL;
 cl_mem data_buf = NULL;
 
 
-
 size_t *global_item_size;
 size_t *local_item_size;
 
