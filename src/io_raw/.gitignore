@@ -7,3 +7,4 @@ Makefile
 Makefile.in
 configure.lineno
 get_patches.c
+.dirstamp
