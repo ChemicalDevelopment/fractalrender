@@ -43,5 +43,3 @@ __kernel void mand_64in_32out(__global __const int *imgMeta, __global __const do
 
 
 
-
-

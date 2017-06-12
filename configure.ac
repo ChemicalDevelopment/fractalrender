@@ -158,8 +158,6 @@ AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
 AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
 
 
-
-
 # Checks for library functions.
 #AC_FUNC_MALLOC
 #AC_FUNC_REALLOC
@@ -168,4 +166,13 @@ AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
 # todo, add tests
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
+
+
+
+AS_IF([test x$with_png == xno],
+  [
+    AC_MSG_WARN([Not compiled with PNG support, so FractalRender cannot create .png images! You can only create .raw files])
+  ]
+)
+
 

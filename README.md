@@ -27,10 +27,10 @@ FractalRender v0.0.1
 --info                                  show info
 -h, --help                              show help / usage
 --authors                               show authors
--e, --engine=S                          engine (C, MPC, OPENCL)
+-e, --engine=S                          engine (C, MPF, MPC, OPENCL)
 --from-raw=S                            input from .raw files
 -A                                      create multiple frames
--p, --prec=N                            min bits of precision (only supprted in MPC engine)
+-p, --prec=N                            min bits of precision (only supprted in MPF,MPC engine)
 -col, --color=S                         red color pattern
 --sec=F                                 seconds
 --fps=F                                 frames per second

@@ -238,7 +238,13 @@ int main(int argc, char *argv[]) {
 
 
     cargs_add_arg("", NULL, 1, CARGS_ARG_TYPE_STR, "file to save as");
+
+    // if they don't have -lpng, just compute raw
+    #ifdef HAVE_PNG
     cargs_add_default("", "out.png");
+    #else
+    cargs_add_default("", "out.raw");
+    #endif
 
     cargs_parse();
 
