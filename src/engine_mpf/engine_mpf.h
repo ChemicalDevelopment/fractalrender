@@ -24,7 +24,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define __ENGINE_MPF_H__
 
 
-void engine_mpf_fulltest(fractal_img_t * ret);
+void engine_mpf_init_mpf(fractal_img_t * ret, fractal_mpf_t *mp);
+
+void engine_mpf_clear_mpf(fractal_img_t * ret, fractal_mpf_t *mp);
+
+void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t * mp);
 
 #endif
 

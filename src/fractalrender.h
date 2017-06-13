@@ -39,17 +39,14 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 // for apple v other implementations
 #ifdef HAVE_OPENCL_OPENCL_H
-#define HAVE_OPENCL
 #include <OpenCL/opencl.h>
 #endif
 
 #ifdef HAVE_CL_CL_H
-#define HAVE_OPENCL
 #include <CL/cl.h>
 #endif
 
 #ifdef HAVE_OPENCL_CL_H
-#define HAVE_OPENCL
 #include <OpenCL/cl.h>
 #endif
 
@@ -69,8 +66,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #ifdef HAVE_MPI_H
 #include <mpi.h>
-int mpi_err, mpi_rank, mpi_numprocs;
 #endif
+
+int mpi_err, mpi_rank, mpi_numprocs;
+
 
 
 #ifdef HAVE_CARGS_H
@@ -150,6 +149,25 @@ typedef struct img_t {
     char *data;
 } img_t;
 
+#ifdef HAVE_GMP
+typedef struct fractal_mpf_t {
+    
+    mpf_t cX, cY, Z;
+
+    mpf_t d_c;
+
+    mpf_t ssp_x, ssp_y;
+    
+    mpf_t sp_x, sp_y;
+    
+    mpf_t p_x, p_y;
+    mpf_t p_x_s, p_y_s;
+
+    mpf_t tmp; 
+
+} fractal_mpf_t;
+#endif
+
 
 // mapping object
 typedef struct fractal_img_t {
@@ -179,7 +197,7 @@ typedef struct fractal_img_t {
 
 #include "alloc_lib.h"
 #include "tofile.h"
-
+#include "jobs.h"
 
 // defaults that should always be included
 

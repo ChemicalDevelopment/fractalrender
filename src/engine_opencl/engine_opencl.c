@@ -77,6 +77,7 @@ __kernel void mand_64in_32out(__global __const int *imgMeta, __global __const do
 \
 "
 
+bool engine_opencl_isvalid = false;
 
 
 #define MAX_SOURCE_SIZE (0x100000)
@@ -122,7 +123,12 @@ void engine_opencl_error_handle(char *file, int line, char *src, int code) {
 
 
 void engine_opencl_init(int __depth, int d0, int d1) {
+    if (engine_opencl_isvalid) {
+        return;
+    }
 
+
+    engine_opencl_isvalid = true;
     char *source_str;
     size_t source_size;
 
@@ -135,7 +141,6 @@ void engine_opencl_init(int __depth, int d0, int d1) {
         source_str = ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT;
         source_size = strlen(source_str);
     }
-
     
 
     CLGLBL_HNDL(res = clGetPlatformIDs(CL_MAXPLATFORMS, platform_id, &res_num_platforms));
@@ -157,26 +162,17 @@ void engine_opencl_init(int __depth, int d0, int d1) {
         clgdif = CL_DEVICE_TYPE_DEFAULT;
     }
 
-
     CLGLBL_HNDL(res = clGetDeviceIDs(platform_id[0], clgdif, CL_MAXDEVICES, device_id, &res_num_devices));
 
     printf("OpenCL: found %d devices on platform[0]\n", res_num_devices);
 
-
-    //printf("platformid: %d\n", platform_id);
-
     CLGLBL_HNDL(context = clCreateContext(0, 1, device_id, NULL, NULL, &res));
     
-
     CLGLBL_HNDL(command_queue = clCreateCommandQueue(context, device_id[0], 0, &res));
-
 
     CLGLBL_HNDL(program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &res));
 
-
     CLGLBL_HNDL(res = clBuildProgram(program, 1, device_id, NULL, NULL, NULL));
-
-
 
 
     // switch based on kernel
@@ -211,21 +207,28 @@ void engine_opencl_init(int __depth, int d0, int d1) {
 
 
 void engine_opencl_end() {
-	CLGLBL_HNDL(res = clFlush(command_queue));
-	CLGLBL_HNDL(res = clFinish(command_queue));
-	CLGLBL_HNDL(res = clReleaseKernel(kernel));
-	CLGLBL_HNDL(res = clReleaseProgram(program));
-	CLGLBL_HNDL(res = clReleaseMemObject(data_buf));
-	CLGLBL_HNDL(res = clReleaseMemObject(meta_buf));
-	CLGLBL_HNDL(res = clReleaseMemObject(imgMeta_buf));
-	CLGLBL_HNDL(res = clReleaseCommandQueue(command_queue));
-	CLGLBL_HNDL(res = clReleaseContext(context));
+    if (engine_opencl_isvalid) {
+        CLGLBL_HNDL(res = clFlush(command_queue));
+        CLGLBL_HNDL(res = clFinish(command_queue));
+        CLGLBL_HNDL(res = clReleaseKernel(kernel));
+        CLGLBL_HNDL(res = clReleaseProgram(program));
+        CLGLBL_HNDL(res = clReleaseMemObject(data_buf));
+        CLGLBL_HNDL(res = clReleaseMemObject(meta_buf));
+        CLGLBL_HNDL(res = clReleaseMemObject(imgMeta_buf));
+        CLGLBL_HNDL(res = clReleaseCommandQueue(command_queue));
+        CLGLBL_HNDL(res = clReleaseContext(context));
+    }
 }
 
 
 void engine_opencl_fulltest(fractal_img_t * ret) {
 
     assert(ret->depth == 16);
+
+    if (!engine_opencl_isvalid) {
+        engine_opencl_init(ret->depth, ret->px, ret->py);
+    }
+
 
 	int *imgMeta = (int *)malloc(3 * sizeof(int));
     double * meta = (double *)malloc(3 * sizeof(double));

@@ -22,6 +22,7 @@
 AM_CFLAGS = --pedantic -Wall -std=c99 -O2
 AM_LDFLAGS =
 
+
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
 bin_PROGRAMS = fractalrender
@@ -39,7 +40,6 @@ color_src += $(color_c_src)
 
 engine_c_src = engine_c/engine_c.h engine_c/engine_c.c
 engine_mpf_src = engine_mpf/engine_mpf.h engine_mpf/engine_mpf.c
-engine_mpc_src = engine_mpc/engine_mpc.h engine_mpc/engine_mpc.c
 engine_opencl_src = engine_opencl/engine_opencl.h engine_opencl/engine_opencl.c
 
 engine_src = 
@@ -51,9 +51,6 @@ if HAVE_GMP
 engine_src += $(engine_mpf_src)
 endif
 
-if HAVE_MPC
-engine_src += $(engine_mpc_src)
-endif
 
 if HAVE_OPENCL
 engine_src += $(engine_opencl_src)
@@ -74,6 +71,7 @@ if HAVE_PNG
 io_src += $(io_png_src)
 endif
 
-fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h fractalrender.c alloc_lib.c tofile.c $(engine_src) $(io_src) $(color_src)
-fractalrender_CFLAGS = @CL_CFLAGS@
-fractalrender_LDADD = @CL_LIBS@
+fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h jobs.h fractalrender.c alloc_lib.c tofile.c jobs.c $(engine_src) $(io_src) $(color_src)
+fractalrender_CFLAGS =
+fractalrender_LDADD =
+

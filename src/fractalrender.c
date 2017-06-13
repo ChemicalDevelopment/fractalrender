@@ -22,10 +22,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-#ifdef HAVE_MPI
+//#ifdef HAVE_MPI
 int mpi_err, mpi_rank, mpi_numprocs;
 
-#endif
+//#endif
 
 // this method 'fills in' defaults to ret, if no flags are set.
 void init_fillin(fractal_img_t *ret) {
@@ -110,11 +110,6 @@ void init_from_cmdline(fractal_img_t *ret) {
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
         FR_FAIL
         #endif
-    } else if (strcmp(engine, "MPC") == 0) {
-        #ifndef HAVE_MPC
-        printf("ERROR: not compiled with support for engine: '%s'\n", engine);
-        FR_FAIL
-        #endif
     } else if (strcmp(engine, "OPENCL") == 0) {
         #ifndef HAVE_OPENCL
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
@@ -123,8 +118,6 @@ void init_from_cmdline(fractal_img_t *ret) {
     } else {
         printf("Unkown engine: '%s'\n", engine);
     }
-
-
 
     ret->prec = prec;
     ret->engine = engine;
@@ -143,19 +136,8 @@ void do_engine_test(fractal_img_t * ret) {
     if (strcmp(ret->engine, "C") == 0) {
         engine_c_fulltest(ret);
     } else if (strcmp(ret->engine, "MPF") == 0) {
-        #ifdef HAVE_GMP
-        engine_mpf_fulltest(ret);
-        #else
-        printf("Trying to use MPF engine, but was not compiled with GMP support\n");
+        printf("ERROR: used do_engine_test for MPF");
         FR_FAIL
-        #endif
-    } else if (strcmp(ret->engine, "MPC") == 0) {
-        #ifdef HAVE_MPC
-        engine_mpc_fulltest(ret);
-        #else
-        printf("Trying to use MPC engine, but was not compiled with MPC support\n");
-        FR_FAIL
-        #endif
     } else if (strcmp(ret->engine, "OPENCL") == 0) {
         #ifdef HAVE_OPENCL
         engine_opencl_fulltest(ret);
@@ -174,6 +156,11 @@ int main(int argc, char *argv[]) {
     mpi_err = MPI_Init(&argc, &argv);
     mpi_err = MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
     mpi_err = MPI_Comm_size(MPI_COMM_WORLD, &mpi_numprocs);
+    printf("process %d/%d started\n", mpi_rank, mpi_numprocs);
+    #else
+    mpi_err = 0;
+    mpi_rank = 0;
+    mpi_numprocs = 1;
     #endif
 
     cargs_init(PACKAGE_NAME, PACKAGE_VERSION, argc, argv);
@@ -181,15 +168,14 @@ int main(int argc, char *argv[]) {
     cargs_add_author("Cade Brown", "cade@chemicaldevelopment.us");
 
 
-
-    cargs_add_arg("-e", "--engine", 1, CARGS_ARG_TYPE_STR, "engine (C, MPF, MPC, OPENCL)");
+    cargs_add_arg("-e", "--engine", 1, CARGS_ARG_TYPE_STR, "engine (C, MPF, OPENCL)");
     cargs_add_default("-e", "C");
 
     cargs_add_arg("--from-raw", NULL, 1, CARGS_ARG_TYPE_STR, "input from .raw files");
 
     cargs_add_flag("-A", NULL, "create multiple frames");
 
-    cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision (only supprted in MPF,MPC engine)");
+    cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision (only supprted in MPF engine)");
     cargs_add_default("-p", "64");
 
     cargs_add_arg("-col", "--color", 1, CARGS_ARG_TYPE_STR, "red color pattern");
@@ -257,8 +243,6 @@ int main(int argc, char *argv[]) {
 
     fractal_img_t fractal;
 
-    
-
     fractal.out = cargs_get("");
     fractal.genout = cargs_get("");
 
@@ -274,91 +258,25 @@ int main(int argc, char *argv[]) {
     img_t reti;
     io_init_fractal_to_img(&fractal, &reti);
 
+    figure_out_job(&fractal, &reti);
 
+    #ifdef HAVE_OPENCL
+    engine_opencl_end();
+    #endif
 
-    if (cargs_get_flag("--from-raw")) {
-        //printf("FROM RAW ERROR\n");
-        //FR_FAIL
-        if (cargs_get_flag("-A")) {
-            // TODO: read from .meta 
-            double sec = atof(cargs_get("--sec")), fps = atof(cargs_get("--fps")), zps = atof(cargs_get("--zps"));
-            double basezoom = atof(cargs_get("-z"));
+    #ifdef HAVE_MPI
 
-            char * baseinfmt = (char *)malloc(strlen(cargs_get("--from-raw")));
-            sprintf(baseinfmt, "%s", cargs_get("--from-raw"));
-            char * infmt = (char *)malloc(strlen(baseinfmt) + 40);
+    printf("process %d/%d ended\n", mpi_rank, mpi_numprocs);
 
-            char * baseoutfmt = (char *)malloc(strlen(fractal.genout));
-            sprintf(baseoutfmt, "%s", fractal.genout);
+    MPI_Barrier(MPI_COMM_WORLD);
 
-            fractal.out = (char *)malloc(strlen(baseoutfmt) + 40);
-
-            FILE *fp;
-
-            int total_frames = (int)floor(sec * fps);
-            int i;
-            for (i = 1; i <= total_frames; ++i) {
-                sprintf(fractal.out, baseoutfmt, i);
-                sprintf(infmt, baseinfmt, i);
-
-                fp = sfopen(infmt, "rb");
-                if (fp == NULL) {
-                    printf("ERROR opening file: %s\n", infmt);
-                    FR_FAIL
-                }
-                io_raw_read_fractal(&fractal, fp);
-                //do_engine_test(&fractal);
-                fclose(fp);
-                fractal_to_file(&fractal, &reti);
-            }
-
-        } else {
-            FILE *fp = sfopen(cargs_get("--from-raw"), "rb");
-            io_raw_read_fractal(&fractal, fp);
-            fclose(fp);
-            //do_engine_test(&fractal);
-            fractal_to_file(&fractal, &reti);
-        }
-    } else {
-        if (strcmp(fractal.engine, "OPENCL") == 0) {
-            #ifdef HAVE_OPENCL
-            engine_opencl_init(fractal.depth, fractal.px, fractal.py);
-            #else
-            printf("ERROR: Selected OPENCL engine, but was not compiled with OpenCL support\n");
-            #endif
-        }
-        if (cargs_get_flag("-A")) {
-            // need to add dynamic type to ZPS
-            double sec = atof(cargs_get("--sec")), fps = atof(cargs_get("--fps")), zps = atof(cargs_get("--zps"));
-            double basezoom = atof(cargs_get("-z"));
-
-            char * basefmt = (char *)malloc(strlen(fractal.genout));
-            sprintf(basefmt, "%s", fractal.genout);
-            fractal.out = (char *)malloc(strlen(basefmt) + 40);
-
-            int total_frames = (int)floor(sec * fps);
-            int i;
-            for (i = 1; i <= total_frames; ++i) {
-                sprintf(fractal.Z, "%lf", basezoom * pow(zps, (double)i/fps));
-                sprintf(fractal.out, basefmt, i);
-                do_engine_test(&fractal);
-                fractal_to_file(&fractal, &reti);
-            }
-
-        } else {
-            do_engine_test(&fractal);
-            fractal_to_file(&fractal, &reti);
-        }
-        if (strcmp(fractal.engine, "OPENCL") == 0) {
-            #ifdef HAVE_OPENCL
-            engine_opencl_end();
-            #else
-            printf("ERROR: Selected OPENCL engine, but was not compiled with OpenCL support\n");
-            #endif
-        }
+    if (mpi_rank == 0) {
+        printf("all processes done\n");
     }
+    #endif
 
-    if (cargs_get_flag("-A") && get_format(fractal.genout) != FR_FORMAT_RAW) {
+
+    if (mpi_rank == 0 && cargs_get_flag("-A") && get_format(fractal.genout) != FR_FORMAT_RAW) {
         #define FR_FFMPEG_CMD "ffmpeg -i %s result.mp4 -framerate %s"
 
         char *cmd = (char *)malloc(strlen(FR_FFMPEG_CMD) + 40 + strlen(fractal.genout));
@@ -368,7 +286,12 @@ int main(int argc, char *argv[]) {
         printf("%s\n", cmd);
     }
 
-    //fr_tsummary();
+
+    #ifdef HAVE_MPI
+
+    MPI_Finalize();
+
+    #endif
 
     return 0;
 }

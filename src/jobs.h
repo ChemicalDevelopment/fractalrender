@@ -1,4 +1,4 @@
-/* engine_mpc/engine_mpc.h -- header file for MPC engine
+/* jobs.c --
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,11 +20,28 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __ENGINE_MPC_H__
-#define __ENGINE_MPC_H__
+#ifndef __JOBS_H__
+#define __JOBS_H__
+
+void figure_out_job(fractal_img_t *fractal, img_t *reti);
+
+#ifdef HAVE_GMP
+
+mpf_t frtmp[4];
+
+void do_anim_mpf(fractal_img_t *fractal, img_t *reti);
+
+void do_single_mpf(fractal_img_t *fractal, img_t *reti);
+#endif
+
+void do_anim(fractal_img_t *fractal, img_t *reti);
+
+void do_single(fractal_img_t *fractal, img_t *reti);
 
 
-void engine_mpc_fulltest(fractal_img_t * ret);
+void do_anim_raw(fractal_img_t *fractal, img_t *reti);
+
+void do_single_raw(fractal_img_t *fractal, img_t *reti);
 
 #endif
 
