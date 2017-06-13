@@ -69,26 +69,40 @@ void __mpf_nroot(mpf_t r, mpf_t a, int n, int prec) {
 
     while (cprec < prec) {
         __mpf_nroot_f(frtmp[1], frtmp[0], a, n);
-
         __mpf_nroot_fp(frtmp[2], frtmp[0], a, n);
 
         mpf_div(frtmp[1], frtmp[1], frtmp[2]);
 
-
         mpf_sub(frtmp[0], frtmp[0], frtmp[1]);
-        if (citer > 10) {
+
+        if (citer > 40) {
             cprec *= 2;
         }
         citer++;
     }
 
     mpf_set(r, frtmp[0]);
+
+}
+
+int __gcd(int a, int b) {
+    int c;
+    while ( a != 0 ) {
+        c = a; 
+        a = b % a;
+        b = c;
+    }
+    return b;
 }
 
 // r = a ^ ( p / q )
 void __mpf_pow_ui_div_ui(mpf_t r, mpf_t a, int p, int q, int prec) {
-    __mpf_nroot(r, a, q, prec);
-    mpf_pow_ui(r, r, p);
+    int gg = __gcd(p, q);
+    int gp = p / gg, gq = q / gg;
+
+    mpf_pow_ui(r, a, p);
+    __mpf_nroot(r, r, q, prec);
+
 }
 
 void do_anim_mpf(fractal_img_t *fractal, img_t *reti) {
@@ -103,9 +117,12 @@ void do_anim_mpf(fractal_img_t *fractal, img_t *reti) {
     mpf_init2(basezoom, fractal->prec+64);
     mpf_init2(zps, fractal->prec+64);
 
-    mpf_set_str(basezoom, cargs_get("-z"), 10);
+    mpf_set_str(basezoom, fractal->Z, 10);
     mpf_set_str(zps, cargs_get("--zps"), 10);
 
+    mpf_set_str(mp.cX, fractal->cX, 10);
+    mpf_set_str(mp.cY, fractal->cY, 10);
+    
     double sec = atof(cargs_get("--sec"));
 
     int fps = cargs_get_int("--fps");
@@ -120,7 +137,9 @@ void do_anim_mpf(fractal_img_t *fractal, img_t *reti) {
     int i;
     for (i = mpi_rank + 1; i <= total_frames; i += mpi_numprocs) {
         __mpf_pow_ui_div_ui(mp.Z, zps, i - 1, fps, fractal->prec);
+
         mpf_mul(mp.Z, mp.Z, basezoom);
+
 
         sprintf(fractal->out, basefmt, i);
 
@@ -133,6 +152,11 @@ void do_anim_mpf(fractal_img_t *fractal, img_t *reti) {
 void do_single_mpf(fractal_img_t *fractal, img_t *reti) {
     fractal_mpf_t mp;
     engine_mpf_init_mpf(fractal, &mp);
+
+    mpf_set_str(mp.cX, fractal->cX, 10);
+    mpf_set_str(mp.cY, fractal->cY, 10);
+
+    mpf_set_str(mp.Z, fractal->Z, 10);
 
     engine_mpf_fulltest(fractal, &mp);
     fractal_to_file(fractal, reti);
