@@ -36,7 +36,7 @@ This is a quick abstraction so that the kernel can get this info
 // use `./utils/convert_kernel.py ./kernel.cl` to regenerate
 
 
-#define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT #define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT "\
+#define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT "\
 __kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global uchar * incol, __global uchar * outcol)\
 {\
     int px = get_global_id(0), py = get_global_id(1);\
