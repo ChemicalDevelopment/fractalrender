@@ -147,6 +147,9 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
             } else {
                 hue = di + 1 - log(fabs(zn)) / log(er2);
             }
+
+            hue *= ret->color.mult;
+
             while (hue < 0) {
                 hue += ret->color.numcol;
             }

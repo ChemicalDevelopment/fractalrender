@@ -31,6 +31,9 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
     } else {
         hue = di + 1 - log(fabs(zn)) / log(er2);
     }
+
+    hue = hue * meta[3];
+
     while (hue < 0) {
         hue += imgMeta[3];
     }

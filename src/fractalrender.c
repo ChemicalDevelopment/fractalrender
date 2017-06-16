@@ -115,6 +115,8 @@ void init_from_cmdline(fractal_img_t *ret) {
         color_type = FR_COLOR_RAND;
     } else if (strcmp(ctype_str, "MOCHA") == 0) {
         color_type = FR_COLOR_MOCHA;
+    } else if (strcmp(ctype_str, "HAZEOCEAN") == 0) {
+        color_type = FR_COLOR_HAZEOCEAN;
     } else if (get_format(ctype_str) == FR_FORMAT_COLOR) {
         printf("Reading from color file: %s\n", ctype_str);
         color_type = FR_COLOR_FILE;
@@ -208,6 +210,9 @@ int main(int argc, char *argv[]) {
 
     cargs_add_arg("-col", "--color", 1, CARGS_ARG_TYPE_STR, "color scheme (RED, BW, $FILE, etc)");
     cargs_add_default("-col", "RED");
+
+    cargs_add_arg("-colm", "--color-mult", 1, CARGS_ARG_TYPE_FLOAT, "change color period");
+    cargs_add_default("-colm", "1.0");
 
     cargs_add_arg("-ncs", "--num-colors", 1, CARGS_ARG_TYPE_INT, "number of colors");
     cargs_add_default("-ncs", "10");

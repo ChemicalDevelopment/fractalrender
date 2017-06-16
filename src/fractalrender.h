@@ -121,6 +121,8 @@ typedef struct fractal_color_t {
     // in form FR_COLOR_$X
     long coltype;
 
+    double mult;
+
     // 3 * numcol, in RGB format
     unsigned char * data;
 
@@ -161,6 +163,7 @@ typedef struct fractal_img_t {
 #define FR_COLOR_BW                  (0x0004)
 #define FR_COLOR_RAND                (0x0005)
 #define FR_COLOR_MOCHA               (0x0006)
+#define FR_COLOR_HAZEOCEAN           (0x0007)
 
 // todo
 #define FR_COLOR_FILE                (0x0101)

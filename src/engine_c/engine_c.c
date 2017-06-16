@@ -82,6 +82,8 @@ void engine_c_fulltest(fractal_img_t * ret) {
             } else {
                 hue = di + 1 - log(fabs(zn)) / log(er2);
             }
+            hue *= ret->color.mult;
+
             while (hue < 0) {
                 hue += ret->color.numcol;
             }

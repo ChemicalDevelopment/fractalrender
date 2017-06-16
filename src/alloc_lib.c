@@ -51,8 +51,12 @@ void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
 
 void init_frcl(fractal_color_t *ret) {
   long numcol = cargs_get_int("-ncs");
-  ret->numcol = numcol;
-  ret->data = (unsigned char *)malloc(ret->numcol * 3);
+  ret->mult = cargs_get_float("-colm");
+  if (ret->coltype != FR_COLOR_FILE) {
+    ret->numcol = numcol;
+    ret->data = (unsigned char *)malloc(ret->numcol * 3);
+  }
+
   long i;
   if (ret->coltype == FR_COLOR_RED) {
     for (i = 0; i < numcol; ++i) {
@@ -92,9 +96,35 @@ void init_frcl(fractal_color_t *ret) {
       ret->data[3 * i + 1] = (long)(floor(di * di * 255.0)) & 0xff;
       ret->data[3 * i + 2] = (long)(floor(di * di * di * 255.0)) & 0xff;
     }
+  } else if (ret->coltype == FR_COLOR_HAZEOCEAN) {
+    double di;
+    for (i = 0; i < numcol; ++i) {
+      di = (double)i / (numcol);
+      ret->data[3 * i + 0] = (long)(di * 178) & 0xff;
+      ret->data[3 * i + 1] = (long)((100 + floor(di * 255.0))) & 0xff;
+      ret->data[3 * i + 2] = (long)(di * 178) & 0xff;
+    }
   } else if (ret->coltype == FR_COLOR_FILE) {
-    printf("color files not supported!\n");
-    FR_FAIL
+    unsigned int R, G, B, ct;
+    FILE *fp = sfopen(cargs_get("-col"), "r");
+    for (ct = 0; fscanf(fp, "%d,%d,%d\n", &R, &G, &B) == 3; ct++) {
+        if (R > 255 || G > 255 || B > 255) {
+          printf("error reading color file\n");
+          FR_FAIL
+        }
+    }
+    fclose(fp);
+    numcol = ct;
+    ret->numcol = ct;
+    ret->data = (unsigned char *)malloc(3 * numcol);
+    fp = sfopen(cargs_get("-col"), "r");
+    for (ct = 0; fscanf(fp, "%d,%d,%d\n", &R, &G, &B) == 3; ct++) {
+        ret->data[3 * ct + 0] = R & 0xff;
+        ret->data[3 * ct + 1] = G & 0xff;
+        ret->data[3 * ct + 2] = B & 0xff;
+    }
+    fclose(fp);
+    printf("Done reading from file\n");
   } else {
     printf("unknown color format\n");
     FR_FAIL      

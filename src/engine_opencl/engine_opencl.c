@@ -36,7 +36,7 @@ This is a quick abstraction so that the kernel can get this info
 // use `./utils/convert_kernel.py ./kernel.cl` to regenerate
 
 
-#define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT "\
+#define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT #define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT "\
 __kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global uchar * incol, __global uchar * outcol)\
 {\
     int px = get_global_id(0), py = get_global_id(1);\
@@ -69,6 +69,9 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
     } else {\
         hue = di + 1 - log(fabs(zn)) / log(er2);\
     }\
+\
+    hue = hue * meta[3];\
+\
     while (hue < 0) {\
         hue += imgMeta[3];\
     }\
@@ -95,7 +98,6 @@ __kernel void mand(__global __const int *imgMeta, __global __const double * meta
 \
 }\
 "
-
 
 
 bool engine_opencl_isvalid = false;
@@ -212,7 +214,7 @@ void engine_opencl_init(int __depth, int d0, int d1, int numincol, unsigned char
     CLGLBL_HNDL(imgMeta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 4 * sizeof(int), NULL, &res));
 
 	
-    CLGLBL_HNDL(meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * sizeof(double), NULL, &res));
+    CLGLBL_HNDL(meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 4 * sizeof(double), NULL, &res));
 
     CLGLBL_HNDL(incol_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * numincol, NULL, &res));
 
@@ -247,7 +249,7 @@ void engine_opencl_fulltest(fractal_img_t * ret) {
 
 
 	int *imgMeta = (int *)malloc(4 * sizeof(int));
-    double * meta = (double *)malloc(3 * sizeof(double));
+    double * meta = (double *)malloc(4 * sizeof(double));
 
     long long *data = (long long *)ret->data;
 
@@ -259,10 +261,11 @@ void engine_opencl_fulltest(fractal_img_t * ret) {
     meta[0] = atof(ret->cX);
     meta[1] = atof(ret->cY);
     meta[2] = atof(ret->Z);
+    meta[3] = ret->color.mult;
 
 	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, imgMeta_buf, CL_TRUE, 0, 4 * sizeof(int), imgMeta, 0, NULL, NULL));
 
-	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, meta_buf, CL_TRUE, 0, 3 * sizeof(double), meta, 0, NULL, NULL));
+	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, meta_buf, CL_TRUE, 0, 4 * sizeof(double), meta, 0, NULL, NULL));
 
 	//clEnqueueWriteBuffer(command_queue, data_buf, CL_TRUE, 0, ret->px * ret->py * sizeof(FR_16BIT), data, 0, NULL, NULL);
 
