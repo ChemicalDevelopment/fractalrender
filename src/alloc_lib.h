@@ -29,4 +29,6 @@ FILE * sfopen(char *fn, char *mode);
 
 void init_frit(fractal_img_t *ret, long px, long py, long max_iter);
 
+void init_frcl(fractal_color_t *ret);
+
 #endif

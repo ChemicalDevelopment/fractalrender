@@ -33,25 +33,71 @@ FILE * sfopen(char *fn, char *mode) {
 }
 
 
+
+
 void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
     ret->px = px;
     ret->py = py;
 
     ret->max_iter = max_iter;
 
-    if (max_iter > FR_32BIT_MAX) {
-        ret->depth = 64;
-    } else if (max_iter > FR_16BIT_MAX) {
-        ret->depth = 32;
-        //printf("ERROR: max iterations must be < 2^16\n");
-        //FR_FAIL
-    } else {
-        ret->depth = 16;
-    }
-    
-
-    ret->data = (void *)malloc(px * py * ret->depth / 8 + 1);
+    ret->data = (void *)malloc(px * py * 3);
     
     assert(ret->data != NULL);
+
+    init_frcl(&ret->color);
+}
+
+
+void init_frcl(fractal_color_t *ret) {
+  long numcol = cargs_get_int("-ncs");
+  ret->numcol = numcol;
+  ret->data = (unsigned char *)malloc(ret->numcol * 3);
+  long i;
+  if (ret->coltype == FR_COLOR_RED) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 255 * i / numcol;
+      ret->data[3 * i + 1] = 0;
+      ret->data[3 * i + 2] = 0;
+    }
+  } else if (ret->coltype == FR_COLOR_GREEN) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 0;
+      ret->data[3 * i + 1] = 255 * i / numcol;
+      ret->data[3 * i + 2] = 0;
+    }
+  } else if (ret->coltype == FR_COLOR_BLUE) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 0;
+      ret->data[3 * i + 1] = 0;
+      ret->data[3 * i + 2] = 255 * i / numcol;
+    }
+  } else if (ret->coltype == FR_COLOR_BW) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 255 * i / numcol;
+      ret->data[3 * i + 1] = 255 * i / numcol;
+      ret->data[3 * i + 2] = 255 * i / numcol;
+    }
+  } else if (ret->coltype == FR_COLOR_RAND) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = rand() & 0xff;
+      ret->data[3 * i + 1] = rand() & 0xff;
+      ret->data[3 * i + 2] = rand() & 0xff;
+    }
+  } else if (ret->coltype == FR_COLOR_MOCHA) {
+    double di;
+    for (i = 0; i < numcol; ++i) {
+      di = (double)i / (numcol);
+      ret->data[3 * i + 0] = (long)(floor(di * 255.0)) & 0xff;
+      ret->data[3 * i + 1] = (long)(floor(di * di * 255.0)) & 0xff;
+      ret->data[3 * i + 2] = (long)(floor(di * di * di * 255.0)) & 0xff;
+    }
+  } else if (ret->coltype == FR_COLOR_FILE) {
+    printf("color files not supported!\n");
+    FR_FAIL
+  } else {
+    printf("unknown color format\n");
+    FR_FAIL      
+  }
 }
 

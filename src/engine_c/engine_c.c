@@ -24,8 +24,23 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 
 void engine_c_fulltest(fractal_img_t * ret) {
-    
+    /*
+    #define NUM_COL 1000
+
+    unsigned char * cols = (unsigned char *)malloc(NUM_COL * 3);
+
+
+    for (x = 0; x < NUM_COL * 3; x += 3) {
+        cols[x + 0] = rand() & 0xff;
+        cols[x + 1] = rand() & 0xff;
+        cols[x + 2] = rand() & 0xff;
+
+    }
+*/
     long x, y, ci;
+
+    unsigned char *col0, *col1;
+
 
     double ssxd = atof(ret->cX) - 1.0 / atof(ret->Z), ssyd = atof(ret->cY) + ret->py / (ret->px * atof(ret->Z));
 
@@ -33,10 +48,15 @@ void engine_c_fulltest(fractal_img_t * ret) {
 
     double xd, yd, tmp, sxd, syd, xds, yds;
 
-    FR_16BIT * data_16 = (FR_16BIT *)ret->data;
-    FR_32BIT * data_32 = (FR_32BIT *)ret->data;
-    FR_64BIT * data_64 = (FR_64BIT *)ret->data;
-    
+    double log_zn;
+
+    long sci;
+    double zn, di, hue;
+
+    double er = 4.0;
+
+    double er2 = er * er;
+
 
     //#pragma omp parallel for
     for (x = 0; x < ret->px; ++x) {
@@ -46,19 +66,45 @@ void engine_c_fulltest(fractal_img_t * ret) {
             sxd = xd, syd = yd;
             xds = xd * xd, yds = yd * yd;
             
-            for (ci = 0; ci < ret->max_iter && xds + yds <= 4.0; ++ci) {
+            for (ci = 1; ci <= ret->max_iter && xds + yds <= er2; ++ci) {
                 tmp = 2 * xd * yd;
                 xd = xds - yds + sxd;
                 yd = tmp + syd;
                 xds = xd * xd;
                 yds = yd * yd;
             }
-            //((char *)ret->data)[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter;
-            switch (ret->depth) {
-                case 16: data_16[y * ret->px + x] = ci; break;
-                case 32: data_32[y * ret->px + x] = ci; break;
-                case 64: data_64[y * ret->px + x] = ci; break;
+
+            zn = xds + yds;
+            di = (double)ci;
+
+            if (zn <= er2) {
+                hue = 0;
+            } else {
+                hue = di + 1 - log(fabs(zn)) / log(er2);
             }
+            while (hue < 0) {
+                hue += ret->color.numcol;
+            }
+            while (hue >= ret->color.numcol) {
+                hue -= ret->color.numcol;
+            }
+
+            sci = (long)floor(hue);
+            tmp = hue - floor(hue);
+
+            col0 = &ret->color.data[3 * sci];
+            if (sci >= ret->color.numcol - 1) {
+                col1 = &ret->color.data[0];
+            } else {
+                col1 = &ret->color.data[3 * sci + 3];
+            }
+
+            sci = (y * ret->px + x) * 3;
+
+            ret->data[sci + 0] = ((unsigned long)floor(tmp*col1[0]+(1-tmp)*col0[0])) & 0xff;
+            ret->data[sci + 1] = ((unsigned long)floor(tmp*col1[1]+(1-tmp)*col0[1])) & 0xff;
+            ret->data[sci + 2] = ((unsigned long)floor(tmp*col1[2]+(1-tmp)*col0[2])) & 0xff;
+
         }
     }
 }

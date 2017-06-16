@@ -84,70 +84,14 @@ int mpi_err, mpi_rank, mpi_numprocs;
 
 #define FR_FAIL exit(3);
 
-
-
-#if SIZEOF_UNSIGNED_SHORT == 2
-    #define FR_16BIT unsigned short
-#elif SIZEOF_UNSIGNED_INT == 2
-    #define FR_16BIT unsigned int
-#elif SIZEOF_UNSIGNED_LONG == 2
-    #define FR_16BIT unsigned long
-#elif SIZEOF_UNSIGNED_LONG_LONG == 2
-    #define FR_16BIT unsigned long long
-#else
-    #define FR_16BIT unsigned long long
-    #warning could not find suitable FR_32BIT (defining as ull)
+#if SIZEOF_DOUBLE != 8
+#warning sizeof(double) is not 64 bit!
 #endif
 
-
-#if SIZEOF_UNSIGNED_INT == 4
-    #define FR_32BIT unsigned int
-#elif SIZEOF_UNSIGNED_LONG == 4
-    #define FR_32BIT unsigned long
-#elif SIZEOF_UNSIGNED_LONG_LONG == 4
-    #define FR_32BIT unsigned long long
-#else
-    #define FR_32BIT unsigned long long
-    #warning could not find suitable FR_32BIT (defining as ull)
-#endif
-
-
-#if SIZEOF_UNSIGNED_INT == 8
-    #define FR_64BIT unsigned int
-#elif SIZEOF_UNSIGNED_LONG == 8
-    #define FR_64BIT unsigned long
-#elif SIZEOF_UNSIGNED_LONG_LONG == 8
-    #define FR_64BIT unsigned long long
-#else
-    #define FR_64BIT unsigned long long
-    #warning could not find suitable FR_64BIT (defining as ull)
-#endif
 
 
 #define FR_MAX_PARAMSTRLEN (0x1000)
 
-
-#define FR_16BIT_MAX        ((FR_64BIT)0xFFFF)
-#define FR_32BIT_MAX        ((FR_64BIT)0xFFFFFFFF)
-#define FR_64BIT_MAX        ((FR_64BIT)0xFFFFFFFFFFFFFFFF)
-
-
-
-// a task struct,
-// this keeps ahold of timings, and prints conclusions
-typedef struct fr_task_t {
-    char *name;
-    struct timeval stime, etime;
-    bool is_done;
-} fr_task_t;
-
-
-typedef struct img_t {
-    long px, py;
-
-    // len(data) = px * py * 3, and stores RGB vals
-    char *data;
-} img_t;
 
 #ifdef HAVE_GMP
 typedef struct fractal_mpf_t {
@@ -169,6 +113,19 @@ typedef struct fractal_mpf_t {
 #endif
 
 
+// this keeps track of colors
+typedef struct fractal_color_t {
+
+    long numcol;
+
+    // in form FR_COLOR_$X
+    long coltype;
+
+    // 3 * numcol, in RGB format
+    unsigned char * data;
+
+} fractal_color_t;
+
 // mapping object
 typedef struct fractal_img_t {
     long px, py, max_iter;
@@ -178,6 +135,8 @@ typedef struct fractal_img_t {
 
     // generic output format, output file
     char *genout, * out;
+
+    fractal_color_t color;
 
     long prec;
 
@@ -190,9 +149,21 @@ typedef struct fractal_img_t {
 
     char *Z;
 
-    void * data;
+    // r, g, b
+    unsigned char * data;
 
 } fractal_img_t;
+
+
+#define FR_COLOR_RED                 (0x0001)
+#define FR_COLOR_BLUE                (0x0002)
+#define FR_COLOR_GREEN               (0x0003)
+#define FR_COLOR_BW                  (0x0004)
+#define FR_COLOR_RAND                (0x0005)
+#define FR_COLOR_MOCHA               (0x0006)
+
+// todo
+#define FR_COLOR_FILE                (0x0101)
 
 
 #include "alloc_lib.h"
@@ -201,12 +172,11 @@ typedef struct fractal_img_t {
 
 // defaults that should always be included
 
-#include "io_raw/io_raw.h"
-#include "io_img/io_img.h"
+#include "io_bmp/io_bmp.h"
 
 #include "engine_c/engine_c.h"
 
-#include "color_c/color_c.h"
+//#include "color_c/color_c.h"
 
 
 

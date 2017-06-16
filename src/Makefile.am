@@ -33,7 +33,7 @@ color_c_src = color_c/color_c.h color_c/color_c.c
 
 color_src = 
 
-color_src += $(color_c_src)
+#color_src += $(color_c_src)
 
 
 
@@ -46,7 +46,6 @@ engine_src =
 
 engine_src += $(engine_c_src)
 
-
 if HAVE_GMP
 engine_src += $(engine_mpf_src)
 endif
@@ -56,16 +55,12 @@ if HAVE_OPENCL
 engine_src += $(engine_opencl_src)
 endif
 
-
-io_raw_src = io_raw/io_raw.h io_raw/io_raw.c
-io_img_src = io_img/io_img.h io_img/io_img.c
 io_png_src = io_png/io_png.h io_png/io_png.c
+io_bmp_src = io_bmp/io_bmp.h io_bmp/io_bmp.c
 
 io_src =
 
-
-io_src += $(io_raw_src)
-io_src += $(io_img_src)
+io_src += $(io_bmp_src)
 
 if HAVE_PNG
 io_src += $(io_png_src)

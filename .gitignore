@@ -15,6 +15,7 @@ src/fractalrender
 *.mp4
 *.gif
 *.png
+*.bmp
 
 
 *.orig
