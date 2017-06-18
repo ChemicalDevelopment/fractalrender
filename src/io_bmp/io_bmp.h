@@ -20,12 +20,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __IO_RAW_H__
-#define __IO_RAW_H__
+#ifndef __IO_BMP_H__
+#define __IO_BMP_H__
 
-void io_raw_read_fractal(fractal_img_t * ret, FILE *fp);
-
-void io_raw_write_fractal(fractal_img_t * ret, FILE *fp);
+void io_bmp_write_fractal(fractal_img_t * ret, FILE *fp);
 
 #endif
 

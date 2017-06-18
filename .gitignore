@@ -15,7 +15,10 @@ src/fractalrender
 *.mp4
 *.gif
 *.png
+*.bmp
 
+*.color
+!example_*
 
 *.orig
 Makefile

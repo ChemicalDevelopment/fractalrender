@@ -26,7 +26,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 bool engine_opencl_isvalid;
 
 
-void engine_opencl_init(int __depth, int d0, int d1);
+void engine_opencl_init(int __depth, int d0, int d1, int numincol, unsigned char * incol);
 
 void engine_opencl_fulltest(fractal_img_t * ret);
 

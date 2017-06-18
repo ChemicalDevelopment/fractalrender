@@ -10,8 +10,7 @@ A program that generates images and videos of the mandelbrot fractals
 
 Lots to be done!
 
-  * Create more engines [functional: C, OpenCL, MPF, MPC] [future: CUDA]
-  * Create some color formats swappable at runtime.
+  * Create more engines [functional: C, OpenCL, MPF] [future: CUDA]
 
 
 
@@ -22,16 +21,16 @@ Once compiled, run `fractalrender -h` to view help.
 This will give output like:
 
 ```
-FractalRender v0.0.1
+FractalRender v0.2.0
 
 --info                                  show info
 -h, --help                              show help / usage
 --authors                               show authors
--e, --engine=S                          engine (C, MPF, MPC, OPENCL)
---from-raw=S                            input from .raw files
+-e, --engine=S                          engine (C, MPF, OPENCL)
+-col, --color=S                         color scheme (RED, BW, $FILE, etc)
+-ncs, --num-colors=N                    number of colors
 -A                                      create multiple frames
--p, --prec=N                            min bits of precision (only supprted in MPF,MPC engine)
--col, --color=S                         red color pattern
+-p, --prec=N                            min bits of precision (only supprted in MPF engine)
 --sec=F                                 seconds
 --fps=F                                 frames per second
 --zps=F                                 zoom per second
@@ -41,18 +40,20 @@ FractalRender v0.0.1
 -c, --center=S,S                        x, y coordinates of middle of image
 -l, --location=S                        location name, opposed to coordinates
 -z, --zoom=S                            zoom level
+-CLdevice=S                             OpenCL device ('CPU', 'GPU', or 'ALL')
+-CLdevicenum=N                          OpenCL device number
 -CLkernel=S                             OpenCL engine kernel
 -CLdevice=N                             OpenCL device number
 -CLsize=N,N                             OpenCL local item size
 S                                       file to save as
 
-Authors: 
+Authors:
   Cade Brown <cade@chemicaldevelopment.us>
 ```
 
 ### Example Usage
 
-You can run `fractalrender` with no arguments, and a file named `out.png` will be created, with a good default image
+You can run `fractalrender` with no arguments, and a file named `out.png` will be created, with a good default image (or, if you don't have libpng, fractalrender will create `out.bmp`)
 
 Here a good example image: `fractalrender -l elephantvalley -z 100 -i 600`
 
@@ -66,12 +67,20 @@ You can specify a different output here:
 
 `fractalrender here.png`
 
-Or, use raw formatted data, to then colorize faster (using precomputed pixels).
+Or, use raw BMP fle:
 
-`fractalrender here.raw && fractalrender here.png --from-raw here.raw`
+`fractalrender here.bmp`
 
-Now, you don't need to calculate the `.raw` file everytime you want to recolorize the same image.
 
+### Colorizing
+
+To colorize, use the `-col` option.
+
+For example, use
+
+`fractalrender -col RAND` to create a random colorization pattern.
+
+It uses interpolation to create a smooth image without the normal aliased bands that are common.
 
 
 #### Animation
@@ -87,15 +96,6 @@ You can use `--sec` for how many seconds, `--fps` for the frames per second, and
 To make a 15 second video zooming in on a nice default point, run this:
 
 `fractalrender -A --sec 15 --fps 6 --zps 1.8 -i 100 -l elephantvalley vid_%d.png`
-
-Or, to do in two steps:
-
-`fractalrender -A --sec 15 --fps 6 --zps 1.8 -i 100 -l elephantvalley vid_%d.raw`
-
-Then, `fractalrender --fps 6 --from-raw vid_%d.raw vid_%d.png`
-
-These two commands have the same effect. However, using the latter method has a main advantage: you can rerun the second command with different colorization options, and it goes much faster, because it uses precomputed pixel data. However, for large projects, .raw files can take up a lot of room. For the average user, the first method is clearer.
-
 
 
 ## Compiling
@@ -118,8 +118,7 @@ Notes:
 
 The `dir` for arguments starting with `--with` is optional; if you leave it off, it looks in standard places to find the library, and optionally enables them if found. Use `--without-X` to disable the automatic checking
 
-You can use `--without-X` to disable support. Thus, the minimal build configuration, only able to create `.raw` files using C code is achieved by using `./configure --without-mpi --without-gmp --without-mpfr --without-mpc --without-png --without-opencl`.
-
+You can use `--without-X` to disable support. Thus, the minimal build configuration, only able to create `.bmp` files using C code is achieved by using `./configure --without-mpi --without-gmp --without-mpfr --without-mpc --without-png --without-opencl`.
 
 
 

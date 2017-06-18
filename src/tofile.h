@@ -26,20 +26,15 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-#define FR_COLOR_RED_ONLY                (0x0001)
-#define FR_COLOR_BLUE_ONLY               (0x0002)
-#define FR_COLOR_GREEN_ONLY              (0x0003)
-#define FR_COLOR_BW_LIN                  (0x0004)
-#define FR_COLOR_BINARY                  (0x0005)
 
-
-#define FR_FORMAT_RAW                    (0x0101)
+#define FR_FORMAT_COLOR                  (0x0101)
 
 #define FR_FORMAT_PNG                    (0x0102)
+#define FR_FORMAT_BMP                    (0x0103)
 
 
 int get_format(char *filename);
 
-void fractal_to_file(fractal_img_t *ret, img_t *reti);
+void fractal_to_file(fractal_img_t *ret);
 
 #endif

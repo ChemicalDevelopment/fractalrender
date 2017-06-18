@@ -20,7 +20,7 @@
 
 
 AC_PREREQ([2.55])
-AC_INIT([FractalRender], [0.1.0], [group@chemicaldevelopment.us])
+AC_INIT([FractalRender], [0.2.0], [group@chemicaldevelopment.us])
 AM_INIT_AUTOMAKE([subdir-objects])
 
 #AC_CONFIG_MACRO_DIRS([m4])
@@ -42,6 +42,7 @@ AC_CHECK_LIB(m, log)
 UNAME_S=$(uname)
 
 
+AC_CHECK_SIZEOF([double])
 AC_CHECK_SIZEOF([unsigned char])
 AC_CHECK_SIZEOF([unsigned short])
 AC_CHECK_SIZEOF([unsigned int])

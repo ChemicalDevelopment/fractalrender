@@ -33,25 +33,101 @@ FILE * sfopen(char *fn, char *mode) {
 }
 
 
+
+
 void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
     ret->px = px;
     ret->py = py;
 
     ret->max_iter = max_iter;
 
-    if (max_iter > FR_32BIT_MAX) {
-        ret->depth = 64;
-    } else if (max_iter > FR_16BIT_MAX) {
-        ret->depth = 32;
-        //printf("ERROR: max iterations must be < 2^16\n");
-        //FR_FAIL
-    } else {
-        ret->depth = 16;
-    }
-    
-
-    ret->data = (void *)malloc(px * py * ret->depth / 8 + 1);
+    ret->data = (void *)malloc(px * py * 3);
     
     assert(ret->data != NULL);
+
+    init_frcl(&ret->color);
+}
+
+
+void init_frcl(fractal_color_t *ret) {
+  long numcol = cargs_get_int("-ncs");
+  ret->mult = cargs_get_float("-colm");
+  if (ret->coltype != FR_COLOR_FILE) {
+    ret->numcol = numcol;
+    ret->data = (unsigned char *)malloc(ret->numcol * 3);
+  }
+
+  long i;
+  if (ret->coltype == FR_COLOR_RED) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 255 * i / numcol;
+      ret->data[3 * i + 1] = 0;
+      ret->data[3 * i + 2] = 0;
+    }
+  } else if (ret->coltype == FR_COLOR_GREEN) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 0;
+      ret->data[3 * i + 1] = 255 * i / numcol;
+      ret->data[3 * i + 2] = 0;
+    }
+  } else if (ret->coltype == FR_COLOR_BLUE) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 0;
+      ret->data[3 * i + 1] = 0;
+      ret->data[3 * i + 2] = 255 * i / numcol;
+    }
+  } else if (ret->coltype == FR_COLOR_BW) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = 255 * i / numcol;
+      ret->data[3 * i + 1] = 255 * i / numcol;
+      ret->data[3 * i + 2] = 255 * i / numcol;
+    }
+  } else if (ret->coltype == FR_COLOR_RAND) {
+    for (i = 0; i < numcol; ++i) {
+      ret->data[3 * i + 0] = rand() & 0xff;
+      ret->data[3 * i + 1] = rand() & 0xff;
+      ret->data[3 * i + 2] = rand() & 0xff;
+    }
+  } else if (ret->coltype == FR_COLOR_MOCHA) {
+    double di;
+    for (i = 0; i < numcol; ++i) {
+      di = (double)i / (numcol);
+      ret->data[3 * i + 0] = (long)(floor(di * 255.0)) & 0xff;
+      ret->data[3 * i + 1] = (long)(floor(di * di * 255.0)) & 0xff;
+      ret->data[3 * i + 2] = (long)(floor(di * di * di * 255.0)) & 0xff;
+    }
+  } else if (ret->coltype == FR_COLOR_HAZEOCEAN) {
+    double di;
+    for (i = 0; i < numcol; ++i) {
+      di = (double)i / (numcol);
+      ret->data[3 * i + 0] = (long)(di * 178) & 0xff;
+      ret->data[3 * i + 1] = (long)((100 + floor(di * 255.0))) & 0xff;
+      ret->data[3 * i + 2] = (long)(di * 178) & 0xff;
+    }
+  } else if (ret->coltype == FR_COLOR_FILE) {
+    unsigned int R, G, B, ct;
+    FILE *fp = sfopen(cargs_get("-col"), "r");
+    for (ct = 0; fscanf(fp, "%d,%d,%d\n", &R, &G, &B) == 3; ct++) {
+        if (R > 255 || G > 255 || B > 255) {
+          printf("error reading color file\n");
+          FR_FAIL
+        }
+    }
+    fclose(fp);
+    numcol = ct;
+    ret->numcol = ct;
+    ret->data = (unsigned char *)malloc(3 * numcol);
+    fp = sfopen(cargs_get("-col"), "r");
+    for (ct = 0; fscanf(fp, "%d,%d,%d\n", &R, &G, &B) == 3; ct++) {
+        ret->data[3 * ct + 0] = R & 0xff;
+        ret->data[3 * ct + 1] = G & 0xff;
+        ret->data[3 * ct + 2] = B & 0xff;
+    }
+    fclose(fp);
+    printf("Done reading from file\n");
+  } else {
+    printf("unknown color format\n");
+    FR_FAIL      
+  }
 }
 

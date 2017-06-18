@@ -23,7 +23,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 
 
-void io_png_write_fractal(img_t * ret, FILE *fp) {
+void io_png_write_fractal(fractal_img_t * ret, FILE *fp) {
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
     int code;

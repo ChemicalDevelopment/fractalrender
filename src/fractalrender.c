@@ -100,6 +100,30 @@ void init_from_cmdline(fractal_img_t *ret) {
         prec = cargs_get_int("-p");
     }
 
+    char *ctype_str = cargs_get("-col");
+    long color_type;
+
+    if (strcmp(ctype_str, "RED") == 0) {
+        color_type = FR_COLOR_RED;
+    } else if (strcmp(ctype_str, "GREEN") == 0) {
+        color_type = FR_COLOR_GREEN;
+    } else if (strcmp(ctype_str, "BLUE") == 0) {
+        color_type = FR_COLOR_BLUE;
+    } else if (strcmp(ctype_str, "BW") == 0) {
+        color_type = FR_COLOR_BW;
+    } else if (strcmp(ctype_str, "RAND") == 0) {
+        color_type = FR_COLOR_RAND;
+    } else if (strcmp(ctype_str, "MOCHA") == 0) {
+        color_type = FR_COLOR_MOCHA;
+    } else if (strcmp(ctype_str, "HAZEOCEAN") == 0) {
+        color_type = FR_COLOR_HAZEOCEAN;
+    } else if (get_format(ctype_str) == FR_FORMAT_COLOR) {
+        printf("Reading from color file: %s\n", ctype_str);
+        color_type = FR_COLOR_FILE;
+    } else {
+        printf("Don't know how to use color scheme: %s\n", ctype_str);
+        FR_FAIL
+    }
 
     char * engine = cargs_get("-e");
 
@@ -127,6 +151,8 @@ void init_from_cmdline(fractal_img_t *ret) {
 
     ret->Z = zoom;
 
+    ret->color.coltype = color_type;
+
     init_frit(ret, d0, d1, iter);
     
 
@@ -152,16 +178,27 @@ void do_engine_test(fractal_img_t * ret) {
 
 int main(int argc, char *argv[]) {
 
+    int to_srand;
+
     #ifdef HAVE_MPI
     mpi_err = MPI_Init(&argc, &argv);
     mpi_err = MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
     mpi_err = MPI_Comm_size(MPI_COMM_WORLD, &mpi_numprocs);
     printf("process %d/%d started\n", mpi_rank, mpi_numprocs);
+    if (mpi_rank == 0) {
+        to_srand = time(NULL);
+    }
+    MPI_Bcast(&to_srand, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    
     #else
     mpi_err = 0;
     mpi_rank = 0;
     mpi_numprocs = 1;
+    to_srand = time(NULL);
+    
     #endif
+
+    srand(to_srand);
 
     cargs_init(PACKAGE_NAME, PACKAGE_VERSION, argc, argv);
 
@@ -171,15 +208,23 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("-e", "--engine", 1, CARGS_ARG_TYPE_STR, "engine (C, MPF, OPENCL)");
     cargs_add_default("-e", "C");
 
-    cargs_add_arg("--from-raw", NULL, 1, CARGS_ARG_TYPE_STR, "input from .raw files");
+    cargs_add_arg("-col", "--color", 1, CARGS_ARG_TYPE_STR, "color scheme (RED, BW, $FILE, etc)");
+    cargs_add_default("-col", "RED");
+
+    cargs_add_arg("-colm", "--color-mult", 1, CARGS_ARG_TYPE_FLOAT, "change color period");
+    cargs_add_default("-colm", "1.0");
+
+    cargs_add_arg("-ncs", "--num-colors", 1, CARGS_ARG_TYPE_INT, "number of colors");
+    cargs_add_default("-ncs", "10");
+    
+
+    //cargs_add_arg("--from-raw", NULL, 1, CARGS_ARG_TYPE_STR, "input from .raw files");
 
     cargs_add_flag("-A", NULL, "create multiple frames");
 
     cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision (only supprted in MPF engine)");
     cargs_add_default("-p", "64");
 
-    cargs_add_arg("-col", "--color", 1, CARGS_ARG_TYPE_STR, "red color pattern");
-    cargs_add_default("-col", "0");
 
     cargs_add_arg("--sec", NULL, 1, CARGS_ARG_TYPE_FLOAT, "seconds");
     cargs_add_default("--sec", "4");
@@ -189,7 +234,6 @@ int main(int argc, char *argv[]) {
 
     cargs_add_arg("--zps", NULL, 1, CARGS_ARG_TYPE_FLOAT, "zoom per second");
     cargs_add_default("--zps", "1.6");
-
 
 
     cargs_add_arg("-d", "--dim", 2, CARGS_ARG_TYPE_INT, "dimensions of image/video");
@@ -213,7 +257,9 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("-z", "--zoom", 1, CARGS_ARG_TYPE_STR, "zoom level");
     cargs_add_default("-z", "0.4");
 
-    cargs_add_arg("-CLdevice", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL device ('CPU', 'GPU', or 'ALL'");
+    #ifdef HAVE_OPENCL
+
+    cargs_add_arg("-CLdevice", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL device ('CPU', 'GPU', or 'ALL')");
     cargs_add_default("-CLdevice", "GPU");
 
     cargs_add_arg("-CLdevicenum", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL device number");
@@ -229,14 +275,15 @@ int main(int argc, char *argv[]) {
     cargs_add_default_i("-CLsize", "16", 0);
     cargs_add_default_i("-CLsize", "16", 1);
 
+    #endif
 
     cargs_add_arg("", NULL, 1, CARGS_ARG_TYPE_STR, "file to save as");
 
-    // if they don't have -lpng, just compute raw
+    // if they don't have -lpng, just compute bmp
     #ifdef HAVE_PNG
     cargs_add_default("", "out.png");
     #else
-    cargs_add_default("", "out.raw");
+    cargs_add_default("", "out.bmp");
     #endif
 
     cargs_parse();
@@ -248,17 +295,9 @@ int main(int argc, char *argv[]) {
 
     init_fillin(&fractal);
 
-    if (!cargs_get_flag("--from-raw")) {
-        init_from_cmdline(&fractal);
-    }
+    init_from_cmdline(&fractal);
 
-    // choose image format, and maybe change name
-    fractal.imgfmt = FR_COLOR_RED_ONLY;
-
-    img_t reti;
-    io_init_fractal_to_img(&fractal, &reti);
-
-    figure_out_job(&fractal, &reti);
+    figure_out_job(&fractal);
 
     #ifdef HAVE_OPENCL
     engine_opencl_end();
@@ -276,7 +315,7 @@ int main(int argc, char *argv[]) {
     #endif
 
 
-    if (mpi_rank == 0 && cargs_get_flag("-A") && get_format(fractal.genout) != FR_FORMAT_RAW) {
+    if (mpi_rank == 0 && cargs_get_flag("-A")) {
         #define FR_FFMPEG_CMD "ffmpeg -i %s result.mp4 -framerate %s"
 
         char *cmd = (char *)malloc(strlen(FR_FFMPEG_CMD) + 40 + strlen(fractal.genout));

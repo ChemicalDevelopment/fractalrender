@@ -22,26 +22,25 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-void figure_out_job(fractal_img_t *fractal, img_t *reti) {
-    bool is_raw = cargs_get_flag("--from-raw");
+void figure_out_job(fractal_img_t *fractal) {
     bool is_anim = cargs_get_flag("-A");
     bool is_mpf = strcmp(cargs_get("-e"), "MPF") == 0;
 
     if (is_anim) {
         if (is_mpf) {
-            do_anim_mpf(fractal, reti);
-        } else if (is_raw) {
-            do_anim_raw(fractal, reti);
+            #ifdef HAVE_GMP
+            do_anim_mpf(fractal);
+            #endif
         } else {
-            do_anim(fractal, reti);
+            do_anim(fractal);
         }
     } else {
         if (is_mpf) {
-            do_single_mpf(fractal, reti);
-        } else if (is_raw) {
-            do_single_raw(fractal, reti);
+            #ifdef HAVE_GMP
+            do_single_mpf(fractal);
+            #endif
         } else {
-            do_single(fractal, reti);
+            do_single(fractal);
         }
     }
 }
@@ -105,7 +104,7 @@ void __mpf_pow_ui_div_ui(mpf_t r, mpf_t a, int p, int q, int prec) {
 
 }
 
-void do_anim_mpf(fractal_img_t *fractal, img_t *reti) {
+void do_anim_mpf(fractal_img_t *fractal) {
     fractal_mpf_t mp;
     engine_mpf_init_mpf(fractal, &mp);
     mpf_t basezoom, zps;
@@ -144,12 +143,12 @@ void do_anim_mpf(fractal_img_t *fractal, img_t *reti) {
         sprintf(fractal->out, basefmt, i);
 
         engine_mpf_fulltest(fractal, &mp);
-        fractal_to_file(fractal, reti);
+        fractal_to_file(fractal);
     }
     engine_mpf_clear_mpf(fractal, &mp);
 }
 
-void do_single_mpf(fractal_img_t *fractal, img_t *reti) {
+void do_single_mpf(fractal_img_t *fractal) {
     fractal_mpf_t mp;
     engine_mpf_init_mpf(fractal, &mp);
 
@@ -159,7 +158,7 @@ void do_single_mpf(fractal_img_t *fractal, img_t *reti) {
     mpf_set_str(mp.Z, fractal->Z, 10);
 
     engine_mpf_fulltest(fractal, &mp);
-    fractal_to_file(fractal, reti);
+    fractal_to_file(fractal);
 
     engine_mpf_clear_mpf(fractal, &mp);
 }
@@ -167,7 +166,7 @@ void do_single_mpf(fractal_img_t *fractal, img_t *reti) {
 #endif
 
 
-void do_anim(fractal_img_t *fractal, img_t *reti) {
+void do_anim(fractal_img_t *fractal) {
     double sec = atof(cargs_get("--sec")), fps = atof(cargs_get("--fps")), zps = atof(cargs_get("--zps"));
     double basezoom = atof(cargs_get("-z"));
 
@@ -181,55 +180,13 @@ void do_anim(fractal_img_t *fractal, img_t *reti) {
         sprintf(fractal->Z, "%lf", basezoom * pow(zps, (double)(i-1)/fps));
         sprintf(fractal->out, basefmt, i);
         do_engine_test(fractal);
-        fractal_to_file(fractal, reti);
+        fractal_to_file(fractal);
     }
 }
 
-void do_single(fractal_img_t *fractal, img_t *reti)  {
+void do_single(fractal_img_t *fractal)  {
     do_engine_test(fractal);
-    fractal_to_file(fractal, reti);
-}
-
-
-void do_anim_raw(fractal_img_t *fractal, img_t *reti) {
-    double sec = atof(cargs_get("--sec")), fps = atof(cargs_get("--fps")), zps = atof(cargs_get("--zps"));
-    double basezoom = atof(cargs_get("-z"));
-
-    char * baseinfmt = (char *)malloc(strlen(cargs_get("--from-raw")));
-    sprintf(baseinfmt, "%s", cargs_get("--from-raw"));
-    char * infmt = (char *)malloc(strlen(baseinfmt) + 40);
-
-    char * baseoutfmt = (char *)malloc(strlen(fractal->genout));
-    sprintf(baseoutfmt, "%s", fractal->genout);
-
-    fractal->out = (char *)malloc(strlen(baseoutfmt) + 40);
-
-    FILE *fp;
-
-    int total_frames = (int)floor(sec * fps);
-    int i;
-    for (i = mpi_rank + 1; i <= total_frames; i += mpi_numprocs) {
-        sprintf(fractal->out, baseoutfmt, i);
-        sprintf(infmt, baseinfmt, i);
-
-        fp = sfopen(infmt, "rb");
-        if (fp == NULL) {
-            printf("ERROR opening file: %s\n", infmt);
-            FR_FAIL
-        }
-        io_raw_read_fractal(fractal, fp);
-        //do_engine_test(&fractal);
-        fclose(fp);
-        fractal_to_file(fractal, reti);
-    }
-}
-
-void do_single_raw(fractal_img_t *fractal, img_t *reti) {
-    FILE *fp = sfopen(cargs_get("--from-raw"), "rb");
-    io_raw_read_fractal(fractal, fp);
-    fclose(fp);
-    //do_engine_test(&fractal);
-    fractal_to_file(fractal, reti);
+    fractal_to_file(fractal);
 }
 
 

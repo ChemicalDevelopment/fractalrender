@@ -23,25 +23,25 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifndef __JOBS_H__
 #define __JOBS_H__
 
-void figure_out_job(fractal_img_t *fractal, img_t *reti);
+void figure_out_job(fractal_img_t *fractal);
 
 #ifdef HAVE_GMP
 
 mpf_t frtmp[4];
 
-void do_anim_mpf(fractal_img_t *fractal, img_t *reti);
+void do_anim_mpf(fractal_img_t *fractal);
 
-void do_single_mpf(fractal_img_t *fractal, img_t *reti);
+void do_single_mpf(fractal_img_t *fractal);
 #endif
 
-void do_anim(fractal_img_t *fractal, img_t *reti);
+void do_anim(fractal_img_t *fractal);
 
-void do_single(fractal_img_t *fractal, img_t *reti);
+void do_single(fractal_img_t *fractal);
 
 
-void do_anim_raw(fractal_img_t *fractal, img_t *reti);
+void do_anim_raw(fractal_img_t *fractal);
 
-void do_single_raw(fractal_img_t *fractal, img_t *reti);
+void do_single_raw(fractal_img_t *fractal);
 
 #endif
 

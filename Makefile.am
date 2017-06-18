@@ -5,4 +5,4 @@
 AUTOMAKE_OPTIONS=foreign
 SUBDIRS=src 
 
-EXTRA_DIST=test_opencl.c
+EXTRA_DIST=test_opencl.c kernel.cl example_*

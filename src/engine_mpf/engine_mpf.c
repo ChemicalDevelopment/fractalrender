@@ -63,7 +63,7 @@ void engine_mpf_clear_mpf(fractal_img_t * ret, fractal_mpf_t *mp) {
 
 
 void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
-    FR_64BIT x, y, ci;
+    long x, y, ci;
 
     bool __update_xcache = true;
 
@@ -90,11 +90,18 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
     mpf_ui_div(mp->ssp_y, ret->py, mp->ssp_y);
     mpf_add(mp->ssp_y, mp->cY, mp->ssp_y);
 
+    double zn, di, hue;
 
-    FR_16BIT * data_16 = (FR_16BIT *)ret->data;
-    FR_32BIT * data_32 = (FR_32BIT *)ret->data;
-    FR_64BIT * data_64 = (FR_64BIT *)ret->data;
-    
+    unsigned char *col0, *col1;
+
+    int sci;
+
+    double tmp;
+
+    // use integers
+    int er = 4;
+    int er2 = er * er;
+
     for (x = 0; x < ret->px; ++x) {
         mpf_mul_ui(mp->sp_x, mp->d_c, x);
         mpf_add(mp->sp_x, mp->ssp_x, mp->sp_x);
@@ -114,7 +121,7 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
 
             __update_xcache = true;
 
-            for (ci = 0; ci < ret->max_iter && mpf_cmp_ui(mp->tmp, 4) < 0; ++ci) {
+            for (ci = 1; ci <= ret->max_iter && mpf_cmp_ui(mp->tmp, er2) < 0; ++ci) {
                 __update_xcache = true;
                 mpf_mul(mp->tmp, mp->p_x, mp->p_y);
                 mpf_mul_ui(mp->tmp, mp->tmp, 2);
@@ -130,17 +137,44 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
                 mpf_add(mp->tmp, mp->p_x_s, mp->p_y_s);
             }
 
-            //((char *)ret->data)[y * ret->px + x] = (FR_8BIT_MAX*ci) / ret->max_iter;
-            switch (ret->depth) {
-                case 16: data_16[y * ret->px + x] = ci; break;
-                case 32: data_32[y * ret->px + x] = ci; break;
-                case 64: data_64[y * ret->px + x] = ci; break;
+            // TODO:
+            // figure out if we need to compute with multiprecision
+            di = (double)ci;
+            zn = mpf_get_d(mp->tmp);
+
+            if (zn <= er2) {
+                hue = 0;
+            } else {
+                hue = di + 1 - log(fabs(zn)) / log(er2);
             }
+
+            hue *= ret->color.mult;
+
+            while (hue < 0) {
+                hue += ret->color.numcol;
+            }
+            while (hue >= ret->color.numcol) {
+                hue -= ret->color.numcol;
+            }
+
+            sci = (long)floor(hue);
+            tmp = hue - floor(hue);
+
+            col0 = &ret->color.data[3 * sci];
+            if (sci >= ret->color.numcol - 1) {
+                col1 = &ret->color.data[0];
+            } else {
+                col1 = &ret->color.data[3 * sci + 3];
+            }
+
+            sci = (y * ret->px + x) * 3;
+
+            ret->data[sci + 0] = ((unsigned long)floor(tmp*col1[0]+(1-tmp)*col0[0])) & 0xff;
+            ret->data[sci + 1] = ((unsigned long)floor(tmp*col1[1]+(1-tmp)*col0[1])) & 0xff;
+            ret->data[sci + 2] = ((unsigned long)floor(tmp*col1[2]+(1-tmp)*col0[2])) & 0xff;
+
         }
     }
-
-
 }
-
 
 
