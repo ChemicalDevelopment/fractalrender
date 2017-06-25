@@ -203,6 +203,7 @@ int main(int argc, char *argv[]) {
 
     int to_srand;
 
+
     #ifdef HAVE_MPI
     mpi_err = MPI_Init(&argc, &argv);
     mpi_err = MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
@@ -226,6 +227,43 @@ int main(int argc, char *argv[]) {
     srand(to_srand);
 
     cargs_init(PACKAGE_NAME, PACKAGE_VERSION, argc, argv);
+
+
+    char * supported_engines = (char *)malloc(6 * 100);
+    sprintf(supported_engines, "%s", "Supported engines: C, COMPLEX");
+
+
+    #ifdef HAVE_GMP
+    sprintf(supported_engines, "%s%s", supported_engines, ", MPF");
+    cargs_add_info("Compiled with GMP");
+    #endif
+
+    #ifdef HAVE_MPFR
+    cargs_add_info("Compiled with MPFR");
+    #endif
+
+    #ifdef HAVE_PNG
+    cargs_add_info("Compiled with libpng");
+    #endif
+
+    #ifdef HAVE_CARGS
+    cargs_add_info("Compiled with cargs");
+    #endif
+
+    #ifdef HAVE_OPENCL
+    sprintf(supported_engines, "%s%s", supported_engines, ", OPENCL");
+    cargs_add_info("Compiled with OpenCL");
+    #endif
+
+    #ifdef HAVE_MPI
+    cargs_add_info("Compiled with MPI");
+    #endif
+
+    sprintf(supported_engines, "%s", supported_engines);
+
+    cargs_add_info(supported_engines);
+
+
 
     cargs_add_author("Cade Brown", "cade@chemicaldevelopment.us");
 
