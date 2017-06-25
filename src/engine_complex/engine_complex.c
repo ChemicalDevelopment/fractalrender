@@ -32,6 +32,25 @@ inline double complex cpowi(double complex a, int b) {
     return pa;    
 }
 
+
+double complex cgamma(double complex a) {
+    if (creal(a) < 4) {
+        return cgamma(a + 1) / a;
+    }
+    double complex lga = clog(a);
+    double complex a_n2 = 1 / (a * a);
+    double complex a_k_n1 = 1 / a;
+    double complex _ea = a * lga;
+    _ea = _ea - a;
+    _ea = _ea - clog(a / (2 * 3.141592653589793238)) / 2;
+    _ea = _ea + a_k_n1 / 12;
+    a_k_n1 = a_k_n1 * a_n2;
+    _ea = _ea - a_k_n1 / 360;
+    a_k_n1 = a_k_n1 * a_n2;
+    _ea = _ea + a_k_n1 / 1260;
+    return cexp(_ea);
+}
+
 void engine_complex_fulltest(fractal_img_t * ret) {
 
     long x, y, ci;
@@ -55,8 +74,17 @@ void engine_complex_fulltest(fractal_img_t * ret) {
             z = c;
             
             for (ci = 1; ci <= ret->max_iter && cabs(z) <= er; ++ci) {
-                //z = cpow(z, 2 + I) + c;
                 z = z * z + c;
+
+                //z = (1 + 2 * cpowi(z, 3)) / (3 * cpowi(z, 2));
+                //z = cexp(z) + c;
+                //z = cgamma(z) + c;
+                //z = cpow(z, 2 + I) + c;
+                //z = cpow(z, 2.0 + ret->ctime / 2.0) + c;
+                //z = cpowi(z, 6) + c;
+                //z = z * z + .5 + .5 * I;
+                //z = z * z + (1 - 1.61803398875);
+                //z = z * z + -1.75;
             }
 
 

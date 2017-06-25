@@ -76,7 +76,7 @@ __kernel void mand(__global uchar * color_pattern, int color_pattern_length, dou
     for (ci = 1; ci <= max_iter && cnorm_sqr(z) <= er2; ++ci) {
         //z = cpow(z, (complex_t)(4, 0)) + c;
         //z = cpow((complex_t)(2.71828, 0), z) + c;
-        //z = cpow(z, (complex_t)(time + 2, 0)) + c;
+        //z = cpow(z, (complex_t)(2 + time / 4.0, 0)) + c;
         z = csqr(z) + c;
     }
 

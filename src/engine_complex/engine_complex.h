@@ -25,6 +25,8 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 inline double complex cpowi(double complex a, int b);
 
+double complex cgamma(double complex a);
+
 void engine_complex_fulltest(fractal_img_t * ret);
 
 #endif
