@@ -65,7 +65,6 @@ void engine_mpf_clear_mpf(fractal_img_t * ret, fractal_mpf_t *mp) {
 void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
     long x, y, ci;
 
-    bool __update_xcache = true;
 
     mpf_set_str(mp->cX, ret->cX, 10);
     mpf_set_str(mp->cY, ret->cY, 10);
@@ -90,16 +89,12 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
     mpf_ui_div(mp->ssp_y, ret->py, mp->ssp_y);
     mpf_add(mp->ssp_y, mp->cY, mp->ssp_y);
 
-    double zn, di, hue;
-
-    unsigned char *col0, *col1;
-
-    int sci;
+    int col_dest;
 
     double tmp;
 
     // use integers
-    int er = 4;
+    int er = 16;
     int er2 = er * er;
 
     for (x = 0; x < ret->px; ++x) {
@@ -107,6 +102,7 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
         mpf_add(mp->sp_x, mp->ssp_x, mp->sp_x);
 
         for (y = 0; y < ret->py; ++y) {
+            col_dest = 3 * (y * ret->px + x);
 
             mpf_mul_ui(mp->sp_y, mp->d_c, y);
             mpf_sub(mp->sp_y, mp->ssp_y, mp->sp_y);
@@ -119,10 +115,7 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
 
             mpf_add(mp->tmp, mp->p_x_s, mp->p_y_s);
 
-            __update_xcache = true;
-
             for (ci = 1; ci <= ret->max_iter && mpf_cmp_ui(mp->tmp, er2) < 0; ++ci) {
-                __update_xcache = true;
                 mpf_mul(mp->tmp, mp->p_x, mp->p_y);
                 mpf_mul_ui(mp->tmp, mp->tmp, 2);
 
@@ -137,41 +130,44 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
                 mpf_add(mp->tmp, mp->p_x_s, mp->p_y_s);
             }
 
-            // TODO:
-            // figure out if we need to compute with multiprecision
-            di = (double)ci;
-            zn = mpf_get_d(mp->tmp);
 
-            if (zn <= er2) {
-                hue = 0;
+            if (ret->color.is_simple) {
+                int color_off;
+                if (ci > ret->max_iter) {
+                    color_off = 0;
+                } else {
+                    color_off = 3*((int)floor(ci * ret->color.mult + ret->color.disp) % ret->color.numcol);
+                }
+                ret->data[col_dest + 0] = ret->color.data[color_off + 0];
+                ret->data[col_dest + 1] = ret->color.data[color_off + 1];
+                ret->data[col_dest + 2] = ret->color.data[color_off + 2];
+                
             } else {
-                hue = di + 1 - log(fabs(zn)) / log(er2);
+                double zn = mpf_get_d(mp->tmp);
+                double hue;
+                if (zn <= er2) {
+                    hue = 0;
+                } else {
+                    hue = ci + 1.0 - log(fabs(zn)) / log(er2);
+                }
+
+                hue = hue * ret->color.mult + ret->color.disp;
+                
+                hue = fmod(fmod(hue, ret->color.numcol) + ret->color.numcol, ret->color.numcol);
+
+                tmp = hue - floor(hue);
+                int color_off0 = 3 * ((int)floor(hue) % ret->color.numcol);
+                int color_off1;
+                if (color_off0 >= 3 *(ret->color.numcol - 1)) {
+                    color_off1 = 0;
+                } else {
+                    color_off1 = color_off0 + 3;
+                }
+
+                ret->data[col_dest + 0] = ((unsigned char)floor(tmp*ret->color.data[color_off1 + 0]+(1-tmp)*ret->color.data[color_off0 + 0]));
+                ret->data[col_dest + 1] = ((unsigned char)floor(tmp*ret->color.data[color_off1 + 1]+(1-tmp)*ret->color.data[color_off0 + 1]));
+                ret->data[col_dest + 2] = ((unsigned char)floor(tmp*ret->color.data[color_off1 + 2]+(1-tmp)*ret->color.data[color_off0 + 2]));
             }
-
-            hue *= ret->color.mult;
-
-            while (hue < 0) {
-                hue += ret->color.numcol;
-            }
-            while (hue >= ret->color.numcol) {
-                hue -= ret->color.numcol;
-            }
-
-            sci = (long)floor(hue);
-            tmp = hue - floor(hue);
-
-            col0 = &ret->color.data[3 * sci];
-            if (sci >= ret->color.numcol - 1) {
-                col1 = &ret->color.data[0];
-            } else {
-                col1 = &ret->color.data[3 * sci + 3];
-            }
-
-            sci = (y * ret->px + x) * 3;
-
-            ret->data[sci + 0] = ((unsigned long)floor(tmp*col1[0]+(1-tmp)*col0[0])) & 0xff;
-            ret->data[sci + 1] = ((unsigned long)floor(tmp*col1[1]+(1-tmp)*col0[1])) & 0xff;
-            ret->data[sci + 2] = ((unsigned long)floor(tmp*col1[2]+(1-tmp)*col0[2])) & 0xff;
 
         }
     }

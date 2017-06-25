@@ -39,12 +39,14 @@ color_src =
 
 
 engine_c_src = engine_c/engine_c.h engine_c/engine_c.c
+engine_complex_src = engine_complex/engine_complex.h engine_complex/engine_complex.c
 engine_mpf_src = engine_mpf/engine_mpf.h engine_mpf/engine_mpf.c
 engine_opencl_src = engine_opencl/engine_opencl.h engine_opencl/engine_opencl.c
 
 engine_src = 
 
 engine_src += $(engine_c_src)
+engine_src += $(engine_complex_src)
 
 if HAVE_GMP
 engine_src += $(engine_mpf_src)

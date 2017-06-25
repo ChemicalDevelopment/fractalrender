@@ -1,4 +1,4 @@
-/* c_engine/engine_c.c -- C engine for computing fractals
+/* engine_complex/engine_complex.c -- C engine for computing fractals, with complex numbers
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -23,37 +23,42 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender.h"
 
 
-void engine_c_fulltest(fractal_img_t * ret) {
+inline double complex cpowi(double complex a, int b) {
+    double complex pa = 1;
+    while (b > 0) {
+        pa = pa * a;
+        b--;
+    }
+    return pa;    
+}
+
+void engine_complex_fulltest(fractal_img_t * ret) {
 
     long x, y, ci;
 
-    double ssxd = atof(ret->cX) - 1.0 / atof(ret->Z), ssyd = atof(ret->cY) + ret->py / (ret->px * atof(ret->Z));
+    double complex base_complex = atof(ret->cX) - 1.0 / atof(ret->Z) + I * (atof(ret->cY) + ret->py / (ret->px * atof(ret->Z)));
+    double complex base_add_complex = 2.0 / (ret->px * atof(ret->Z)) + I * (-2.0 / (ret->px * atof(ret->Z)));
 
-    double d_xd = 2.0 / (ret->px * atof(ret->Z)), d_yd = -2.0 / (ret->px * atof(ret->Z));
-
-    double xd, yd, tmp, sxd, syd, xds, yds;
+    double complex c, z;
 
     double er = 16.0;
     double er2 = er * er;
 
-
+    double tmp;
     int col_dest;
 
     for (x = 0; x < ret->px; ++x) {
         for (y = 0; y < ret->py; ++y) {
             col_dest = 3 * (y * ret->px + x);
-            xd = ssxd + x * d_xd;
-            yd = ssyd + y * d_yd;
-            sxd = xd, syd = yd;
-            xds = xd * xd, yds = yd * yd;
+
+            c = (creal(base_complex) + creal(base_add_complex) * x) + I * (cimag(base_complex) + cimag(base_add_complex) * y);
+            z = c;
             
-            for (ci = 1; ci <= ret->max_iter && xds + yds <= er2; ++ci) {
-                tmp = 2 * xd * yd;
-                xd = xds - yds + sxd;
-                yd = tmp + syd;
-                xds = xd * xd;
-                yds = yd * yd;
+            for (ci = 1; ci <= ret->max_iter && cabs(z) <= er; ++ci) {
+                //z = cpow(z, 2 + I) + c;
+                z = z * z + c;
             }
+
 
             if (ret->color.is_simple) {
                 int color_off;
@@ -67,7 +72,7 @@ void engine_c_fulltest(fractal_img_t * ret) {
                 ret->data[col_dest + 2] = ret->color.data[color_off + 2];
                 
             } else {
-                double zn = xds + yds;
+                double zn = cabs(z) * cabs(z);
                 double hue;
                 if (zn <= er2) {
                     hue = 0;

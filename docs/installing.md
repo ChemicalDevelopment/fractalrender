@@ -55,4 +55,3 @@ If you don't specify any, FractalRender will try to check if you have each piece
 So, to compile with a local copy of `libpng`, run `./configure --with-png=$HOME/prefix && make && make install`
 
 
-

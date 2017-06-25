@@ -23,8 +23,14 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender.h"
 
 void figure_out_job(fractal_img_t *fractal) {
-    bool is_anim = cargs_get_flag("-A");
+    bool is_anim = fractal->is_anim;
     bool is_mpf = strcmp(cargs_get("-e"), "MPF") == 0;
+    if (cargs_get_flag("--no-image")) {
+        if (cargs_get_flag("")) {
+            printf("Not creating file: %s, because `--no-image` was set\n", cargs_get(""));
+        }
+        exit(0);
+    }
 
     if (is_anim) {
         if (is_mpf) {
@@ -126,8 +132,8 @@ void do_anim_mpf(fractal_img_t *fractal) {
 
     int fps = cargs_get_int("--fps");
 
-    char * basefmt = (char *)malloc(strlen(fractal->genout));
-    sprintf(basefmt, "%s", fractal->genout);
+    char * basefmt = (char *)malloc(strlen(fractal->tmpout));
+    sprintf(basefmt, "%s", fractal->tmpout);
     fractal->out = (char *)malloc(strlen(basefmt) + 40);
 
     int total_frames = (int)floor(sec * fps);
@@ -136,7 +142,6 @@ void do_anim_mpf(fractal_img_t *fractal) {
     int i;
     for (i = mpi_rank + 1; i <= total_frames; i += mpi_numprocs) {
         __mpf_pow_ui_div_ui(mp.Z, zps, i - 1, fps, fractal->prec);
-
         mpf_mul(mp.Z, mp.Z, basezoom);
 
 
@@ -166,12 +171,15 @@ void do_single_mpf(fractal_img_t *fractal) {
 #endif
 
 
+
+
+
 void do_anim(fractal_img_t *fractal) {
     double sec = atof(cargs_get("--sec")), fps = atof(cargs_get("--fps")), zps = atof(cargs_get("--zps"));
     double basezoom = atof(cargs_get("-z"));
 
-    char * basefmt = (char *)malloc(strlen(fractal->genout));
-    sprintf(basefmt, "%s", fractal->genout);
+    char * basefmt = (char *)malloc(strlen(fractal->tmpout));
+    sprintf(basefmt, "%s", fractal->tmpout);
     fractal->out = (char *)malloc(strlen(basefmt) + 40);
 
     int total_frames = (int)floor(sec * fps);
@@ -179,6 +187,8 @@ void do_anim(fractal_img_t *fractal) {
     for (i = mpi_rank + 1; i <= total_frames; i += mpi_numprocs) {
         sprintf(fractal->Z, "%lf", basezoom * pow(zps, (double)(i-1)/fps));
         sprintf(fractal->out, basefmt, i);
+        fractal->ctime = (double)(i-1)/fps;
+        
         do_engine_test(fractal);
         fractal_to_file(fractal);
     }

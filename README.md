@@ -21,15 +21,19 @@ Once compiled, run `fractalrender -h` to view help.
 This will give output like:
 
 ```
-FractalRender v0.2.0
+FractalRender v0.3.0
 
 --info                                  show info
 -h, --help                              show help / usage
 --authors                               show authors
 -e, --engine=S                          engine (C, MPF, OPENCL)
 -col, --color=S                         color scheme (RED, BW, $FILE, etc)
+-cols, --color-simple                   use simple color bands, instead of gradient
+-colm, --color-mult=F                   change color period
+-cold, --color-disp=F                   change color displacement
+-colo, --color-out=F                    output color file
 -ncs, --num-colors=N                    number of colors
--A                                      create multiple frames
+--no-image                              don't create image
 -p, --prec=N                            min bits of precision (only supprted in MPF engine)
 --sec=F                                 seconds
 --fps=F                                 frames per second
@@ -45,9 +49,11 @@ FractalRender v0.2.0
 -CLkernel=S                             OpenCL engine kernel
 -CLdevice=N                             OpenCL device number
 -CLsize=N,N                             OpenCL local item size
+--ffmpeg=S                              ffmpeg binary
+--anim-tmp=S                            store temporary files for animation
 S                                       file to save as
 
-Authors:
+Authors: 
   Cade Brown <cade@chemicaldevelopment.us>
 ```
 
@@ -85,17 +91,18 @@ It uses interpolation to create a smooth image without the normal aliased bands 
 
 #### Animation
 
-For making animations, you can run the default: `fractalrender -A`. This will generate a number of PNG images, and will print out a command to run with `ffmpeg` to join them into a video.
+For making animations, you can run the default: `fractalrender out.mp4`. This will generate a number of PNG images, and will use `ffmpeg` to create the result. Use `--ffmpeg` if ffmpeg is installed somewhere not on the PATH.
 
-**`-A` does not generate a video. You need [FFMPEG](http://ffmpeg.org) to string together output**.
+If ffmpeg is not installed or found, fractalrender will output a command to run to manually create the video.
 
-If you want to store temporary `.png` s somewhere, you can run with the normal output, like `fractalrender /tmp/%d_out.png -A` this will replace the first `%d` with the index of the png.
+
+If you want to store temporary `.png` s somewhere other than `/tmp/`, you can use `--anim-tmp`, like `fractalrender out.mp4 --anim-tmp %d_out.png` this will replace the first `%d` with the index of the png.
 
 You can use `--sec` for how many seconds, `--fps` for the frames per second, and `--zps` for zoom per second.
 
 To make a 15 second video zooming in on a nice default point, run this:
 
-`fractalrender -A --sec 15 --fps 6 --zps 1.8 -i 100 -l elephantvalley vid_%d.png`
+`fractalrender out.mp4 --sec 15 --fps 6 --zps 1.8 -i 100 -l elephantvalley --anim-tmp vid_%d.png`
 
 
 ## Compiling

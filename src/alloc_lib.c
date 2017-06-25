@@ -52,6 +52,10 @@ void init_frit(fractal_img_t *ret, long px, long py, long max_iter) {
 void init_frcl(fractal_color_t *ret) {
   long numcol = cargs_get_int("-ncs");
   ret->mult = cargs_get_float("-colm");
+  ret->disp = cargs_get_float("-cold");
+
+  ret->is_simple = cargs_get_flag("-cols");
+
   if (ret->coltype != FR_COLOR_FILE) {
     ret->numcol = numcol;
     ret->data = (unsigned char *)malloc(ret->numcol * 3);
@@ -128,6 +132,20 @@ void init_frcl(fractal_color_t *ret) {
   } else {
     printf("unknown color format\n");
     FR_FAIL      
+  }
+  if (cargs_get_flag("-colo")) {
+    int i;
+    FILE *fp;
+    char *out = cargs_get("-colo");
+    if (strcmp(out, "-") == 0) {
+      fp = stdout;
+    } else {
+      fp = sfopen(out, "w");
+    }
+    for (i = 0; i < ret->numcol; ++i) {
+      fprintf(fp, "%d,%d,%d\n", ret->data[3*i + 0], ret->data[3*i + 1], ret->data[3*i + 2]);
+    }
+    fclose(fp);
   }
 }
 

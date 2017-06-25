@@ -37,66 +37,71 @@ This is a quick abstraction so that the kernel can get this info
 
 
 #define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT "\
-__kernel void mand(__global __const int *imgMeta, __global __const double * meta, __global uchar * incol, __global uchar * outcol)\
+\
+__kernel void mand(__global uchar * color_pattern, int color_pattern_length, double color_pattern_scale, double color_pattern_disp, int do_simple_color, __global uchar * color_output, int width, int height, int max_iter, double center_x, double center_y, double zoom, double time)\
 {\
     int px = get_global_id(0), py = get_global_id(1);\
 \
-    double x = meta[0] + (2 * px - imgMeta[0]) / (meta[2] * imgMeta[0]), y = meta[1] + (imgMeta[1] - 2 * py) / (meta[2] * imgMeta[0]);\
+    double x = center_x + (2 * px - width) / (zoom * width), y = center_y + (height - 2 * py) / (zoom * width);\
 \
     double sx = x, sy = y, xs = x * x, ys = y * y, tmp;\
     \
-    double hue, di, zn;\
-\
-    double er = 4.0;\
+    double er = 16.0;\
     double er2 = er * er;\
 \
-    int iter = 1;\
-    while (xs + ys <= er2) {\
+    int col_dest = 3 * (py * width + px);\
+\
+\
+    int ci;\
+    for (ci = 1; ci <= max_iter && xs + ys <= er2; ++ci) {\
         tmp = 2 * x * y;\
         x = xs - ys + sx;\
         y = tmp + sy;\
-        iter += 1;\
-        if (iter >= imgMeta[2]) break;\
         xs = x * x;\
         ys = y * y;\
     }\
+    if (do_simple_color) {\
+        int color_off;\
+        \
+        if (ci > max_iter) {\
+            color_off = 0;\
+        } else {\
+            color_off = 3*((int)floor(ci * color_pattern_scale + color_pattern_disp) % color_pattern_length);\
+        }\
 \
-    zn = xs + ys;\
-    di = (double) iter;\
 \
-    if (zn <= er2) {\
-        hue = 0;\
+\
+        color_output[col_dest + 0] = color_pattern[color_off + 0];\
+        color_output[col_dest + 1] = color_pattern[color_off + 1];\
+        color_output[col_dest + 2] = color_pattern[color_off + 2];\
     } else {\
-        hue = di + 1 - log(fabs(zn)) / log(er2);\
+        double zn = xs + ys;\
+        double hue;\
+        if (zn <= er2) {\
+            hue = 0;\
+        } else {\
+            hue = ci + 1.0 - log(fabs(zn)) / log(er2);\
+        }\
+\
+        hue = hue * color_pattern_scale + color_pattern_disp;\
+        \
+        hue = fmod(fmod(hue, color_pattern_length) + color_pattern_length, color_pattern_length);\
+\
+        tmp = hue - floor(hue);\
+        int color_off0 = 3 * ((int)floor(hue) % color_pattern_length);\
+        int color_off1;\
+        if (color_off0 >= 3 *(color_pattern_length - 1)) {\
+            color_off1 = 0;\
+        } else {\
+            color_off1 = color_off0 + 3;\
+        }\
+\
+        color_output[col_dest + 0] = ((uchar)floor(tmp*color_pattern[color_off1 + 0]+(1-tmp)*color_pattern[color_off0 + 0]));\
+        color_output[col_dest + 1] = ((uchar)floor(tmp*color_pattern[color_off1 + 1]+(1-tmp)*color_pattern[color_off0 + 1]));\
+        color_output[col_dest + 2] = ((uchar)floor(tmp*color_pattern[color_off1 + 2]+(1-tmp)*color_pattern[color_off0 + 2]));\
     }\
-\
-    hue = hue * meta[3];\
-\
-    while (hue < 0) {\
-        hue += imgMeta[3];\
-    }\
-    while (hue >= imgMeta[3]) {\
-        hue -= imgMeta[3];\
-    }\
-\
-    int sci0 = (int)floor(hue);\
-    tmp = hue - sci0;\
-\
-    int sci1 = sci0 * 3;\
-    int sci2;\
-\
-    if (sci0 >= imgMeta[3] - 1) {\
-        sci2 = 0;\
-    } else {\
-        sci2 = sci1 + 3;\
-    }\
-\
-    int sci3 = 3 * (py * imgMeta[0] + px);\
-    outcol[sci3 + 0] = (uchar)(floor(tmp * incol[sci2 + 0] + (1 - tmp) * incol[sci1 + 0]));\
-    outcol[sci3 + 1] = (uchar)(floor(tmp * incol[sci2 + 1] + (1 - tmp) * incol[sci1 + 1]));\
-    outcol[sci3 + 2] = (uchar)(floor(tmp * incol[sci2 + 2] + (1 - tmp) * incol[sci1 + 2]));\
-\
 }\
+\
 "
 
 
@@ -122,10 +127,8 @@ cl_uint res_num_platforms;
 
 cl_int res;
 
-cl_mem imgMeta_buf = NULL;
-cl_mem meta_buf = NULL;
-cl_mem incol_buf = NULL;
-cl_mem outcol_buf = NULL;
+cl_mem color_pattern_m, color_output_m;
+
 
 
 size_t *global_item_size;
@@ -211,17 +214,12 @@ void engine_opencl_init(int __depth, int d0, int d1, int numincol, unsigned char
 	local_item_size[0] = cargs_get_int_idx("-CLsize", 0);
 	local_item_size[1] = cargs_get_int_idx("-CLsize", 1);
 
-    CLGLBL_HNDL(imgMeta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 4 * sizeof(int), NULL, &res));
+    CLGLBL_HNDL(color_pattern_m = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * numincol, NULL, &res));
 
+	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, color_pattern_m, CL_TRUE, 0, 3 * numincol, incol, 0, NULL, NULL));
+
+    CLGLBL_HNDL(color_output_m = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * global_item_size[0] * global_item_size[1], NULL, &res));
 	
-    CLGLBL_HNDL(meta_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 4 * sizeof(double), NULL, &res));
-
-    CLGLBL_HNDL(incol_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, 3 * numincol, NULL, &res));
-
-    CLGLBL_HNDL(outcol_buf = clCreateBuffer(context, CL_MEM_READ_WRITE, global_item_size[0] * global_item_size[1] * 3, NULL, &res));
-
-	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, incol_buf, CL_TRUE, 0, 3 * numincol, incol, 0, NULL, NULL));
-
 }
 
 
@@ -231,10 +229,8 @@ void engine_opencl_end() {
         CLGLBL_HNDL(res = clFinish(command_queue));
         CLGLBL_HNDL(res = clReleaseKernel(kernel));
         CLGLBL_HNDL(res = clReleaseProgram(program));
-        CLGLBL_HNDL(res = clReleaseMemObject(incol_buf));
-        CLGLBL_HNDL(res = clReleaseMemObject(outcol_buf));
-        CLGLBL_HNDL(res = clReleaseMemObject(meta_buf));
-        CLGLBL_HNDL(res = clReleaseMemObject(imgMeta_buf));
+        CLGLBL_HNDL(res = clReleaseMemObject(color_pattern_m));
+        CLGLBL_HNDL(res = clReleaseMemObject(color_output_m));
         CLGLBL_HNDL(res = clReleaseCommandQueue(command_queue));
         CLGLBL_HNDL(res = clReleaseContext(context));
     }
@@ -247,36 +243,35 @@ void engine_opencl_fulltest(fractal_img_t * ret) {
         engine_opencl_init(ret->depth, ret->px, ret->py, ret->color.numcol, ret->color.data);
     }
 
-
-	int *imgMeta = (int *)malloc(4 * sizeof(int));
-    double * meta = (double *)malloc(4 * sizeof(double));
-
     long long *data = (long long *)ret->data;
 
-    imgMeta[0] = ret->px;
-    imgMeta[1] = ret->py;
-    imgMeta[2] = ret->max_iter;
-    imgMeta[3] = ret->color.numcol;
+    double cX, cY, Z;
 
-    meta[0] = atof(ret->cX);
-    meta[1] = atof(ret->cY);
-    meta[2] = atof(ret->Z);
-    meta[3] = ret->color.mult;
-
-	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, imgMeta_buf, CL_TRUE, 0, 4 * sizeof(int), imgMeta, 0, NULL, NULL));
-
-	CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, meta_buf, CL_TRUE, 0, 4 * sizeof(double), meta, 0, NULL, NULL));
+    cX = atof(ret->cX);
+    cY = atof(ret->cY);
+    Z = atof(ret->Z);
 
 	//clEnqueueWriteBuffer(command_queue, data_buf, CL_TRUE, 0, ret->px * ret->py * sizeof(FR_16BIT), data, 0, NULL, NULL);
 
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgMeta_buf));
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&meta_buf));
-	CLGLBL_HNDL(res = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&incol_buf));
-	CLGLBL_HNDL(res = clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&outcol_buf));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&color_pattern_m));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 1, sizeof(int), &ret->color.numcol));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 2, sizeof(double), &ret->color.mult));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 3, sizeof(double), &ret->color.disp));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 4, sizeof(int), &ret->color.is_simple));
 
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 5, sizeof(cl_mem), (void *)&color_output_m));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 6, sizeof(int), &ret->px));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 7, sizeof(int), &ret->py));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 8, sizeof(int), &ret->max_iter));
+
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 9, sizeof(double), &cX));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 10, sizeof(double), &cY));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 11, sizeof(double), &Z));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 12, sizeof(double), &ret->ctime));
+    
     CLGLBL_HNDL(res = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL));
 
-    CLGLBL_HNDL(res = clEnqueueReadBuffer(command_queue, outcol_buf, CL_TRUE, 0, ret->px * ret->py * 3, ret->data, 0, NULL, NULL));
+    CLGLBL_HNDL(res = clEnqueueReadBuffer(command_queue, color_output_m, CL_TRUE, 0, ret->px * ret->py * 3, ret->data, 0, NULL, NULL));
 
 }
 

@@ -29,13 +29,9 @@ int mpi_err, mpi_rank, mpi_numprocs;
 
 // this method 'fills in' defaults to ret, if no flags are set.
 void init_fillin(fractal_img_t *ret) {
-    if (cargs_get_flag("-A")) {
-        // if the user didn't send an output format, fill in the default for -A
-        if (!cargs_get_flag("")) {
-            ret->out = "%d_out.png";
-            ret->genout = "%d_out.png";
-        }
-    }
+    int fmt = get_format(cargs_get(""));
+    ret->is_anim = fmt == FR_FORMAT_MP4 || fmt == FR_FORMAT_FLV;
+    ret->ctime = 0;
 }
 
 void init_from_cmdline(fractal_img_t *ret) {
@@ -129,6 +125,8 @@ void init_from_cmdline(fractal_img_t *ret) {
 
     if (strcmp(engine, "C") == 0) {
         // should always have this
+    } else if (strcmp(engine, "COMPLEX") == 0) {\
+        // should always have this
     } else if (strcmp(engine, "MPF") == 0) {
         #ifndef HAVE_GMP
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
@@ -158,9 +156,32 @@ void init_from_cmdline(fractal_img_t *ret) {
 
 }
 
+// checks and prints any unused inputs.
+void check_for_unused(fractal_img_t * ret) {
+    if (strcmp(ret->engine, "OPENCL") != 0) {
+        if (cargs_get_flag("-CLsize") || cargs_get_flag("-CLdevice") || cargs_get_flag("-CLdevicenum") || cargs_get_flag("-CLkernel")) {
+            printf("WARNING: Specified `-CL...` arguments without using OpenCL engine\n");
+        }
+    }
+    if (strcmp(ret->engine, "MPF") != 0) {
+        if (cargs_get_flag("-p")) {
+            printf("WARNING: Specified `-p` precision, but not using MPF engine\n");
+        }
+    }
+
+    if (!ret->is_anim) {
+        if (cargs_get_flag("--sec") || cargs_get_flag("--fps") || cargs_get_flag("--zps") || cargs_get_flag("--anim-tmp")) {
+            printf("WARNING: Specified animation flags (--sec, --fps, --zps, --anim-tmp), but not creating an animation\n");
+        }
+    }
+
+}
+
 void do_engine_test(fractal_img_t * ret) {
     if (strcmp(ret->engine, "C") == 0) {
         engine_c_fulltest(ret);
+    } else if (strcmp(ret->engine, "COMPLEX") == 0) {
+        engine_complex_fulltest(ret);
     } else if (strcmp(ret->engine, "MPF") == 0) {
         printf("ERROR: used do_engine_test for MPF");
         FR_FAIL
@@ -178,6 +199,8 @@ void do_engine_test(fractal_img_t * ret) {
 
 int main(int argc, char *argv[]) {
 
+    clock_t scl, ecl;
+
     int to_srand;
 
     #ifdef HAVE_MPI
@@ -187,6 +210,7 @@ int main(int argc, char *argv[]) {
     printf("process %d/%d started\n", mpi_rank, mpi_numprocs);
     if (mpi_rank == 0) {
         to_srand = time(NULL);
+        scl = clock();
     }
     MPI_Bcast(&to_srand, 1, MPI_INT, 0, MPI_COMM_WORLD);
     
@@ -195,6 +219,7 @@ int main(int argc, char *argv[]) {
     mpi_rank = 0;
     mpi_numprocs = 1;
     to_srand = time(NULL);
+    scl = clock();
     
     #endif
 
@@ -211,8 +236,18 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("-col", "--color", 1, CARGS_ARG_TYPE_STR, "color scheme (RED, BW, $FILE, etc)");
     cargs_add_default("-col", "RED");
 
+    cargs_add_flag("-cols", "--color-simple", "use simple color bands, instead of gradient");
+
+
     cargs_add_arg("-colm", "--color-mult", 1, CARGS_ARG_TYPE_FLOAT, "change color period");
     cargs_add_default("-colm", "1.0");
+
+    cargs_add_arg("-cold", "--color-disp", 1, CARGS_ARG_TYPE_FLOAT, "change color displacement");
+    cargs_add_default("-cold", "0.0");
+
+
+
+    cargs_add_arg("-colo", "--color-out", 1, CARGS_ARG_TYPE_FLOAT, "output color file");
 
     cargs_add_arg("-ncs", "--num-colors", 1, CARGS_ARG_TYPE_INT, "number of colors");
     cargs_add_default("-ncs", "10");
@@ -220,7 +255,9 @@ int main(int argc, char *argv[]) {
 
     //cargs_add_arg("--from-raw", NULL, 1, CARGS_ARG_TYPE_STR, "input from .raw files");
 
-    cargs_add_flag("-A", NULL, "create multiple frames");
+    cargs_add_flag("--no-image", NULL, "don't create image");
+    
+    //cargs_add_flag("-A", NULL, "create multiple frames");
 
     cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision (only supprted in MPF engine)");
     cargs_add_default("-p", "64");
@@ -277,13 +314,20 @@ int main(int argc, char *argv[]) {
 
     #endif
 
+    cargs_add_arg("--ffmpeg", NULL, 1, CARGS_ARG_TYPE_STR, "ffmpeg binary");
+    cargs_add_default("--ffmpeg", "ffmpeg");
+
+    cargs_add_arg("--anim-tmp", NULL, 1, CARGS_ARG_TYPE_STR, "store temporary files for animation");
+
     cargs_add_arg("", NULL, 1, CARGS_ARG_TYPE_STR, "file to save as");
 
-    // if they don't have -lpng, just compute bmp
+    // if they don't have -lpng, just compute bmp files
     #ifdef HAVE_PNG
     cargs_add_default("", "out.png");
+    cargs_add_default("--anim-tmp", "/tmp/out_%05d.png");
     #else
     cargs_add_default("", "out.bmp");
+    cargs_add_default("--anim-tmp", "/tmp/out_%05d.bmp");
     #endif
 
     cargs_parse();
@@ -291,11 +335,13 @@ int main(int argc, char *argv[]) {
     fractal_img_t fractal;
 
     fractal.out = cargs_get("");
-    fractal.genout = cargs_get("");
+    fractal.tmpout = cargs_get("--anim-tmp");
 
     init_fillin(&fractal);
 
     init_from_cmdline(&fractal);
+
+    check_for_unused(&fractal);
 
     figure_out_job(&fractal);
 
@@ -314,21 +360,47 @@ int main(int argc, char *argv[]) {
     }
     #endif
 
+    fractal.num_pixels_total = fractal.px * fractal.py;
 
-    if (mpi_rank == 0 && cargs_get_flag("-A")) {
-        #define FR_FFMPEG_CMD "ffmpeg -i %s result.mp4 -framerate %s"
+    if (fractal.is_anim) {
+        fractal.num_pixels_total *= atof(cargs_get("--sec")) * atof(cargs_get("--fps"));
+    }
 
-        char *cmd = (char *)malloc(strlen(FR_FFMPEG_CMD) + 40 + strlen(fractal.genout));
-        sprintf(cmd, FR_FFMPEG_CMD, fractal.genout, cargs_get("--fps"));
 
-        printf("Run the following line to create a video from your created frames\n");
-        printf("%s\n", cmd);
+    if (mpi_rank == 0 && fractal.is_anim) {
+        #define FR_FFMPEG_CMD "%s -loglevel panic -hide_banner -nostats -y -i %s %s -framerate %s"
+        char *cmd = (char *)malloc(strlen(FR_FFMPEG_CMD) + strlen(cargs_get("")) + strlen(cargs_get("--ffmpeg")) + strlen(fractal.tmpout) + 80);
+        sprintf(cmd, FR_FFMPEG_CMD, cargs_get("--ffmpeg"), fractal.tmpout, cargs_get(""), cargs_get("--fps"));
+
+        char *testffmpeg = (char *)malloc(strlen(cargs_get("--ffmpeg")) + 100);
+        sprintf(testffmpeg, "%s -loglevel panic -hide_banner -nostats -h > /dev/null", cargs_get("--ffmpeg"));
+
+        // if the ffmpeg binary exists
+        if (system(testffmpeg) == 0) {
+            int sys_res = system(cmd);
+            if (sys_res != 0) {
+                printf("ffmpeg (%s) exit code was non-zero!\n", cargs_get("--ffmpeg"));
+                printf("Here was the command that was ran:\n%s\n", cmd);
+            }
+        } else {
+
+            printf("ffmpeg (%s) was not found!\nRun the following line to create a video from your created frames\n", cargs_get("--ffmpeg"));
+            printf("%s\n", cmd);
+        }
     }
 
 
     #ifdef HAVE_MPI
 
     MPI_Finalize();
+    if (mpi_rank == 0) {
+        ecl = clock();
+        printf("Mpixels/s: %lf\n", (CLOCKS_PER_SEC * fractal.num_pixels_total * 1e-6) / (ecl - scl));
+    }
+
+    #else
+    ecl = clock();
+    printf("Mpixels/s: %lf\n", (CLOCKS_PER_SEC * fractal.num_pixels_total * 1e-6) / (ecl - scl));
 
     #endif
 

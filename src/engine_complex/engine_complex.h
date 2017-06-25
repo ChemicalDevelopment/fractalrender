@@ -1,4 +1,4 @@
-/* tofile.c -- outputs fractal images to files
+/* engine_complex/engine_complex.h -- header file for C complex engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,23 +20,12 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __TOFILE_H__
-#define __TOFILE_H__
+#ifndef __ENGINE_COMPLEX_H__
+#define __ENGINE_COMPLEX_H__
 
+inline double complex cpowi(double complex a, int b);
 
-#include "fractalrender.h"
-
-
-#define FR_FORMAT_COLOR                  (0x0101)
-
-#define FR_FORMAT_PNG                    (0x0102)
-#define FR_FORMAT_BMP                    (0x0103)
-#define FR_FORMAT_MP4                    (0x0104)
-#define FR_FORMAT_FLV                    (0x0105)
-
-
-int get_format(char *filename);
-
-void fractal_to_file(fractal_img_t *ret);
+void engine_complex_fulltest(fractal_img_t * ret);
 
 #endif
+

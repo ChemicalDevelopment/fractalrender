@@ -27,6 +27,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 int get_format(char *filename) {
     if (FR_ENDSWITH(filename, ".png")) {
         return FR_FORMAT_PNG;
+    } else if (FR_ENDSWITH(filename, ".flv")) {
+        return FR_FORMAT_FLV;
+    } else if (FR_ENDSWITH(filename, ".mp4")) {
+        return FR_FORMAT_MP4;
     } else if (FR_ENDSWITH(filename, ".bmp")) {
         return FR_FORMAT_BMP;
     } else if (FR_ENDSWITH(filename, ".color")) {

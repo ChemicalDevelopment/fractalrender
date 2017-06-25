@@ -46,6 +46,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <CL/cl.h>
 #endif
 
+#include <complex.h>
+
+
 #ifdef HAVE_OPENCL_CL_H
 #include <OpenCL/cl.h>
 #endif
@@ -121,7 +124,9 @@ typedef struct fractal_color_t {
     // in form FR_COLOR_$X
     long coltype;
 
-    double mult;
+    int is_simple;
+
+    double mult, disp;
 
     // 3 * numcol, in RGB format
     unsigned char * data;
@@ -135,8 +140,14 @@ typedef struct fractal_img_t {
     // FR_COLOR_X, in tofile.h
     long imgfmt;
 
+    double num_pixels_total;
+
+    double ctime;
+
+    bool is_anim;
+
     // generic output format, output file
-    char *genout, * out;
+    char *tmpout, * out;
 
     fractal_color_t color;
 
@@ -178,6 +189,7 @@ typedef struct fractal_img_t {
 #include "io_bmp/io_bmp.h"
 
 #include "engine_c/engine_c.h"
+#include "engine_complex/engine_complex.h"
 
 //#include "color_c/color_c.h"
 
@@ -207,6 +219,8 @@ typedef struct fractal_img_t {
 void init_fillin();
 
 void init_from_cmdline(fractal_img_t *ret);
+
+void check_for_unused(fractal_img_t * ret);
 
 void do_engine_test(fractal_img_t * ret);
 
