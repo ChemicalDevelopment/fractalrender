@@ -6,6 +6,18 @@
 A program that generates images and videos of the mandelbrot fractals
 
 
+
+## Building
+
+You need [cargs](http://chemicaldevelopment.us/cargs), and here's how to [install cargs](http://chemicaldevelopment.us/cargs/#/installing).
+
+You also need a C compiler, and GNU Autotools. Now, run `autoreconf -i`.
+
+You can now use `./configure && make && make install`
+
+Use `./configure --help` for help on configuring.
+
+
 ## TODO
 
 Lots to be done!
