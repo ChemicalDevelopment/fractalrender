@@ -13,7 +13,10 @@ However, you can read ahead to find out more about compiling the program:
 
 ### Mandatory
 
-You need a C compiler and [cargs](http://chemicaldevelopment.us/cargs)
+You need a C compiler and [cargs](http://chemicaldevelopment.us/cargs).
+
+Here's how to [install cargs](http://chemicaldevelopment.us/cargs/#/installing).
+
 
 ### Optional
 
