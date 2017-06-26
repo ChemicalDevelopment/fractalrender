@@ -25,6 +25,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 //#ifdef HAVE_MPI
 int mpi_err, mpi_rank, mpi_numprocs;
 
+struct timeval scl, ecl;
+
+
 //#endif
 
 // this method 'fills in' defaults to ret, if no flags are set.
@@ -128,7 +131,7 @@ void init_from_cmdline(fractal_img_t *ret) {
     } else if (strcmp(engine, "COMPLEX") == 0) {\
         // should always have this
     } else if (strcmp(engine, "MPF") == 0) {
-        #ifndef HAVE_GMP
+        #ifndef HAVE_GMPclock_t
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
         FR_FAIL
         #endif
@@ -171,7 +174,7 @@ void check_for_unused(fractal_img_t * ret) {
 
     if (!ret->is_anim) {
         if (cargs_get_flag("--sec") || cargs_get_flag("--fps") || cargs_get_flag("--zps") || cargs_get_flag("--anim-tmp")) {
-            printf("WARNING: Specified animation flags (--sec, --fps, --zps, --anim-tmp), but not creating an animation\n");
+            printf("WARNING: Specifclock_tied animation flags (--sec, --fps, --zps, --anim-tmp), but not creating an animation\n");
         }
     }
 
@@ -199,7 +202,6 @@ void do_engine_test(fractal_img_t * ret) {
 
 int main(int argc, char *argv[]) {
 
-    clock_t scl, ecl;
 
     int to_srand;
     
@@ -212,7 +214,6 @@ int main(int argc, char *argv[]) {
     printf("process %d/%d started\n", mpi_rank, mpi_numprocs);
     if (mpi_rank == 0) {
         to_srand = time(NULL);
-        scl = clock();
     }
     MPI_Bcast(&to_srand, 1, MPI_INT, 0, MPI_COMM_WORLD);
     
@@ -221,7 +222,6 @@ int main(int argc, char *argv[]) {
     mpi_rank = 0;
     mpi_numprocs = 1;
     to_srand = time(NULL);
-    scl = clock();
     
     #endif
 
@@ -389,7 +389,11 @@ int main(int argc, char *argv[]) {
 
     check_for_unused(&fractal);
 
+    gettimeofday(&scl, NULL);
+
     figure_out_job(&fractal);
+
+    gettimeofday(&ecl, NULL);
 
     #ifdef HAVE_OPENCL
     engine_opencl_end();
@@ -436,17 +440,18 @@ int main(int argc, char *argv[]) {
     }
 
 
+    double elapsed_ns = (ecl.tv_sec - scl.tv_sec) * 1000000.0 + (ecl.tv_usec - scl.tv_usec);
+    double mpxl_p_s = fractal.num_pixels_total / (elapsed_ns);
+
     #ifdef HAVE_MPI
 
     MPI_Finalize();
     if (mpi_rank == 0) {
-        ecl = clock();
-        printf("Mpixels/s: %lf\n", (CLOCKS_PER_SEC * fractal.num_pixels_total * 1e-6) / (ecl - scl));
+        printf("Mpixels/s: %lf\n", mpxl_p_s);
     }
 
     #else
-    ecl = clock();
-    printf("Mpixels/s: %lf\n", (CLOCKS_PER_SEC * fractal.num_pixels_total * 1e-6) / (ecl - scl));
+        printf("Mpixels/s: %lf\n", mpxl_p_s);
 
     #endif
 

@@ -30,6 +30,8 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <complex.h>
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -46,7 +48,6 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <CL/cl.h>
 #endif
 
-#include <complex.h>
 
 
 #ifdef HAVE_OPENCL_CL_H
@@ -73,6 +74,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 int mpi_err, mpi_rank, mpi_numprocs;
 
+struct timeval scl, ecl;
 
 
 #ifdef HAVE_CARGS_H
@@ -192,7 +194,6 @@ typedef struct fractal_img_t {
 #include "engine_complex/engine_complex.h"
 
 //#include "color_c/color_c.h"
-
 
 
 // only if support is enabled
