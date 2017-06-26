@@ -10,6 +10,8 @@ src/fractalrender
 .vscode/
 *.flv
 
+a.out.dSYM
+
 *.raw
 *.meta
 *.anim
