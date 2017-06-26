@@ -125,14 +125,14 @@ AS_IF([test "x${with_opencl}" != xno], [
 
 AS_IF([test "x${with_opencl}" != xno], [
   AC_MSG_CHECKING([checking for -lOpenCL])
-  AS_IF([ ${CC} $CFLAGS test_opencl.c $LIBS 2> /dev/null ] ,[
+  AS_IF([ ${CC} $CFLAGS $LDFLAGS test_opencl.c  $LIBS 2> /dev/null ] ,[
     AC_MSG_RESULT([yes])
     AC_DEFINE([HAVE_OPENCL], [1], [Use OPENCL])
   ], [
     AC_MSG_RESULT([no])
     AC_MSG_CHECKING([checking for -framework OpenCL])
     LIBS="$BEFORE_CL_LIBS -framework OpenCL"
-      AS_IF([ ${CC} $CFLAGS test_opencl.c $LIBS 2> /dev/null ] ,[
+      AS_IF([ ${CC} $CFLAGS $LDFLAGS test_opencl.c $LIBS 2> /dev/null ] ,[
       AC_MSG_RESULT([yes])
       AC_DEFINE([HAVE_OPENCL], [1], [Use OPENCL])
     ],
