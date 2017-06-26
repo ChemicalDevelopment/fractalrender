@@ -159,7 +159,7 @@ void init_from_cmdline(fractal_img_t *ret) {
 // checks and prints any unused inputs.
 void check_for_unused(fractal_img_t * ret) {
     if (strcmp(ret->engine, "OPENCL") != 0) {
-        if (cargs_get_flag("-CLsize") || cargs_get_flag("-CLdevice") || cargs_get_flag("-CLdevicenum") || cargs_get_flag("-CLkernel")) {
+        if (cargs_get_flag("-CLsize") || cargs_get_flag("-CLdevice") || cargs_get_flag("-CLplatform") || cargs_get_flag("-CLtype") || cargs_get_flag("-CLkernel")) {
             printf("WARNING: Specified `-CL...` arguments without using OpenCL engine\n");
         }
     }
@@ -202,7 +202,8 @@ int main(int argc, char *argv[]) {
     clock_t scl, ecl;
 
     int to_srand;
-
+    
+    setenv("CL_LOG_ERRORS", "stdout", false);
 
     #ifdef HAVE_MPI
     mpi_err = MPI_Init(&argc, &argv);
@@ -334,12 +335,19 @@ int main(int argc, char *argv[]) {
 
     #ifdef HAVE_OPENCL
 
-    cargs_add_arg("-CLdevice", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL device ('CPU', 'GPU', or 'ALL')");
-    cargs_add_default("-CLdevice", "GPU");
+    cargs_add_flag("-CL32", NULL, "OpenCL use 32 bit");
+    cargs_add_flag("-CL64", NULL, "OpenCL force 64 bit");
 
-    cargs_add_arg("-CLdevicenum", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL device number");
-    cargs_add_default("-CLdevicenum", "1");
 
+    cargs_add_arg("-CLplatform", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL platform number");
+    cargs_add_default("-CLplatform", "0");
+
+
+    cargs_add_arg("-CLtype", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL device type (CPU, GPU, ALL, ACCELERATOR or DEFAULT)");
+    cargs_add_default("-CLtype", "GPU");
+
+    cargs_add_arg("-CLdevice", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL device number");
+    cargs_add_default("-CLdevice", "0");
 
     cargs_add_arg("-CLkernel", NULL, 1, CARGS_ARG_TYPE_STR, "OpenCL engine kernel");
 
@@ -347,8 +355,8 @@ int main(int argc, char *argv[]) {
     cargs_add_default("-CLdevice", "0");
 
     cargs_add_arg("-CLsize", NULL, 2, CARGS_ARG_TYPE_INT, "OpenCL local item size");
-    cargs_add_default_i("-CLsize", "16", 0);
-    cargs_add_default_i("-CLsize", "16", 1);
+    cargs_add_default_i("-CLsize", "4", 0);
+    cargs_add_default_i("-CLsize", "4", 1);
 
     #endif
 
