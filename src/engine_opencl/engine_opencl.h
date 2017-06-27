@@ -26,6 +26,16 @@ can also find a copy at http://www.gnu.org/licenses/.
 bool engine_opencl_isvalid;
 
 
+void engine_opencl_error_handle(char *file, int line, char *src, int code);
+
+bool engine_opencl_set_kernel__dev(int platid, int devid, bool doexit);
+
+bool engine_opencl_set_kernel__plat(int platid, bool doexit, int clgdif);
+
+void engine_opencl_set_kernel();
+
+
+
 void engine_opencl_init(int __depth, int d0, int d1, int numincol, unsigned char * incol);
 
 void engine_opencl_fulltest(fractal_img_t * ret);
@@ -33,7 +43,4 @@ void engine_opencl_fulltest(fractal_img_t * ret);
 void engine_opencl_end();
 
 
-
-
 #endif
-

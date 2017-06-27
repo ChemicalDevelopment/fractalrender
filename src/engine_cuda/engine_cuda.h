@@ -1,4 +1,4 @@
-/* alloc_lib.c -- allocates for fractal images
+/* c_engine/engine_c.h -- header file for C engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,17 +20,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __ALLOC_LIB_H__
-#define __ALLOC_LIB_H__
+#ifndef __ENGINE_CUDA_H__
+#define __ENGINE_CUDA_H__
 
-#include "fractalrender.h"
-
-FILE * sfopen(char *fn, char *mode);
-
-void fr_dft_clr(fractal_img_t * ret, double zn, int ci, double er2,int col_dest);
-
-void init_frit(fractal_img_t *ret, long px, long py, long max_iter);
-
-void init_frcl(fractal_color_t *ret);
+void engine_cuda_fulltest(fractal_img_t * ret);
 
 #endif

@@ -26,6 +26,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
@@ -36,6 +37,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifdef HAVE_CUDA
+#define HAVE_CUDA_H 1
+#endif
+
 
 #undef malloc
 
@@ -59,8 +65,13 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <gmp.h>
 #endif
 
-#ifdef HAVE_MPFR_H
-#include <mpfr.h>
+
+#ifdef HAVE_CUDA_H
+#include <cuda.h>
+#endif
+
+#ifdef HAVE_CUDA
+#include <cuda.h>
 #endif
 
 #ifdef HAVE_MPC_H
@@ -93,26 +104,26 @@ struct timeval scl, ecl;
 #warning sizeof(double) is not 64 bit!
 #endif
 
-
+#define CL_LOG_ENV "CL_LOG_ERRORS"
 
 #define FR_MAX_PARAMSTRLEN (0x1000)
 
 
 #ifdef HAVE_GMP
 typedef struct fractal_mpf_t {
-    
+
     mpf_t cX, cY, Z;
 
     mpf_t d_c;
 
     mpf_t ssp_x, ssp_y;
-    
+
     mpf_t sp_x, sp_y;
-    
+
     mpf_t p_x, p_y;
     mpf_t p_x_s, p_y_s;
 
-    mpf_t tmp; 
+    mpf_t tmp;
 
 } fractal_mpf_t;
 #endif
@@ -212,6 +223,10 @@ typedef struct fractal_img_t {
 
 #ifdef HAVE_OPENCL
 #include "engine_opencl/engine_opencl.h"
+#endif
+
+#ifdef HAVE_CUDA
+#include "engine_cuda/engine_cuda.h"
 #endif
 
 

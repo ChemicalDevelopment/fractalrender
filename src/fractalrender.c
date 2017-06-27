@@ -58,7 +58,7 @@ void init_from_cmdline(fractal_img_t *ret) {
         printf("Error: more than 1 position specifier (-l, -c) used\n");
         FR_FAIL
     }
-  
+
     if (cargs_get_flag("-l")) {
         char * loc = cargs_get("-l");
         if (strcmp(loc, "elephantvalley") == 0) {
@@ -131,7 +131,12 @@ void init_from_cmdline(fractal_img_t *ret) {
     } else if (strcmp(engine, "COMPLEX") == 0) {\
         // should always have this
     } else if (strcmp(engine, "MPF") == 0) {
-        #ifndef HAVE_GMPclock_t
+        #ifndef HAVE_GMP
+        printf("ERROR: not compiled with support for engine: '%s'\n", engine);
+        FR_FAIL
+        #endif
+    } else if (strcmp(engine, "CUDA") == 0) {
+        #ifndef HAVE_CUDA
         printf("ERROR: not compiled with support for engine: '%s'\n", engine);
         FR_FAIL
         #endif
@@ -155,22 +160,26 @@ void init_from_cmdline(fractal_img_t *ret) {
     ret->color.coltype = color_type;
 
     init_frit(ret, d0, d1, iter);
-    
+
 
 }
 
 // checks and prints any unused inputs.
 void check_for_unused(fractal_img_t * ret) {
+    #ifdef HAVE_OPENCL
     if (strcmp(ret->engine, "OPENCL") != 0) {
         if (cargs_get_flag("-CLsize") || cargs_get_flag("-CLdevice") || cargs_get_flag("-CLplatform") || cargs_get_flag("-CLtype") || cargs_get_flag("-CLkernel")) {
             printf("WARNING: Specified `-CL...` arguments without using OpenCL engine\n");
         }
     }
+    #endif
+    #ifdef HAVE_GMP
     if (strcmp(ret->engine, "MPF") != 0) {
         if (cargs_get_flag("-p")) {
             printf("WARNING: Specified `-p` precision, but not using MPF engine\n");
         }
     }
+    #endif
 
     if (!ret->is_anim) {
         if (cargs_get_flag("--sec") || cargs_get_flag("--fps") || cargs_get_flag("--zps") || cargs_get_flag("--anim-tmp")) {
@@ -188,6 +197,13 @@ void do_engine_test(fractal_img_t * ret) {
     } else if (strcmp(ret->engine, "MPF") == 0) {
         printf("ERROR: used do_engine_test for MPF");
         FR_FAIL
+    } else if (strcmp(ret->engine, "CUDA") == 0) {
+        #ifdef HAVE_CUDA
+        engine_cuda_fulltest(ret);
+        #else
+        printf("Trying to use CUDA engine, but was not compiled with CUDA support\n");
+        FR_FAIL
+        #endif
     } else if (strcmp(ret->engine, "OPENCL") == 0) {
         #ifdef HAVE_OPENCL
         engine_opencl_fulltest(ret);
@@ -204,8 +220,6 @@ int main(int argc, char *argv[]) {
 
 
     int to_srand;
-    
-    setenv("CL_LOG_ERRORS", "stdout", false);
 
     #ifdef HAVE_MPI
     mpi_err = MPI_Init(&argc, &argv);
@@ -216,13 +230,13 @@ int main(int argc, char *argv[]) {
         to_srand = time(NULL);
     }
     MPI_Bcast(&to_srand, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    
+
     #else
     mpi_err = 0;
     mpi_rank = 0;
     mpi_numprocs = 1;
     to_srand = time(NULL);
-    
+
     #endif
 
     srand(to_srand);
@@ -239,10 +253,6 @@ int main(int argc, char *argv[]) {
     cargs_add_info("Compiled with GMP");
     #endif
 
-    #ifdef HAVE_MPFR
-    cargs_add_info("Compiled with MPFR");
-    #endif
-
     #ifdef HAVE_PNG
     cargs_add_info("Compiled with libpng");
     #endif
@@ -254,6 +264,11 @@ int main(int argc, char *argv[]) {
     #ifdef HAVE_OPENCL
     sprintf(supported_engines, "%s%s", supported_engines, ", OPENCL");
     cargs_add_info("Compiled with OpenCL");
+    #endif
+
+    #ifdef HAVE_CUDA
+    sprintf(supported_engines, "%s%s", supported_engines, ", CUDA");
+    cargs_add_info("Compiled with CUDA");
     #endif
 
     #ifdef HAVE_MPI
@@ -279,7 +294,8 @@ int main(int argc, char *argv[]) {
 
 
     cargs_add_arg("-colm", "--color-mult", 1, CARGS_ARG_TYPE_FLOAT, "change color period");
-    cargs_add_default("-colm", "1.0");
+    // debate: default
+    cargs_add_default("-colm", ".2");
 
     cargs_add_arg("-cold", "--color-disp", 1, CARGS_ARG_TYPE_FLOAT, "change color displacement");
     cargs_add_default("-cold", "0.0");
@@ -290,13 +306,9 @@ int main(int argc, char *argv[]) {
 
     cargs_add_arg("-ncs", "--num-colors", 1, CARGS_ARG_TYPE_INT, "number of colors");
     cargs_add_default("-ncs", "10");
-    
 
-    //cargs_add_arg("--from-raw", NULL, 1, CARGS_ARG_TYPE_STR, "input from .raw files");
 
-    cargs_add_flag("--no-image", NULL, "don't create image");
-    
-    //cargs_add_flag("-A", NULL, "create multiple frames");
+    cargs_add_flag("--no-image", NULL, "don't create image, only print messages");
 
     cargs_add_arg("-p", "--prec", 1, CARGS_ARG_TYPE_INT, "min bits of precision (only supprted in MPF engine)");
     cargs_add_default("-p", "64");
@@ -338,6 +350,7 @@ int main(int argc, char *argv[]) {
     cargs_add_flag("-CL32", NULL, "OpenCL use 32 bit");
     cargs_add_flag("-CL64", NULL, "OpenCL force 64 bit");
 
+    cargs_add_flag("-CLlog", NULL, "OpenCL log errors to console");
 
     cargs_add_arg("-CLplatform", NULL, 1, CARGS_ARG_TYPE_INT, "OpenCL platform number");
     cargs_add_default("-CLplatform", "0");
@@ -377,6 +390,13 @@ int main(int argc, char *argv[]) {
     #endif
 
     cargs_parse();
+    #ifdef HAVE_OPENCL
+
+    if (cargs_get_flag("-CLlog")) {
+        setenv(CL_LOG_ENV, "stdout", true);
+    }
+
+    #endif
 
     fractal_img_t fractal;
 
@@ -457,5 +477,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-

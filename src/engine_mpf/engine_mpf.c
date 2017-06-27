@@ -115,7 +115,7 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
 
             mpf_add(mp->tmp, mp->p_x_s, mp->p_y_s);
 
-            for (ci = 1; ci <= ret->max_iter && mpf_cmp_ui(mp->tmp, er2) < 0; ++ci) {
+            for (ci = 0; ci < ret->max_iter && mpf_cmp_ui(mp->tmp, er2) < 0; ++ci) {
                 mpf_mul(mp->tmp, mp->p_x, mp->p_y);
                 mpf_mul_ui(mp->tmp, mp->tmp, 2);
 
@@ -130,44 +130,7 @@ void engine_mpf_fulltest(fractal_img_t * ret, fractal_mpf_t *mp) {
                 mpf_add(mp->tmp, mp->p_x_s, mp->p_y_s);
             }
 
-
-            if (ret->color.is_simple) {
-                int color_off;
-                if (ci > ret->max_iter) {
-                    color_off = 0;
-                } else {
-                    color_off = 3*((int)floor(ci * ret->color.mult + ret->color.disp) % ret->color.numcol);
-                }
-                ret->data[col_dest + 0] = ret->color.data[color_off + 0];
-                ret->data[col_dest + 1] = ret->color.data[color_off + 1];
-                ret->data[col_dest + 2] = ret->color.data[color_off + 2];
-                
-            } else {
-                double zn = mpf_get_d(mp->tmp);
-                double hue;
-                if (zn <= er2) {
-                    hue = 0;
-                } else {
-                    hue = ci + 1.0 - log(fabs(zn)) / log(er2);
-                }
-
-                hue = hue * ret->color.mult + ret->color.disp;
-                
-                hue = fmod(fmod(hue, ret->color.numcol) + ret->color.numcol, ret->color.numcol);
-
-                tmp = hue - floor(hue);
-                int color_off0 = 3 * ((int)floor(hue) % ret->color.numcol);
-                int color_off1;
-                if (color_off0 >= 3 *(ret->color.numcol - 1)) {
-                    color_off1 = 0;
-                } else {
-                    color_off1 = color_off0 + 3;
-                }
-
-                ret->data[col_dest + 0] = ((unsigned char)floor(tmp*ret->color.data[color_off1 + 0]+(1-tmp)*ret->color.data[color_off0 + 0]));
-                ret->data[col_dest + 1] = ((unsigned char)floor(tmp*ret->color.data[color_off1 + 1]+(1-tmp)*ret->color.data[color_off0 + 1]));
-                ret->data[col_dest + 2] = ((unsigned char)floor(tmp*ret->color.data[color_off1 + 2]+(1-tmp)*ret->color.data[color_off0 + 2]));
-            }
+            fr_dft_clr(ret, mpf_get_d(mp->tmp), ci, er2, col_dest);
 
         }
     }

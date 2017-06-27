@@ -33,7 +33,12 @@ Once compiled, run `fractalrender -h` to view help.
 This will give output like:
 
 ```
-FractalRender v0.3.0
+FractalRender v0.3.2
+Compiled with GMP
+Compiled with libpng
+Compiled with cargs
+Compiled with OpenCL
+Supported engines: C, COMPLEX, MPF, OPENCL
 
 --info                                  show info
 -h, --help                              show help / usage
@@ -56,8 +61,12 @@ FractalRender v0.3.0
 -c, --center=S,S                        x, y coordinates of middle of image
 -l, --location=S                        location name, opposed to coordinates
 -z, --zoom=S                            zoom level
--CLdevice=S                             OpenCL device ('CPU', 'GPU', or 'ALL')
--CLdevicenum=N                          OpenCL device number
+-CL32                                   OpenCL use 32 bit
+-CL64                                   OpenCL force 64 bit
+-CLlog                                  OpenCL log errors to console
+-CLplatform=N                           OpenCL platform number
+-CLtype=S                               OpenCL device type (CPU, GPU, ALL, ACCELERATOR or DEFAULT)
+-CLdevice=N                             OpenCL device number
 -CLkernel=S                             OpenCL engine kernel
 -CLdevice=N                             OpenCL device number
 -CLsize=N,N                             OpenCL local item size
@@ -65,7 +74,7 @@ FractalRender v0.3.0
 --anim-tmp=S                            store temporary files for animation
 S                                       file to save as
 
-Authors: 
+Authors:
   Cade Brown <cade@chemicaldevelopment.us>
 ```
 
@@ -73,7 +82,7 @@ Authors:
 
 You can run `fractalrender` with no arguments, and a file named `out.png` will be created, with a good default image (or, if you don't have libpng, fractalrender will create `out.bmp`)
 
-Here a good example image: `fractalrender -l elephantvalley -z 100 -i 600`
+Here a good example image: `fractalrender -l elephantvalley -z 100 -i 600 -col MOCHA`
 
 The `-l` flag can be used for popular locations.
 
@@ -85,7 +94,7 @@ You can specify a different output here:
 
 `fractalrender here.png`
 
-Or, use raw BMP fle:
+Or, use raw BMP file:
 
 `fractalrender here.bmp`
 
@@ -100,6 +109,19 @@ For example, use
 
 It uses interpolation to create a smooth image without the normal aliased bands that are common.
 
+Here are some common colors:
+
+`RED`, `GREEN`, and `BLUE` all are simply that color scale.
+
+`MOCHA` is a color scheme which looks like coffee.
+
+`RAND` will generate a random color scheme. Use `-colo rand.color` to output which colors it created.
+
+`XX.color` will read in a color file, which can be created from `-colo XX.color`, or by hand.
+
+The format is simple: each line is R,G,B value of a color. Example file: `example_sorbet.color`
+
+
 
 #### Animation
 
@@ -108,13 +130,13 @@ For making animations, you can run the default: `fractalrender out.mp4`. This wi
 If ffmpeg is not installed or found, fractalrender will output a command to run to manually create the video.
 
 
-If you want to store temporary `.png` s somewhere other than `/tmp/`, you can use `--anim-tmp`, like `fractalrender out.mp4 --anim-tmp %d_out.png` this will replace the first `%d` with the index of the png.
+If you want to store temporary `.png` s somewhere other than `/tmp/`, you can use `--anim-tmp`, like `fractalrender out.mp4 --anim-tmp out_%05d.png` this will replace the first `%d` with the index of the png.
 
-You can use `--sec` for how many seconds, `--fps` for the frames per second, and `--zps` for zoom per second.
+You can use `--sec` for how many seconds the animation should last, `--fps` for the frames per second, and `--zps` for zoom increase per second.
 
 To make a 15 second video zooming in on a nice default point, run this:
 
-`fractalrender out.mp4 --sec 15 --fps 6 --zps 1.8 -i 100 -l elephantvalley --anim-tmp vid_%d.png`
+`fractalrender out.mp4 --sec 15 --fps 6 --zps 1.8 -i 200 -l elephantvalley --anim-tmp vid_%d.png`
 
 
 ## Compiling
@@ -127,17 +149,12 @@ To make a 15 second video zooming in on a nice default point, run this:
 | `--with-cargs[=dir]` | Gives info about finding cargs in a non standard directory |
 | `--with-png[=dir]` | Gives info about finding png in a non standard directory |
 | `--with-gmp[=dir]` | Gives info about finding GMP in a non standard directory |
-| `--with-mpfr[=dir]` | Gives info about finding GMP in a non standard directory |
-| `--with-mpc[=dir]` | Gives info about finding GMP in a non standard directory |
 | `--with-opencl[=dir]` | Gives info about finding OpenCL in a non standard directory |
 | `--with-mpi[=dir]` | Gives info about finding MPI in a non standard directory |
 
 
-Notes: 
+Notes:
 
 The `dir` for arguments starting with `--with` is optional; if you leave it off, it looks in standard places to find the library, and optionally enables them if found. Use `--without-X` to disable the automatic checking
 
-You can use `--without-X` to disable support. Thus, the minimal build configuration, only able to create `.bmp` files using C code is achieved by using `./configure --without-mpi --without-gmp --without-mpfr --without-mpc --without-png --without-opencl`.
-
-
-
+You can use `--without-X` to disable support. Thus, the minimal build configuration, only able to create `.bmp` files using C code is achieved by using `./configure --without-mpi --without-gmp --without-png --without-opencl`.

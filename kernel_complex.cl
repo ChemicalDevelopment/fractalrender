@@ -1,3 +1,52 @@
+
+
+
+void colorfunc(__global uchar * color_pattern, int color_pattern_length, int color_pattern_scale, int color_pattern_disp, __global uchar * color_output, float zn, int ci, int max_iter, float er2, int col_dest, int do_simple_color);
+
+
+void colorfunc(__global uchar * color_pattern, int color_pattern_length, int color_pattern_scale, int color_pattern_disp, __global uchar * color_output, float zn, int ci, int max_iter, float er2, int col_dest, int do_simple_color) {
+
+    if (do_simple_color) {
+        int color_off;
+        
+        if (ci >= max_iter) {
+            color_off = 0;
+        } else {
+            color_off = 3*(ci * color_pattern_scale + color_pattern_disp) % color_pattern_length;
+        }
+
+        color_output[col_dest + 0] = color_pattern[color_off + 0];
+        color_output[col_dest + 1] = color_pattern[color_off + 1];
+        color_output[col_dest + 2] = color_pattern[color_off + 2];
+    } else {
+        float tmp;
+        float hue;
+        if (zn <= er2) {
+            hue = 0;
+        } else {
+            hue = ci + 1.0f - log(fabs(zn)) / log(er2);
+        }
+
+        hue = hue * color_pattern_scale + color_pattern_disp;
+        
+        hue = fmod(fmod(hue, color_pattern_length) + color_pattern_length, color_pattern_length);
+
+        tmp = hue - floor(hue);
+        int color_off0 = 3 * ((int)floor(hue) % color_pattern_length);
+        int color_off1;
+        if (color_off0 >= 3 *(color_pattern_length - 1)) {
+            color_off1 = 0;
+        } else {
+            color_off1 = color_off0 + 3;
+        }
+
+        color_output[col_dest + 0] = ((uchar)floor(tmp*color_pattern[color_off1 + 0]+(1-tmp)*color_pattern[color_off0 + 0]));
+        color_output[col_dest + 1] = ((uchar)floor(tmp*color_pattern[color_off1 + 1]+(1-tmp)*color_pattern[color_off0 + 1]));
+        color_output[col_dest + 2] = ((uchar)floor(tmp*color_pattern[color_off1 + 2]+(1-tmp)*color_pattern[color_off0 + 2]));
+    }
+}
+
+
 #ifdef cl_khr_fp64
 
 typedef double2 complex_t;
@@ -71,57 +120,16 @@ __kernel void mand(__global uchar * color_pattern, int color_pattern_length, dou
     double er = 16.0;
     double er2 = er * er;
 
-    double tmp;
-
     int ci;
-    for (ci = 1; ci <= max_iter && cnorm_sqr(z) <= er2; ++ci) {
+    for (ci = 0; ci < max_iter && cnorm_sqr(z) <= er2; ++ci) {
         //z = cpow(z, (complex_t)(4, 0)) + c;
         //z = cpow((complex_t)(2.71828, 0), z) + c;
         //z = cpow(z, (complex_t)(2 + time / 4.0, 0)) + c;
         z = csqr(z) + c;
     }
 
-    if (do_simple_color) {
-        int color_off;
-        if (ci > max_iter) {
-            color_off = 0;
-        } else {
-            color_off = 3*((int)floor(ci * color_pattern_scale + color_pattern_disp) % color_pattern_length);
-        }
+    colorfunc(color_pattern, color_pattern_length, color_pattern_scale, color_pattern_disp, color_output, cnorm_sqr(z), ci, max_iter, er2, col_dest, do_simple_color);
 
-        color_output[col_dest + 0] = color_pattern[color_off + 0];
-        color_output[col_dest + 1] = color_pattern[color_off + 1];
-        color_output[col_dest + 2] = color_pattern[color_off + 2];
-                
-    } else {
-        
-        double zn = cnorm(z);
-        double hue;
-        if (zn <= er2) {
-            hue = 0;
-        } else {
-            hue = ci + 1.0 - log(fabs(zn)) / log(er2);
-        }
-
-
-        hue = hue * color_pattern_scale + color_pattern_disp;
-        
-        hue = fmod(fmod(hue, color_pattern_length) + color_pattern_length, color_pattern_length);
-
-        tmp = hue - floor(hue);
-        int color_off0 = 3 * ((int)floor(hue) % color_pattern_length);
-        int color_off1;
-        if (color_off0 >= 3 *(color_pattern_length - 1)) {
-            color_off1 = 0;
-        } else {
-            color_off1 = color_off0 + 3;
-        }
-
-        color_output[col_dest + 0] = ((uchar)floor(tmp*color_pattern[color_off1 + 0]+(1-tmp)*color_pattern[color_off0 + 0]));
-        color_output[col_dest + 1] = ((uchar)floor(tmp*color_pattern[color_off1 + 1]+(1-tmp)*color_pattern[color_off0 + 1]));
-        color_output[col_dest + 2] = ((uchar)floor(tmp*color_pattern[color_off1 + 2]+(1-tmp)*color_pattern[color_off0 + 2]));
-        
-    }
 }
 
 #endif
@@ -199,57 +207,15 @@ __kernel void mand_32(__global uchar * color_pattern, int color_pattern_length, 
     float er = 16.0f;
     float er2 = er * er;
 
-    float tmp;
-
     int ci;
-    for (ci = 1; ci <= max_iter && fcnorm_sqr(z) <= er2; ++ci) {
+    for (ci = 0; ci < max_iter && fcnorm_sqr(z) <= er2; ++ci) {
         //z = cpow(z, (fcomplex_t)(4, 0)) + c;
         //z = cpow((fcomplex_t)(2.71828, 0), z) + c;
         //z = cpow(z, (fcomplex_t)(2 + time / 4.0, 0)) + c;
         z = fcsqr(z) + c;
     }
+    colorfunc(color_pattern, color_pattern_length, color_pattern_scale, color_pattern_disp, color_output, fcnorm_sqr(z), ci, max_iter, er2, col_dest, do_simple_color);
 
-    if (do_simple_color) {
-        int color_off;
-        if (ci > max_iter) {
-            color_off = 0;
-        } else {
-            color_off = 3*((int)floor(ci * color_pattern_scale + color_pattern_disp) % color_pattern_length);
-        }
-
-        color_output[col_dest + 0] = color_pattern[color_off + 0];
-        color_output[col_dest + 1] = color_pattern[color_off + 1];
-        color_output[col_dest + 2] = color_pattern[color_off + 2];
-                
-    } else {
-        
-        float zn = fcnorm_sqr(z);
-        float hue;
-        if (zn <= er2) {
-            hue = 0;
-        } else {
-            hue = ci + 1.0f - log(fabs(zn)) / log(er2);
-        }
-
-
-        hue = hue * color_pattern_scale + color_pattern_disp;
-        
-        hue = fmod(fmod(hue, color_pattern_length) + color_pattern_length, color_pattern_length);
-
-        tmp = hue - floor(hue);
-        int color_off0 = 3 * ((int)floor(hue) % color_pattern_length);
-        int color_off1;
-        if (color_off0 >= 3 *(color_pattern_length - 1)) {
-            color_off1 = 0;
-        } else {
-            color_off1 = color_off0 + 3;
-        }
-
-        color_output[col_dest + 0] = ((uchar)floor(tmp*color_pattern[color_off1 + 0]+(1-tmp)*color_pattern[color_off0 + 0]));
-        color_output[col_dest + 1] = ((uchar)floor(tmp*color_pattern[color_off1 + 1]+(1-tmp)*color_pattern[color_off0 + 1]));
-        color_output[col_dest + 2] = ((uchar)floor(tmp*color_pattern[color_off1 + 2]+(1-tmp)*color_pattern[color_off0 + 2]));
-        
-    }
 }
 
 
