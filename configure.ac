@@ -52,6 +52,14 @@ AC_CHECK_SIZEOF([unsigned long])
 AC_CHECK_SIZEOF([unsigned long long])
 
 
+ARCH=$(uname -m)
+if [[ $ARCH == "x86_64" ]];
+then
+  SUFFIX="64"
+else
+  SUFFIX=""
+fi
+
 
 # always use C engine
 
@@ -94,20 +102,56 @@ m4_define([FR_CHECK],[
   fi
 ])
 
+
+FR_WITH([cargs])
+FR_CHECK([cargs], [CARGS])
+
+
+
+FR_WITH([gmp])
+FR_CHECK([gmp], [GMP])
+
+FR_WITH([png])
+FR_CHECK([png], [PNG])
+
+FR_WITH([mpi])
+AC_ARG_WITH([mpi],
+  [AS_HELP_STRING([--with-mpi],
+  [use mpi @<:@default=no@:>@])],
+  [],
+  [with_mpi=no]
+)
+
+FR_WITH([cuda])
+
+
 ##### CUDA
 
 
-
-
-# Provide your CUDA path with this
-AC_ARG_WITH(cuda, [  --with-cuda=PREFIX      Prefix of your CUDA installation], [cuda_prefix=$withval], [cuda_prefix="/usr/local/cuda"])
+cuda_prefix="$with_cuda"
 
 # Setting the prefix to the default if only --with-cuda was given
 if test "$cuda_prefix" == "yes"; then
-	if test "$withval" == "yes"; then
-		cuda_prefix="/usr/local/cuda"
-	fi
+	cuda_prefix="/usr/local/cuda"
 fi
+
+if test "$cuda_prefix" == "check"; then
+	cuda_prefix="/usr/local/cuda"
+fi
+
+
+if test "x${with_cuda}" != xno; then
+  AS_IF([test "x${with_cuda}" != xyes && test "x${with_cuda}" != xcheck], [
+    LDFLAGS="$LDFLAGS -L${with_cuda}/lib$SUFFIX -Wl,-rpath,${with_cuda}/lib$SUFFIX"
+    CFLAGS="$CFLAGS -I${with_cuda}/include"
+  ])
+  AS_IF([test "x${with_cuda}" == xcheck], [
+    LDFLAGS="$LDFLAGS -L/usr/local/cuda/lib$SUFFIX -Wl,-rpath,${with_cuda}/lib$SUFFIX"
+    CFLAGS="$CFLAGS -I/usr/local/cuda/include"
+  ])
+fi
+
+
 
 # Checking for nvcc
 AC_MSG_CHECKING([nvcc in $cuda_prefix/bin])
@@ -127,53 +171,45 @@ if test -x "$cuda_prefix/bin/nvcc"; then
 	AC_SUBST([CUDA_CFLAGS])
 	AC_SUBST([CUDA_LDFLAGS])
 	AC_SUBST([NVCC],[$cuda_prefix/bin/nvcc])
-	AC_CHECK_FILE([$cuda_prefix/lib64],[lib64_found=yes],[lib64_found=no])
-	if test "x$lib64_found" = xno ; then
-		AC_CHECK_FILE([$cuda_prefix/lib],[lib32_found=yes],[lib32_found=no])
-		if test "x$lib32_found" = xyes ; then
-			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib])
-		else
-			AC_MSG_WARN([Couldn't find cuda lib directory])
-			VALID_CUDA=no
-		fi
-	else
-		AC_CHECK_SIZEOF([long])
-		if test "x$ac_cv_sizeof_long" = "x8" ; then
+  AC_CHECK_FILE([$cuda_prefix/lib64],[lib64_found=yes],[lib64_found=no])
+  AC_CHECK_FILE([$cuda_prefix/lib32],[lib32_found=yes],[lib32_found=no])
+  AC_CHECK_FILE([$cuda_prefix/lib],[lib_found=yes],[lib_found=no])
+	if test "x$lib64_found" = xyes ; then
 			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib64])
-			CUDA_CFLAGS+=" -m64"
-		elif test "x$ac_cv_sizeof_long" = "x4" ; then
-			AC_CHECK_FILE([$cuda_prefix/lib32],[lib32_found=yes],[lib32_found=no])
-			if test "x$lib32_found" = xyes ; then
-				AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib])
-				CUDA_CFLAGS+=" -m32"
-			else
-				AC_MSG_WARN([Couldn't find cuda lib directory])
-				VALID_CUDA=no
-			fi
-		else
-			AC_MSG_ERROR([Could not determine size of long variable type])
-		fi
-	fi
+      CUDA_LIBDIR=$cuda_prefix/lib64
+	else
+    if test "x$lib_found" = xyes ; then
+  			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib])
+        CUDA_LIBDIR=$cuda_prefix/lib
+  	else
+      if test "x$lib32_found" = xyes ; then
+    			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib32])
+          CUDA_LIBDIR=$cuda_prefix/lib32
+    	else
+        AC_MSG_WARN([Couldn't find cuda lib directory])
+        VALID_CUDA=no
+      fi
+    fi
+  fi
 
 	if test "x$VALID_CUDA" != xno ; then
-		CUDA_CFLAGS+=" -I$cuda_prefix/include"
+    echo $CUDA_LIBDIR
+		CUDA_CFLAGS="$CUDA_CFLAGS -I$cuda_prefix/include/"
 		CFLAGS="$CUDA_CFLAGS $CFLAGS"
 		CUDA_LDFLAGS="-L$CUDA_LIBDIR"
-		LDFLAGS="$CUDA_LDFLAGS $LDFLAGS"
+		LDFLAGS="$CUDA_LDFLAGS $LDFLAGS -Wl,-rpath,$CUDA_LIBDIR"
 
 		# And the header and the lib
-		AC_CHECK_HEADER([cuda.h], [],
-			AC_MSG_WARN([Couldn't find cuda.h])
-			VALID_CUDA=no
-			,[#include <cuda.h>])
+		AC_CHECK_HEADERS([cuda.h cuda_runtime.h helper_functions.h helper_cuda.h])
 		if test "x$VALID_CUDA" != "xno" ; then
 			AC_CHECK_LIB([cuda], [cuInit], [VALID_CUDA=yes], AC_MSG_WARN([Couldn't find libcuda]
 			VALID_CUDA=no))
 		fi
+  else
+    # Returning to the original flags
+    CFLAGS="${ax_save_CFLAGS} -I$cuda_prefix/include"
+    LDFLAGS="${ax_save_LDFLAGS} -L$cuda_prefix/lib$SUFFIX -Wl,-rpath,$cuda_prefix/lib$SUFFIX"
 	fi
-	# Returning to the original flags
-	CFLAGS="${ax_save_CFLAGS} -I$cuda_prefix/include"
-	LDFLAGS="${ax_save_LDFLAGS} -L$cuda_prefix/lib"
 else
 	AC_MSG_RESULT([not found!])
 	AC_MSG_WARN([nvcc was not found in $cuda_prefix/bin])
@@ -195,25 +231,13 @@ fi
 
 
 
-FR_WITH([cargs])
-FR_WITH([gmp])
-FR_WITH([png])
-FR_WITH([mpi])
-FR_WITH([opencl])
-
-
-FR_CHECK([cargs], [CARGS])
-FR_CHECK([gmp], [GMP])
-FR_CHECK([png], [PNG])
-FR_CHECK([mpi], [MPI])
-
-#FR_CHECK([OpenCL], [OPENCL])
-
 # specially handle OpenCL
 #AX_LIB_OPENCL()
 
-AC_CHECK_HEADERS([OpenCL/opencl.h CL/cl.h OpenCL/cl.h])
 
+FR_WITH([opencl])
+
+AC_CHECK_HEADERS([OpenCL/opencl.h CL/cl.h OpenCL/cl.h])
 
 BEFORE_CL_LIBS="$LIBS"
 

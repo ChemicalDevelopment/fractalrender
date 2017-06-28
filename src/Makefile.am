@@ -39,7 +39,7 @@ color_src =
 
 
 engine_c_src = engine_c/engine_c.h engine_c/engine_c.c
-engine_cuda_src = engine_cuda/engine_cuda.h engine_cuda/engine_cuda.c engine_cuda/engine_cuda_kernel.cu
+engine_cuda_src = engine_cuda/engine_cuda.h engine_cuda/engine_cuda.c engine_cuda/engine_cuda_kernel.cu engine_cuda/engine_cuda_impl.h engine_cuda/engine_cuda_helper.h
 engine_complex_src = engine_complex/engine_complex.h engine_complex/engine_complex.c
 engine_mpf_src = engine_mpf/engine_mpf.h engine_mpf/engine_mpf.c
 engine_opencl_src = engine_opencl/engine_opencl.h engine_opencl/engine_opencl.c
@@ -52,22 +52,20 @@ engine_src += $(engine_complex_src)
 fractalrender_LDADD =
 
 if HAVE_CUDA
-#noinst_LIBRARIES = frcuda.o
-#frcuda_o_SOURCES = engine_cuda/engine_cuda_kernel.cu
-#libfrcuda_a_AR = $(NVCC) -lib engine_cuda/engine_cuda_kernel.cu -o
 
-#libfractalrendercuda_a_CFLAGS = $(CUDA_CFLAGS) -I$(top_srcdir)/src -I$(top_srcdir)/include
-#libfractalrendercuda_a_AR = $(NVCC) -lib -o
+NVCC_CFLAGS = -gencode arch=compute_53,code=sm_53 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_62,code=compute_62
+CUDA_CFLAGS = @CUDA_CFLAGS@
+CUDA_LDFLAGS = @CUDA_LDFLAGS@
 
 frcuda.o: engine_cuda/engine_cuda_kernel.cu
-	$(NVCC) $(CUDA_CFLAGS) -lib -c -o frcuda.o engine_cuda/engine_cuda_kernel.cu
+	$(NVCC) $(CUDA_CFLAGS) $(NVCC_CFLAGS) -I. -I.. -DHAVE_CONFIG_H -m64 $(CUDA_LDFLAGS) -lib -o frcuda.o -c engine_cuda/engine_cuda_kernel.cu
 
 frcuda_link.o: frcuda.o
-	$(NVCC) $(CUDA_CFLAGS) -lib -o frcuda_link.o frcuda.o -lcudadevrt -lcudart
+	$(NVCC) $(CUDA_CFLAGS) $(NVCC_CFLAGS) -lib $(CUDA_LDFLAGS)-dc frcuda.o -lcudadevrt -lcudart -o frcuda_link.o
 
 
 engine_src += $(engine_cuda_src)
-fractalrender_LDADD += frcuda.o frcuda_link.o -lcudart -lcuda  -lcudadevrt
+fractalrender_LDADD += frcuda_link.o -lcudart -lcuda -lcudadevrt
 endif
 
 if HAVE_GMP
@@ -90,5 +88,5 @@ if HAVE_PNG
 io_src += $(io_png_src)
 endif
 
-fractalrender_SOURCES = fractalrender.h alloc_lib.h tofile.h jobs.h fractalrender.c alloc_lib.c tofile.c jobs.c $(engine_src) $(io_src) $(color_src)
+fractalrender_SOURCES = fractalrender.h fractalrender_defs.h alloc_lib.h tofile.h jobs.h fractalrender.c alloc_lib.c tofile.c jobs.c $(engine_src) $(io_src) $(color_src)
 fractalrender_CFLAGS =

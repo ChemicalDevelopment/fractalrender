@@ -1,4 +1,4 @@
-/* engine_complex/engine_complex.h -- header file for C complex engine
+/* cuda_engine/cuda_engine_impl.h -- header file for CUDA engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -20,11 +20,37 @@ can also find a copy at http://www.gnu.org/licenses/.
 */
 
 
-#ifndef __ENGINE_COMPLEX_H__
-#define __ENGINE_COMPLEX_H__
+#ifndef __ENGINE_CUDA_IMPL_H__
+#define __ENGINE_CUDA_IMPL_H__
 
-double complex cgamma(double complex a);
 
-void engine_complex_fulltest(fractal_img_t * ret);
+typedef struct __cuda_gpu_fractal_t {
+    double cX, cY, Z;
+    int px, py;
+
+    int simplecolor;
+
+    double colm, cold;
+
+    int numcol;
+
+    int max_iter;
+} __cuda_gpu_fractal_t;
+
+
+typedef struct __cuda_fractal_t {
+
+    __cuda_gpu_fractal_t _gpu_fractal;
+
+    int cuda_size_x, cuda_size_y;
+
+    unsigned char * incol;
+    unsigned char * outcol;
+
+    unsigned char * _gpu_incol;
+    unsigned char * _gpu_outcol;
+
+} __cuda_fractal_t;
+
 
 #endif

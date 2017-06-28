@@ -70,12 +70,16 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <cuda.h>
 #endif
 
-#ifdef HAVE_CUDA
-#include <cuda.h>
+#ifdef HAVE_CUDA_RUNTIME_H
+#include <cuda_runtime.h>
 #endif
 
-#ifdef HAVE_MPC_H
-#include <mpc.h>
+#ifdef HAVE_HELPER_FUNCTIONS_H
+#include <helper_functions.h>
+#endif
+
+#ifdef HAVE_HELPER_CUDA_H
+#include <helper_cuda.h>
 #endif
 
 
@@ -109,76 +113,7 @@ struct timeval scl, ecl;
 #define FR_MAX_PARAMSTRLEN (0x1000)
 
 
-#ifdef HAVE_GMP
-typedef struct fractal_mpf_t {
-
-    mpf_t cX, cY, Z;
-
-    mpf_t d_c;
-
-    mpf_t ssp_x, ssp_y;
-
-    mpf_t sp_x, sp_y;
-
-    mpf_t p_x, p_y;
-    mpf_t p_x_s, p_y_s;
-
-    mpf_t tmp;
-
-} fractal_mpf_t;
-#endif
-
-
-// this keeps track of colors
-typedef struct fractal_color_t {
-
-    long numcol;
-
-    // in form FR_COLOR_$X
-    long coltype;
-
-    int is_simple;
-
-    double mult, disp;
-
-    // 3 * numcol, in RGB format
-    unsigned char * data;
-
-} fractal_color_t;
-
-// mapping object
-typedef struct fractal_img_t {
-    long px, py, max_iter;
-
-    // FR_COLOR_X, in tofile.h
-    long imgfmt;
-
-    double num_pixels_total;
-
-    double ctime;
-
-    bool is_anim;
-
-    // generic output format, output file
-    char *tmpout, * out;
-
-    fractal_color_t color;
-
-    long prec;
-
-    char *engine;
-
-
-    long depth;
-
-    char *cX, *cY;
-
-    char *Z;
-
-    // r, g, b
-    unsigned char * data;
-
-} fractal_img_t;
+#include "fractalrender_defs.h"
 
 
 #define FR_COLOR_RED                 (0x0001)
@@ -227,6 +162,7 @@ typedef struct fractal_img_t {
 
 #ifdef HAVE_CUDA
 #include "engine_cuda/engine_cuda.h"
+#include "engine_cuda/engine_cuda_impl.h"
 #endif
 
 

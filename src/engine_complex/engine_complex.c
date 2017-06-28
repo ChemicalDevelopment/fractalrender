@@ -23,16 +23,6 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender.h"
 
 
-inline double complex cpowi(double complex a, int b) {
-    double complex pa = 1;
-    while (b > 0) {
-        pa = pa * a;
-        b--;
-    }
-    return pa;    
-}
-
-
 double complex cgamma(double complex a) {
     if (creal(a) < 4) {
         return cgamma(a + 1) / a;
@@ -72,7 +62,7 @@ void engine_complex_fulltest(fractal_img_t * ret) {
 
             c = (creal(base_complex) + creal(base_add_complex) * x) + I * (cimag(base_complex) + cimag(base_add_complex) * y);
             z = c;
-            
+
             for (ci = 0; ci < ret->max_iter && cabs(z) <= er; ++ci) {
                 z = z * z + c;
 
@@ -91,5 +81,3 @@ void engine_complex_fulltest(fractal_img_t * ret) {
         }
     }
 }
-
-

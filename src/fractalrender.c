@@ -345,6 +345,15 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("-z", "--zoom", 1, CARGS_ARG_TYPE_STR, "zoom level");
     cargs_add_default("-z", "0.4");
 
+    #ifdef HAVE_CUDA
+
+    cargs_add_arg("-CUDAsize", NULL, 2, CARGS_ARG_TYPE_INT, "CUDA local item size");
+    cargs_add_default_i("-CUDAsize", "4", 0);
+    cargs_add_default_i("-CUDAsize", "4", 1);
+
+    #endif
+
+
     #ifdef HAVE_OPENCL
 
     cargs_add_flag("-CL32", NULL, "OpenCL use 32 bit");
@@ -417,6 +426,10 @@ int main(int argc, char *argv[]) {
 
     #ifdef HAVE_OPENCL
     engine_opencl_end();
+    #endif
+
+    #ifdef HAVE_CUDA
+    engine_cuda_end();
     #endif
 
     #ifdef HAVE_MPI

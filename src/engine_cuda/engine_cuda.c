@@ -23,8 +23,26 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender.h"
 
 
+bool engine_cuda_isvalid = false;
+
+__cuda_fractal_t cfract;
+
+
 void engine_cuda_fulltest(fractal_img_t * ret) {
+  if (!engine_cuda_isvalid) {
+      cfract.cuda_size_x = cargs_get_int_idx("-CUDAsize", 0);
+      cfract.cuda_size_y = cargs_get_int_idx("-CUDAsize", 1);
+      mand_cuda_init(&cfract, ret);
+      gettimeofday(&scl, NULL);
+      engine_cuda_isvalid = true;
+  }
+  //mand_cuda(&ret->data, ret->px, ret->py, ret->max_iter, atof(ret->cX), atof(ret->cY), atof(ret->Z));
+  cfract._gpu_fractal.Z = atof(ret->Z);
+  cfract._gpu_fractal.simplecolor = ret->color.is_simple;
+  mand_cuda(&cfract);
 
-  mand_cuda(&ret->data, ret->px, ret->py, ret->max_iter, atof(ret->cX), atof(ret->cY), atof(ret->Z));
+}
 
+void engine_cuda_end() {
+    mand_cuda_end(&cfract);
 }
