@@ -485,7 +485,6 @@ int main(int argc, char *argv[]) {
 
     #else
         printf("Mpixels/s: %lf\n", mpxl_p_s);
-
     #endif
 
     return 0;

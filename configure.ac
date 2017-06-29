@@ -114,13 +114,14 @@ FR_CHECK([gmp], [GMP])
 FR_WITH([png])
 FR_CHECK([png], [PNG])
 
-FR_WITH([mpi])
 AC_ARG_WITH([mpi],
   [AS_HELP_STRING([--with-mpi],
   [use mpi @<:@default=no@:>@])],
   [],
   [with_mpi=no]
 )
+FR_CHECK([mpi], [MPI])
+
 
 FR_WITH([cuda])
 
@@ -280,6 +281,7 @@ echo $VALID_CUDA
 
 AM_CONDITIONAL([HAVE_CUDA_ENGINE], [test x$VALID_CUDA == xyes])
 AM_CONDITIONAL([HAVE_CARGS], [test x$with_cargs != xno])
+AM_CONDITIONAL([HAVE_MPI], [test x$with_mpi != xno])
 AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
 AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
 AM_CONDITIONAL([HAVE_CUDA], [test x$with_cuda != xno])
