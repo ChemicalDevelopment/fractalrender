@@ -32,7 +32,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <assert.h>
 #include <math.h>
 #include <complex.h>
-
+#include <sys/stat.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

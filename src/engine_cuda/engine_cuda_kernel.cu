@@ -47,8 +47,7 @@ extern "C" {
     }
 
     //double tmp;
-    double zn = xs + ys;
-    if (!params.simplecolor) {
+    if (params.simplecolor) {
         int color_off;
         if (ci >= params.max_iter) {
             color_off = 0;
@@ -60,6 +59,7 @@ extern "C" {
         color_output[col_dest + 2] = color_input[color_off + 2];
 
     } else {
+        double zn = xs + ys;
         double hue;
         if (zn <= er2) {
             hue = 0;
@@ -67,7 +67,7 @@ extern "C" {
             hue = ci + 1.0 - log(fabs(zn)) / log(er2);
         }
 
-        hue = ci * params.colm + params.cold;
+        hue = hue * params.colm + params.cold;
 
         hue = fmod(fmod(hue, (double)params.numcol) + params.numcol, (double)params.numcol);
 

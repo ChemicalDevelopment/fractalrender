@@ -35,7 +35,7 @@ AC_PROG_RANLIB
 
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h stdio.h stdbool.h string.h math.h sys/time.h time.h unistd.h])
+AC_CHECK_HEADERS([stdlib.h stdio.h stdbool.h string.h math.h sys/time.h sys/stat.h time.h unistd.h])
 
 # Checks for libraries.
 

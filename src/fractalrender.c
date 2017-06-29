@@ -390,12 +390,24 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("", NULL, 1, CARGS_ARG_TYPE_STR, "file to save as");
 
     // if they don't have -lpng, just compute bmp files
+    char * tmp_dir_name = (char *)malloc(1000);
+    char * tmp_file_name = (char *)malloc(1000);
+    sprintf(tmp_dir_name, "/tmp/fr_out_%04x", rand() & 0xFFFF);
+
     #ifdef HAVE_PNG
     cargs_add_default("", "out.png");
-    cargs_add_default("--anim-tmp", "/tmp/out_%05d.png");
+    sprintf(tmp_file_name, "%s/%%05d_out.png", tmp_dir_name);
     #else
     cargs_add_default("", "out.bmp");
-    cargs_add_default("--anim-tmp", "/tmp/out_%05d.bmp");
+    sprintf(tmp_file_name, "%s/%%05d_out.bmp", tmp_dir_name);
+    #endif
+
+    #ifdef HAVE_MPI
+    if (mpi_rank == 0) {
+        cargs_add_default("--anim-tmp", tmp_file_name);
+    }
+    #else
+    cargs_add_default("--anim-tmp", tmp_file_name);
     #endif
 
     cargs_parse();
@@ -417,6 +429,15 @@ int main(int argc, char *argv[]) {
     init_from_cmdline(&fractal);
 
     check_for_unused(&fractal);
+
+    if (strcmp(fractal.tmpout, tmp_file_name) == 0)  {
+      struct stat st = {0};
+      if (stat(tmp_dir_name, &st) == -1) {
+          mkdir(tmp_dir_name, 0777);
+      }
+    }
+
+    printf("Temporary files: %s\n", fractal.tmpout);
 
     gettimeofday(&scl, NULL);
 
