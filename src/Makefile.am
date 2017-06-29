@@ -51,11 +51,11 @@ engine_src += $(engine_complex_src)
 
 fractalrender_LDADD =
 
-if HAVE_CUDA
+if HAVE_CUDA_ENGINE
 
 NVCC_CFLAGS = -gencode arch=compute_53,code=sm_53 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_62,code=compute_62
-CUDA_CFLAGS = @CUDA_CFLAGS@
-CUDA_LDFLAGS = @CUDA_LDFLAGS@
+CUDA_CFLAGS += @CUDA_CFLAGS@
+CUDA_LDFLAGS += @CUDA_LDFLAGS@
 
 frcuda.o: engine_cuda/engine_cuda_kernel.cu
 	$(NVCC) $(CUDA_CFLAGS) $(NVCC_CFLAGS) -I. -I.. -DHAVE_CONFIG_H -m64 $(CUDA_LDFLAGS) -lib -o frcuda.o -c engine_cuda/engine_cuda_kernel.cu
@@ -66,6 +66,7 @@ frcuda_link.o: frcuda.o
 
 engine_src += $(engine_cuda_src)
 fractalrender_LDADD += frcuda_link.o -lcudart -lcuda -lcudadevrt
+
 endif
 
 if HAVE_GMP

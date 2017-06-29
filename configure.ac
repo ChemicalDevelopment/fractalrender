@@ -152,6 +152,7 @@ if test "x${with_cuda}" != xno; then
 fi
 
 
+VALID_CUDA=no
 
 # Checking for nvcc
 AC_MSG_CHECKING([nvcc in $cuda_prefix/bin])
@@ -177,14 +178,17 @@ if test -x "$cuda_prefix/bin/nvcc"; then
 	if test "x$lib64_found" = xyes ; then
 			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib64])
       CUDA_LIBDIR=$cuda_prefix/lib64
+      VALID_CUDA=yes
 	else
     if test "x$lib_found" = xyes ; then
   			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib])
         CUDA_LIBDIR=$cuda_prefix/lib
+        VALID_CUDA=yes
   	else
       if test "x$lib32_found" = xyes ; then
     			AC_SUBST([CUDA_LIBDIR],[$cuda_prefix/lib32])
           CUDA_LIBDIR=$cuda_prefix/lib32
+          VALID_CUDA=yes
     	else
         AC_MSG_WARN([Couldn't find cuda lib directory])
         VALID_CUDA=no
@@ -216,9 +220,9 @@ else
 	VALID_CUDA=no
 fi
 
-if test "x$enable_cuda" = xyes && test x$VALID_CUDA = xyes ; then
+if test "x$with_cuda" = xyes && test x$VALID_CUDA = xyes ; then
 	AC_MSG_NOTICE([Building with CUDA bindings])
-elif test "x$enable_cuda" = xyes && test x$VALID_CUDA = xno ; then
+elif test "x$with_cuda" = xyes && test x$VALID_CUDA = xno ; then
 	AC_MSG_ERROR([Cannot build CUDA bindings. Check errors])
 fi
 
@@ -272,6 +276,9 @@ AS_IF([test "x${with_opencl}" != xno], [
   ], [
 ])
 
+echo $VALID_CUDA
+
+AM_CONDITIONAL([HAVE_CUDA_ENGINE], [test x$VALID_CUDA == xyes])
 AM_CONDITIONAL([HAVE_CARGS], [test x$with_cargs != xno])
 AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
 AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
