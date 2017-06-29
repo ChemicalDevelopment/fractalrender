@@ -218,7 +218,6 @@ void do_engine_test(fractal_img_t * ret) {
 
 int main(int argc, char *argv[]) {
 
-
     int to_srand;
 
     #ifdef HAVE_MPI
@@ -390,9 +389,18 @@ int main(int argc, char *argv[]) {
     cargs_add_arg("", NULL, 1, CARGS_ARG_TYPE_STR, "file to save as");
 
     // if they don't have -lpng, just compute bmp files
+    int tmp_dir_id;
     char * tmp_dir_name = (char *)malloc(1000);
     char * tmp_file_name = (char *)malloc(1000);
-    sprintf(tmp_dir_name, "/tmp/fr_out_%04x", rand() & 0xFFFF);
+
+    if (mpi_rank == 0) {
+      tmp_dir_id = rand() & 0xFFFF;
+    }
+    #ifdef HAVE_MPI
+    MPI_Bcast(&tmp_dir_id, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    #endif
+
+    sprintf(tmp_dir_name, "/tmp/fr_out_%04x", tmp_dir_id);
 
     #ifdef HAVE_PNG
     cargs_add_default("", "out.png");
@@ -402,13 +410,7 @@ int main(int argc, char *argv[]) {
     sprintf(tmp_file_name, "%s/%%05d_out.bmp", tmp_dir_name);
     #endif
 
-    #ifdef HAVE_MPI
-    if (mpi_rank == 0) {
-        cargs_add_default("--anim-tmp", tmp_file_name);
-    }
-    #else
     cargs_add_default("--anim-tmp", tmp_file_name);
-    #endif
 
     cargs_parse();
     #ifdef HAVE_OPENCL
@@ -430,14 +432,17 @@ int main(int argc, char *argv[]) {
 
     check_for_unused(&fractal);
 
-    if (strcmp(fractal.tmpout, tmp_file_name) == 0)  {
-      struct stat st = {0};
-      if (stat(tmp_dir_name, &st) == -1) {
-          mkdir(tmp_dir_name, 0777);
-      }
-    }
+    if (fractal.is_anim && mpi_rank == 0) {
+        if (strcmp(tmp_file_name, fractal.tmpout) == 0) {
+            struct stat st = {0};
 
-    printf("Temporary files: %s\n", fractal.tmpout);
+            if (stat(tmp_dir_name, &st) == -1) {
+                mkdir(tmp_dir_name, 0777);
+            }
+        }
+
+        printf("Temporary files: %s\n", fractal.tmpout);
+    }
 
     gettimeofday(&scl, NULL);
 
@@ -500,13 +505,12 @@ int main(int argc, char *argv[]) {
     #ifdef HAVE_MPI
 
     MPI_Finalize();
+
+    #endif
+
     if (mpi_rank == 0) {
         printf("Mpixels/s: %lf\n", mpxl_p_s);
     }
-
-    #else
-        printf("Mpixels/s: %lf\n", mpxl_p_s);
-    #endif
 
     return 0;
 }

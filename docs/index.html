@@ -7,14 +7,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
   <title>FractalRender</title>
   <link rel="stylesheet" href="https://unpkg.com/docute@2/dist/docute.css">
+
+  <style type="text/css">
+  form  { display: table;      }
+	p     { display: table-row;  }
+	label { display: table-cell; }
+	input { display: table-cell; }
+  </style>
+
+
 </head>
 
 <body>
   <!-- don't remove this part start -->
-  <div id="app"></div>
-  <script src="./config.js"></script>
   <script src="https://unpkg.com/docute@2/dist/docute.js"></script>
+
+  <script src="./config.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="./jquery.populate.pack.js"></script>
+
+  <script async src="./mandelbrot.js"></script>
+
   <!-- don't remove this part end -->
+
+  <div id="app"></div>
+
+
 </body>
 
 </html>

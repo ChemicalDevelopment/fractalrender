@@ -1,4 +1,4 @@
-self.$config = {
+docute.init({
   repo: 'ChemicalDevelopment/FractalRender',
   url: 'http://chemicaldevelopment.us/FractalRender',
   'edit-link': 'https://github.com/ChemicalDevelopment/FractalRender/blob/master/docs',
@@ -11,7 +11,9 @@ self.$config = {
     },
     {
       title: 'Installing', path: '/installing'
+    },
+    {
+      title: 'Online Viewer', path: '/viewer'
     }
   ]
-}
-
+});
