@@ -22,13 +22,16 @@ var colors_str = {
     "green": "0,21,0;0,42,0;0,63,0;0,85,0;0,106,0;0,127,0;0,148,0;0,170,0;0,191,0;0,212,0;0,233,0;0,255,0",
     "blue": "0,0,21;0,0,42;0,0,63;0,0,85;0,0,106;0,0,127;0,0,148;0,0,170;0,0,191;0,0,212;0,0,233;0,0,255",
     "mocha": "0,0,0;21,1,0;42,7,1;63,15,3;85,28,9;106,44,18;127,63,31;148,86,50;170,113,75;191,143,107;212,177,147;233,214,196",
-    "rand": "RAND"
+    "random": "RAND"
 };
 
 var mand_canvas;
 var mand_canvas_last;
 var mand_canvas_ctx;
 var mand_canvas_data;
+
+
+var num_updates = 0;
 
 var mouse = {
     x: 0,
@@ -91,14 +94,31 @@ function mand_init() {
 
     mand_conf_dict = unsrl_dict(serialized, mand_conf_default_dict);
 
+    setTimeout(function() {
+        if (num_updates == 0) {
+            if ($('#color_scheme').val() == undefined) {
+              $('#color_scheme').val("random");
+            }
+            mand_update();
+        }
+    }, 500);
+
     setTimeout(function () {
-      $('#mand_conf').populate(mand_conf_dict);
+        $('#mand_conf').populate(mand_conf_dict);
+
+         $("#mand_conf").keypress(function (e) {
+            if (e.keyCode == 13) {
+              console.log();
+            }
+         });
 
         $(window).on('resize', function() {
 
-            mand_update();
+        mand_update();
 
       });
+
+
 
       mand_canvas = $('#fractal')[0];
 
@@ -267,13 +287,14 @@ function mand_update() {
     //mand_canvas_ctx = mand_canvas.getContext("2d");
     mand_canvas_data = mand_canvas_ctx.createImageData(mand_canvas.width, mand_canvas.height);
 
+    num_updates++;
+
     mand_recalc();
 
     mand_canvas_ctx.putImageData(mand_canvas_data, 0, 0);
 
 
     mand_canvas_last = mand_canvas_ctx.getImageData(0, 0, mand_canvas.width, mand_canvas.height);
-
 
 }
 
@@ -297,7 +318,7 @@ function mand_recalc() {
     var color_scheme_key = mand_conf_dict["color_scheme"];
 
     if (iter == "auto") {
-        iter = Math.round(10 * Math.pow(Z, .25));
+        iter = Math.round(10 * Math.pow(Z, .5));
     } else {
         iter = parseInt(iter);
     }

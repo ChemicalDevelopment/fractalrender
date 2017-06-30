@@ -20,8 +20,8 @@ This is an online JavaScript renderer of the Mandelbrot fractal.
     <label for="iter">Iterations: </label><input name="iter"><br/>
   </p>
   <p>
-    <label for="color_scheme">Color Scheme: </label><select onchange="javascript:mand_update();" name="color_scheme">
-      <option value="rand" selected="selected">Random</option>
+    <label for="color_scheme">Color Scheme: </label><select onchange="javascript:mand_update();" id="color_scheme" name="color_scheme">
+      <option value="random" selected="selected">Random</option>
       <option value="mocha">Mocha</option>
       <option value="red">Red</option>
       <option value="blue">Blue</option>
