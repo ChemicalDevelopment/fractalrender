@@ -108,7 +108,7 @@ function mand_init() {
 
          $("#mand_conf").keypress(function (e) {
             if (e.keyCode == 13) {
-              console.log();
+              mand_update();
             }
          });
 
@@ -198,12 +198,21 @@ function mand_init() {
           var ccX = parseFloat(mand_conf_dict["cX"]);
           var ccY = parseFloat(mand_conf_dict["cY"]);
 
-          console.log(new_pix_x);
-          console.log(new_pix_y);
+          var fact = Math.sqrt(new_flt / c_flt);
+
+          console.log(fact);
+
+          console.log(ev.shiftKey);
+
+          if (ev.shiftKey) {
+              fact = 1.0 / fact;
+          }
+
+          console.log("Zooming, by factor", fact)
           var new_coord_x = ccX - 1.0 / cZ + 2.0 * new_pix_x / (mand_canvas.width * cZ);
           var new_coord_y = ccY + 1.0 / cZ - 2.0 * new_pix_y / (mand_canvas.width * cZ);
 
-          $('input[name="Z"]').val("" + Math.abs(cZ / Math.sqrt(new_flt / c_flt)));
+          $('input[name="Z"]').val("" + Math.abs(cZ / fact));
           $('input[name="cX"]').val("" + new_coord_x);
           $('input[name="cY"]').val("" + new_coord_y);
 
