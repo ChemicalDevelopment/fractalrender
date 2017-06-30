@@ -13,7 +13,8 @@ var mand_conf_default_dict = [
     ["cY", "0.0"],
     ["Z", "0.5"],
     ["iter", "auto"],
-    ["color_scheme", "random"]
+    ["color_scheme", "random"],
+    ["color_scheme_custom", "255,0,0;0,255,0;0,0,255"]
 ];
 
 // computed with fractalrender -col XX -colo - --no-image
@@ -22,7 +23,8 @@ var colors_str = {
     "green": "0,21,0;0,42,0;0,63,0;0,85,0;0,106,0;0,127,0;0,148,0;0,170,0;0,191,0;0,212,0;0,233,0;0,255,0",
     "blue": "0,0,21;0,0,42;0,0,63;0,0,85;0,0,106;0,0,127;0,0,148;0,0,170;0,0,191;0,0,212;0,0,233;0,0,255",
     "mocha": "0,0,0;21,1,0;42,7,1;63,15,3;85,28,9;106,44,18;127,63,31;148,86,50;170,113,75;191,143,107;212,177,147;233,214,196",
-    "random": "RAND"
+    "random": "RAND",
+    "custom": "CUSTOM"
 };
 
 var mand_canvas;
@@ -92,19 +94,24 @@ function mand_init() {
     var serialized = window.location.hash.replace("#/viewer?", "");
     serialized = serialized.replace("#/viewer", "");
 
+    console.log(mand_conf_default_dict)
+
     mand_conf_dict = unsrl_dict(serialized, mand_conf_default_dict);
 
     setTimeout(function() {
         if (num_updates == 0) {
             if ($('#color_scheme').val() == undefined) {
               $('#color_scheme').val("random");
+              //$('#color_scheme_custom').val(mand_conf_default_dict["color_scheme_custom"]);
             }
+
             mand_update();
         }
-    }, 500);
+    }, 100);
 
     setTimeout(function () {
-        $('#mand_conf').populate(mand_conf_dict);
+      $('#mand_conf').populate(mand_conf_dict);
+      $("#color_scheme_custom").val($("#color_scheme_custom").val().replace(new RegExp("%3B", 'g'), ";"));
 
          $("#mand_conf").keypress(function (e) {
             if (e.keyCode == 13) {
@@ -227,13 +234,15 @@ function mand_init() {
 
 }
 function mand_conf_update() {
+
+  $("#color_scheme_custom").val($("#color_scheme_custom").val().replace(new RegExp("\%3B", 'g'), ";"));
+
     var serialized = $("#mand_conf").serialize();
 
     mand_conf_dict = unsrl_dict(serialized, mand_conf_default_dict, mand_conf_dict);
     console.log(serialized);
     serialized = "";
 
-    $('#mand_conf').populate(mand_conf_dict);
 
     serialized = $("#mand_conf").serialize();
 
@@ -250,6 +259,8 @@ function color_scheme_from_src(src) {
         data: []
     }
 
+
+
     if (src == "RAND") {
         ret.numcol = 20;
         for (var i = 0; i < ret.numcol; ++i) {
@@ -258,7 +269,13 @@ function color_scheme_from_src(src) {
 
         return ret;
     } else {
-        var ssrc = src.split(";");
+        var ssrc;
+        if (src == "CUSTOM") {
+            ssrc = $("#color_scheme_custom").val().split(";");
+        } else {
+            ssrc = src.split(";");
+        }
+
         ret.numcol = ssrc.length;
 
         var scol, tcol;
@@ -340,8 +357,30 @@ function mand_recalc() {
 
     var color_scheme = color_scheme_from_src(colors_str[color_scheme_key]);
 
-    console.log("Full color scheme: " + JSON.stringify(color_scheme));
+    var __color_scheme = "";
 
+    for (var i = 0; i < color_scheme.numcol; ++i) {
+        __color_scheme = __color_scheme + "" + color_scheme.data[i][0] + "," + color_scheme.data[i][1] + "," + color_scheme.data[i][2];
+        if (i != color_scheme.numcol - 1) {
+            __color_scheme = __color_scheme + ";";
+        }
+    }
+
+
+    var relevant_info = {
+        cX: "" + cX,
+        cY: "" + cY,
+        Z: "" + Z,
+        iter: iter,
+        color_scheme: "custom",
+        color_scheme_custom: __color_scheme
+    }
+
+    console.log("Full color scheme: " + JSON.stringify(color_scheme));
+    SHARE_URL = "http://chemicaldevelopment.us/fractalrender/#/viewer?" + $.param(relevant_info);
+    console.log("URL to share: " + SHARE_URL);
+    $("#info_link").text("URL to share")
+    $("#info_link").attr("href", SHARE_URL)
 
     var s_x = cX - 1.0 / Z, s_y;
     var x, y, zn2, scl;
