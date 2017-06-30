@@ -301,7 +301,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    cargs_add_arg("-colo", "--color-out", 1, CARGS_ARG_TYPE_FLOAT, "output color file");
+    cargs_add_arg("-colo", "--color-out", 1, CARGS_ARG_TYPE_STR, "output color file");
 
     cargs_add_arg("-ncs", "--num-colors", 1, CARGS_ARG_TYPE_INT, "number of colors");
     cargs_add_default("-ncs", "10");
@@ -393,9 +393,7 @@ int main(int argc, char *argv[]) {
     char * tmp_dir_name = (char *)malloc(1000);
     char * tmp_file_name = (char *)malloc(1000);
 
-    if (mpi_rank == 0) {
-      tmp_dir_id = rand() & 0xFFFF;
-    }
+    tmp_dir_id = rand() & 0xFFFF;
     #ifdef HAVE_MPI
     MPI_Bcast(&tmp_dir_id, 1, MPI_INT, 0, MPI_COMM_WORLD);
     #endif
