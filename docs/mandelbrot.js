@@ -100,18 +100,15 @@ function mand_init() {
 
     setTimeout(function() {
         if (num_updates == 0) {
-            if ($('#color_scheme').val() == undefined) {
-              $('#color_scheme').val("random");
-              //$('#color_scheme_custom').val(mand_conf_default_dict["color_scheme_custom"]);
-            }
-
             mand_update();
         }
     }, 100);
 
     setTimeout(function () {
       $('#mand_conf').populate(mand_conf_dict);
-      $("#color_scheme_custom").val($("#color_scheme_custom").val().replace(new RegExp("%3B", 'g'), ";"));
+        $('#color_scheme').val("random");
+      
+        $("#color_scheme_custom").val($("#color_scheme_custom").val().replace(new RegExp("%3B", 'g'), ";"));
 
          $("#mand_conf").keypress(function (e) {
             if (e.keyCode == 13) {
@@ -235,7 +232,7 @@ function mand_init() {
 }
 function mand_conf_update() {
 
-  $("#color_scheme_custom").val($("#color_scheme_custom").val().replace(new RegExp("\%3B", 'g'), ";"));
+      $("#color_scheme_custom").val($("#color_scheme_custom").val().replace(new RegExp("\%3B", 'g'), ";"));
 
     var serialized = $("#mand_conf").serialize();
 
