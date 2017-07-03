@@ -48,7 +48,7 @@ void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
         if (zn2 < fr->prop.er2) {
             colci = 0;
         } else {
-            colci = 4 * (ci % fr->col.col_len);
+            colci = fr->dim.byte_depth * (ci % fr->col.col_len);
         }
         fr->bitmap[ri + 0] = fr->col.in_col[colci + 0];
         fr->bitmap[ri + 1] = fr->col.in_col[colci + 1];
@@ -81,13 +81,18 @@ void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
                 colci1 = colci0 + 1;
             }
 
-            colci0 *= 4;
-            colci1 *= 4;
+            colci0 *= fr->dim.byte_depth;
+            colci1 *= fr->dim.byte_depth;
+
 
             fr->bitmap[ri + 0] = (int)floor(mixfactor * fr->col.in_col[colci1 + 0] + (1 - mixfactor) * fr->col.in_col[colci0 + 0]);
             fr->bitmap[ri + 1] = (int)floor(mixfactor * fr->col.in_col[colci1 + 1] + (1 - mixfactor) * fr->col.in_col[colci0 + 1]);
             fr->bitmap[ri + 2] = (int)floor(mixfactor * fr->col.in_col[colci1 + 2] + (1 - mixfactor) * fr->col.in_col[colci0 + 2]);
             fr->bitmap[ri + 3] = (int)floor(mixfactor * fr->col.in_col[colci1 + 3] + (1 - mixfactor) * fr->col.in_col[colci0 + 3]);
+            if (fr->bitmap[ri + 3] == 0) {
+                fr->bitmap[ri + 3] = 255;
+            }
+
         }
     }
 }

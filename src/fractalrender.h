@@ -60,6 +60,8 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #define FR_DFT_LIBPREFIX      "libfr"
 
+#define FR_BYTEDEPTH                4
+
 // static object out, maybe dll on windows
 #ifdef _WIN32
 #define FR_DFT_LIBO            ".dll"
@@ -79,6 +81,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender_common.h"
 
 #include "fractalrender_color.h"
+
+#include "gen_image.h"
+
+#include "gen_interactive.h"
 
 
 #endif

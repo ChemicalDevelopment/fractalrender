@@ -67,6 +67,8 @@ typedef struct fr_engine_lib_export_t {
 } fr_engine_lib_export_t;
 
 
+
+
 // a compute engine, such as C, MPF, COMPLEX, or user defined ones.
 typedef struct fr_engine_t {
     // actual shared library
@@ -85,9 +87,29 @@ typedef struct fr_io_t {
 } fr_io_t;
 
 
+typedef struct fr_interactive_lib_export_t {
+
+    void (*fr_init)(fr_t * fr, fr_engine_t * fr_engine);
+
+    void (*fr_interactive)(fr_t * fr, fr_engine_t * fr_engine);
+
+} fr_interactive_lib_export_t;
+
+
+// an interactive library
+typedef struct fr_interactive_t {
+
+    fr_lib_t lib;
+
+    fr_interactive_lib_export_t *export;
+
+} fr_interactive_t;
+
 void fr_libsearch_init(fr_libsearch_t * libsearch);
 
 void fr_libsearch_addpath(fr_libsearch_t * libsearch, char * path);
+
+void fr_find_interactive(fr_interactive_t * fr_interactive, fr_libsearch_t * libsearch, char * name);
 
 bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * name);
 

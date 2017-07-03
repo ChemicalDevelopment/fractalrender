@@ -28,6 +28,10 @@ if HAVE_PNG
 lib_LTLIBRARIES += libfrpng.la
 endif
 
+if HAVE_SDL
+lib_LTLIBRARIES += libfrsdl.la
+endif
+
 bin_PROGRAMS = fractalrender
 
 
@@ -35,22 +39,24 @@ bin_PROGRAMS = fractalrender
 
 # C engine
 libfrc_la_SOURCES = fractalrender_engine_c.h fractalrender_engine_c.c
-libfrc_la_LDFLAGS = 
 
 # C complex engine
 libfrcomplex_la_SOURCES = fractalrender_engine_complex.h fractalrender_engine_complex.c
-libfrcomplex_la_LDFLAGS = 
 
 # bmp io lib
 libfrbmp_la_SOURCES = fractalrender_io_bmp.c fractalrender_io_bmp.h
-libfrbmp_la_LDFLAGS = 
 
 # png io lib
 libfrpng_la_SOURCES = fractalrender_io_png.c fractalrender_io_png.h
 libfrpng_la_LDFLAGS = -lpng
 
+# interactive library
+libfrsdl_la_SOURCES = fractalrender_interactive_sdl.c fractalrender_interactive_sdl.h
+libfrsdl_la_CFLAGS = @SDL_CFLAGS@
+libfrsdl_la_LDFLAGS = @SDL_LDFLAGS@
+
 # shared library with common sources
-libfrcommon_la_SOURCES = fractalrender.h fractalrender_common.h fractalrender_log.h fractalrender_types.h fractalrender_color.h fractalrender_lib.h  fractalrender_common.c fractalrender_log.c fractalrender_color.c fractalrender_lib.c
+libfrcommon_la_SOURCES = fractalrender.h fractalrender_common.h fractalrender_log.h fractalrender_types.h fractalrender_color.h fractalrender_lib.h gen_image.h gen_interactive.h  fractalrender_common.c fractalrender_log.c fractalrender_color.c fractalrender_lib.c gen_image.c gen_interactive.c
 
 ##
 

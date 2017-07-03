@@ -26,6 +26,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 // dimensions
 typedef struct fr_dim_t {
     unsigned long width, height;
+
+    // should be normally width..., but SDL requires this
+    unsigned long mem_width, byte_depth;
 } fr_dim_t;
 
 
@@ -61,15 +64,29 @@ typedef struct fr_prop_t {
 } fr_prop_t;
 
 
+// for storing output
+typedef struct fr_out_t {
+
+    char * file_tmp_out;
+    char * file_tmp_out_ext;
+
+    char * file_out;
+    char * file_out_ext;
+
+    char * file_write_out;
+
+} fr_out_t;
 
 // animation type
 typedef struct fr_anim_t {
     bool do_anim;
 
-    char *zps_str;
-    double zps, sec;
+    char *zoomps_str;
+    double zoomps, sec;
 
     int fps;
+
+    int total_frames;
 
     int c_frame;
     double c_time;

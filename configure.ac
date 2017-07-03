@@ -20,7 +20,7 @@
 
 
 AC_PREREQ([2.55])
-AC_INIT([fractalrender], [0.4.0], [group@chemicaldevelopment.us])
+AC_INIT([fractalrender], [0.4.1], [group@chemicaldevelopment.us])
 AM_INIT_AUTOMAKE([])
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -70,7 +70,44 @@ if test "x$with_png" != xno; then
 fi
 
 
+AC_ARG_WITH([sdl],
+    [AS_HELP_STRING([--with-sdl],
+    [use sdl @<:@default=check@:>@])],
+    [],
+    [with_sdl=check]
+)
+
+
+if test "x$with_sdl" != xno; then
+    AS_IF([test "x$with_sdl" != xyes && test "x$with_sdl" != xcheck], [
+        LDFLAGS="$LDFLAGS -L$with_sdl/lib"
+        CFLAGS="$CFLAGS -I$with_sdl/include"
+    ])
+
+    SDL_VERSION=1.2.0
+    AM_PATH_SDL([$SDL_VERSION],[
+            AC_MSG_CHECKING([sdl])
+            AC_MSG_RESULT([yes])
+            export with_sdl=yes
+        ], [
+            AC_MSG_CHECKING([sdl])
+            AC_MSG_RESULT([no])
+            if test "x$with_sdl" != xcheck; then
+                AC_MSG_FAILURE([--with-sdl was given, but test for libpng failed])
+            fi
+            export with_sdl=no
+        ]
+    )
+fi
+
+
+AC_SUBST([SDL_CFLAGS], [$SDL_CFLAGS])
+AC_SUBST([SDL_LDFLAGS], [$SDL_LIBS])
+
+
+
 AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
+AM_CONDITIONAL([HAVE_SDL], [test x$with_sdl != xno])
 
 
 

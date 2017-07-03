@@ -57,13 +57,15 @@ void fr_engine_c_compute(fr_t * fr) {
     double delta_ppx = 2.0 / (fr->dim.width * fr->prop.zoom);
 
 
+    log_trace("c engine: center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
+
     // temporary variable
     double tmp;
 
     for (px = 0; px < fr->dim.width; ++px) {
         c_i = start_c_i;
         for (py = 0; py < fr->dim.height; ++py) {
-            ri = 4 * (py * fr->dim.width + px);
+            ri = py * fr->dim.mem_width + fr->dim.byte_depth * px;
             z_r = c_r;
             z_i = c_i;
             z_r2 = z_r * z_r;

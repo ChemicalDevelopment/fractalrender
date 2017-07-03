@@ -66,11 +66,35 @@ bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * name) {
     return false;
 }
 
+void fr_find_interactive(fr_interactive_t * fr_interactive, fr_libsearch_t * libsearch, char * name) {
+    log_info("looking for interactive library: %s", name);
+
+    if (!fr_find_lib(&fr_interactive->lib, libsearch, name)) {
+        log_error("could not find interactive library: %s", name);
+    } else {
+        log_info("found interactive library: %s", name);
+    }
+
+    fr_interactive->export = (fr_interactive_lib_export_t *)dlsym(fr_interactive->lib._lib, "fr_interactive_export");
+
+    if (fr_interactive->export == NULL) {
+        log_error("couldn't find fr_interactive_export for interactive library %s", name);
+    }
+    if (fr_interactive->export->fr_init == NULL) {
+        log_error("couldn't find fr_init() in fr_interactive_export for interactive library %s", name);
+    }
+    if (fr_interactive->export->fr_interactive == NULL) {
+        log_error("couldn't find fr_interactive() in fr_interactive_export for interactive library %s", name);
+    }
+
+}
+
+
 void fr_find_io(fr_io_t * fr_io, fr_libsearch_t * libsearch, char * name) {
     log_info("looking for I/O library: %s", name);
 
     if (!fr_find_lib(&fr_io->lib, libsearch, name)) {
-        log_warn("could not find I/O library: %s", name);
+        log_error("could not find I/O library: %s", name);
     } else {
         log_info("found I/O library: %s", name);
     }
@@ -91,7 +115,7 @@ void fr_find_engine(fr_engine_t * fr_engine, fr_libsearch_t * libsearch, char * 
     log_info("looking for engine: %s", name);
 
     if (!fr_find_lib(&fr_engine->lib, libsearch, name)) {
-        log_warn("could not find engine: %s", name);
+        log_error("could not find engine: %s", name);
     } else {
         log_info("found engine: %s", name);
     }

@@ -21,6 +21,10 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
+double get_center_x(fr_t * fr, int px) {
+
+}
+
 char * fr_get_ext(char *filename) {
     char *dot = strrchr(filename, '.');
     if  (!dot || dot == filename) return "";
@@ -40,16 +44,103 @@ void fr_ctime(struct timeval *ret) {
     #endif
 }
 
+// sets to dval if val is null
+void fr_set_prop(fr_t * fr, char * name, char * val, double dval) {
+    char * target = NULL;
+    double * target_d = NULL;
+    if (STR_EQIC(name, "base_zoom")) {
+        target = fr->prop.base_zoom_str;
+        target_d = &fr->prop.base_zoom;
+    } else if (STR_EQIC(name, "zoomps")) {
+        target = fr->anim.zoomps_str;
+        target_d = &fr->anim.zoomps;
+    } else if (STR_EQIC(name, "center_x")) {
+        target = fr->prop.center_x_str;
+        target_d = &fr->prop.center_x;
+    } else if (STR_EQIC(name, "center_y")) {
+        target = fr->prop.center_y_str;
+        target_d = &fr->prop.center_y;
+    } else if (STR_EQIC(name, "zoom")) {
+        target = fr->prop.zoom_str;
+        target_d = &fr->prop.zoom;
+    } else if (STR_EQIC(name, "er")) {
+        target_d = &fr->prop.er;
+    }
+
+
+    if (target == NULL && target_d == NULL) {
+        log_fatal("fr_set_prop(): unsupported prop name '%s'", name);
+    }
+    if (target != NULL) {
+        if (val == NULL) {
+            sprintf(target, "%lf", dval);
+        } else {
+            if (target == NULL || strlen(val) > strlen(target)) {
+                target = (char *)malloc(strlen(val) + 1);
+            }
+            sprintf(target, "%s", val);
+        }
+    }
+
+    if (target_d != NULL) {
+        if (val == NULL) {
+            *target_d = dval;
+        } else {
+            *target_d = atof(val);
+        }
+    }
+
+    if (STR_EQIC(name, "er")) {
+        fr->prop.er2 = fr->prop.er * fr->prop.er;
+    }
+}
+
+void fr_get_prop(char **_target, double *_target_d, fr_t * fr, char * name) {
+    char * target = NULL;
+    double * target_d = NULL;
+    if (STR_EQIC(name, "base_zoom")) {
+        target = fr->prop.base_zoom_str;
+        target_d = &fr->prop.base_zoom;
+    } else if (STR_EQIC(name, "zoomps")) {
+        target = fr->anim.zoomps_str;
+        target_d = &fr->anim.zoomps;
+    }
+
+    if (target == NULL && target_d == NULL) {
+        log_error("fr_get_prop(): unsupported prop name '%s'", name);
+        return;
+    }
+    if (target != NULL) {
+        if (strlen(target) > strlen(*_target)) {
+            *_target = (char *)malloc(strlen(target) + 1);
+        }
+        sprintf(*_target, "%s", target);
+    }
+
+    if (target_d != NULL) {
+        *_target_d = *target_d;
+    }
+}
+
 
 void fr_init(fr_t * fr, fr_dim_t dim) {
     assert(dim.width > 0 && dim.height > 0);
     fr->dim = dim;
 
-    fr->bitmap = (unsigned char *)malloc(4 * fr->dim.width * fr->dim.height);
+    fr->prop.zoom_str = (char *)malloc(100);
+
+    fr->dim.byte_depth = FR_BYTEDEPTH;
+
+    fr->dim.mem_width = fr->dim.width * fr->dim.byte_depth;
+
+    fr->bitmap = (unsigned char *)malloc(fr->dim.mem_width * fr->dim.height);
     assert(fr->bitmap != NULL);
 
     // start in color at NULL
     fr->col.in_col = NULL;
+
+    fr->prop.base_zoom_str = NULL;
+
 
 }
 
@@ -93,8 +184,11 @@ void fr_set_col(fr_t * fr, fr_col_t col, char * color_scheme) {
             fr->col.in_col = (unsigned char *)malloc(4 * fr->col.col_len);
             fp = fr_sfopen(color_scheme, "r");
 
+            log_trace("now printing color results:");
+
             for (i = 0; i < ct; ++i) {
                 assert(fscanf(fp, "%d,%d,%d,%d\n", &R, &G, &B, &A) == 4);
+                log_trace("  %d,%d,%d,%d", R, G, B, A);
                 fr->col.in_col[4 * i + 0] = R;
                 fr->col.in_col[4 * i + 1] = G;
                 fr->col.in_col[4 * i + 2] = B;
@@ -136,7 +230,9 @@ void fr_conv_prop(fr_t * fr) {
     fr->prop.center_x = atof(fr->prop.center_x_str);
     fr->prop.center_y = atof(fr->prop.center_y_str);
     fr->prop.base_zoom = atof(fr->prop.base_zoom_str);
+
     fr->prop.zoom = atof(fr->prop.zoom_str);
+
     fr->prop.er2 = fr->prop.er * fr->prop.er;
 }
 
