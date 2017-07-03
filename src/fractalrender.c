@@ -31,6 +31,7 @@ void fr_print_help() {
     printf("Usage: fractalrender [options] -o file...\n");
     printf("Options:\n");
     printf(FRPO "--help                     show help and exit\n");
+    printf(FRPO "-v <verbosity>             set verbosity to <verbosity> (vals are 0,1,2,3,4,5)\n");
     printf(FRPO "-w <width>                 set image width to <width>\n");
     printf(FRPO "-h <height>                set image width to <height>\n");
     printf(FRPO "-i <iter>                  set max iterations to <iter>\n");
