@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
     fr_io_t fr_io;
 
     fr_libsearch_init(&libsearch);
-    fr_libsearch_addpath(&libsearch, "");
     fr_libsearch_addpath(&libsearch, "./src/.libs/");
+    fr_libsearch_addpath(&libsearch, "");
     fr_libsearch_addpath(&libsearch, "/usr/local/lib/");
     fr_libsearch_addpath(&libsearch, "/usr/lib/");
 
