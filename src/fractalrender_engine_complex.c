@@ -34,11 +34,11 @@ fr_engine_lib_export_t fr_engine_export = {
 
 
 void fr_engine_complex_init(fr_t * fr) {
-    log_info("complex engine initialized");
+    log_debug("complex engine initialized");
 }
 
 void fr_engine_complex_compute(fr_t * fr) {
-    log_info("complex engine computing started");
+    log_debug("complex engine computing started");
 
     int px, py;
 
@@ -72,6 +72,6 @@ void fr_engine_complex_compute(fr_t * fr) {
 
         }
     }
-    log_info("complex engine computing ended");
+    log_debug("complex engine computing ended");
 }
 

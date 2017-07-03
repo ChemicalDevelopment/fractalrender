@@ -51,14 +51,32 @@ typedef struct fr_prop_t {
     char * center_x_str, * center_y_str;
     double center_x, center_y;
 
-    char * zoom_str;
-    double zoom;
+    char * base_zoom_str, * zoom_str;
+    double base_zoom, zoom;
 
     unsigned int max_iter;
 
     double er, er2;
 
 } fr_prop_t;
+
+
+
+// animation type
+typedef struct fr_anim_t {
+    bool do_anim;
+
+    char *zps_str;
+    double zps, sec;
+
+    int fps;
+
+    int c_frame;
+    double c_time;
+
+} fr_anim_t;
+
+
 
 // fractal type
 typedef struct fr_t {
@@ -69,12 +87,12 @@ typedef struct fr_t {
 
     fr_prop_t prop;
 
+    fr_anim_t anim;
+
     // R, G, B, A, 4 * dim.width * dim.height
     unsigned char * bitmap;
 
 } fr_t;
-
-
 
 #endif
 

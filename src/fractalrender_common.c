@@ -135,6 +135,7 @@ void fr_set_col(fr_t * fr, fr_col_t col, char * color_scheme) {
 void fr_conv_prop(fr_t * fr) {
     fr->prop.center_x = atof(fr->prop.center_x_str);
     fr->prop.center_y = atof(fr->prop.center_y_str);
+    fr->prop.base_zoom = atof(fr->prop.base_zoom_str);
     fr->prop.zoom = atof(fr->prop.zoom_str);
     fr->prop.er2 = fr->prop.er * fr->prop.er;
 }

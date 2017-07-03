@@ -71,6 +71,8 @@ void fr_find_io(fr_io_t * fr_io, fr_libsearch_t * libsearch, char * name) {
 
     if (!fr_find_lib(&fr_io->lib, libsearch, name)) {
         log_warn("could not find I/O library: %s", name);
+    } else {
+        log_info("found I/O library: %s", name);
     }
 
     fr_io->export = (fr_io_lib_export_t *)dlsym(fr_io->lib._lib, "fr_io_export");
@@ -90,6 +92,8 @@ void fr_find_engine(fr_engine_t * fr_engine, fr_libsearch_t * libsearch, char * 
 
     if (!fr_find_lib(&fr_engine->lib, libsearch, name)) {
         log_warn("could not find engine: %s", name);
+    } else {
+        log_info("found engine: %s", name);
     }
 
     fr_engine->export = (fr_engine_lib_export_t *)dlsym(fr_engine->lib._lib, "fr_engine_export");

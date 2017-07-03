@@ -56,9 +56,8 @@ static struct {
 
 
 static const char *level_names[] = {
-    "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+    "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE" 
 };
-
 
 
 static void lock(void)     {
@@ -101,7 +100,7 @@ void log_set_quiet(int enable) {
 
 
 void log_log(int level, const char *file, int line, const char *fmt, ...) {
-    if (level < L.level) {
+    if (level > L.level) {
         return;
     }
 

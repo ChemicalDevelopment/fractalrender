@@ -29,7 +29,7 @@ fr_io_lib_export_t fr_io_export = {
 };
 
 void fr_io_bmp_dump(fr_t * fr, FILE *fp) {
-    log_info("bmp io dump started");
+    log_debug("bmp io dump started");
 
     int filesize = 54 + 3 * fr->dim.width * fr->dim.height;
 
@@ -45,11 +45,9 @@ void fr_io_bmp_dump(fr_t * fr, FILE *fp) {
         40, 00, 00, 00,
         00, 00, 00, 00,
         00, 00, 00, 00,
-        03, 00,
+        01, 00,
         24, 00,
-        00, 00, 00, 00
     };
-
 
     // for padding 
     unsigned char pad[4] = {
@@ -73,18 +71,18 @@ void fr_io_bmp_dump(fr_t * fr, FILE *fp) {
     info_H[10] = (unsigned char)(fr->dim.height >> 16);
     info_H[11] = (unsigned char)(fr->dim.height >> 24);
 
-    log_debug("bmp header writing started");
+    log_trace("bmp header writing started");
 
     fwrite(file_H, 1, sizeof(file_H), fp);
     fwrite(info_H, 1, sizeof(info_H), fp);
 
 
-    log_debug("bmp header writing ended");
+    log_trace("bmp header writing ended");
 
     //fwrite(fr->bitmap, 4, fr->dim.height * fr->dim.height, fp);
 
 
-    log_debug("bmp pixel array writing started");
+    log_trace("bmp pixel array writing started");
 
     int ri;
 
@@ -101,9 +99,9 @@ void fr_io_bmp_dump(fr_t * fr, FILE *fp) {
         fwrite(pad, 1, (4-(fr->dim.width*3)%4)%4, fp);
     }
 
-    log_debug("bmp pixel array writing ended");
+    log_trace("bmp pixel array writing ended");
 
-    log_info("bmp io dump ended");
+    log_debug("bmp io dump ended");
 
 }
 

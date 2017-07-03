@@ -31,11 +31,11 @@ fr_engine_lib_export_t fr_engine_export = {
 };
 
 void fr_engine_c_init(fr_t * fr) {
-    log_info("c engine initialized");
+    log_debug("c engine initialized");
 }
 
 void fr_engine_c_compute(fr_t * fr) {
-    log_info("c engine computing started");
+    log_debug("c engine computing started");
 
     int px, py;
 
@@ -83,6 +83,6 @@ void fr_engine_c_compute(fr_t * fr) {
         }
         c_r += delta_ppx;
     }
-    log_info("c engine computing ended");
+    log_debug("c engine computing ended");
 }
 

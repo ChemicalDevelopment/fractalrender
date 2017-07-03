@@ -52,6 +52,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define FR_DFT_COLORSCHEME      "red"
 #define FR_DFT_O            "out.bmp"
 #define FR_DFT_ENGINE             "c"
+#define FR_DFT_ANIMTMP         "@TMP"
+#define FR_DFT_ANIMFPS             10
+#define FR_DFT_ANIMSEC           10.0
+#define FR_DFT_ANIMZPS          "1.9"
+#define FR_DFT_LOGLVL        LOG_INFO
 
 #define FR_DFT_LIBPREFIX      "libfr"
 

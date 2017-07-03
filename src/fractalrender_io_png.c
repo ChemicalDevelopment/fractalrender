@@ -31,6 +31,8 @@ fr_io_lib_export_t fr_io_export = {
 
 
 void fr_io_png_dump(fr_t * fr, FILE *fp) {
+    log_debug("png io dump started");
+
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
 
@@ -53,10 +55,15 @@ void fr_io_png_dump(fr_t * fr, FILE *fp) {
 
     png_init_io(png_ptr, fp);
 
+    log_trace("png header writing started");
+
     // Write header (8 bit colour depth)
     png_set_IHDR(png_ptr, info_ptr, fr->dim.width, fr->dim.height,
         8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
         PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    log_trace("png header ended started");
+
 
     char * title = "fractalrender";
 
@@ -69,21 +76,29 @@ void fr_io_png_dump(fr_t * fr, FILE *fp) {
         png_set_text(png_ptr, info_ptr, &title_text, 1);
     }
 
+    log_trace("png info writing started");
+
     png_write_info(png_ptr, info_ptr);
 
-	  //png_bytep row = (png_bytep) malloc(4 * fr);
+    log_trace("png info writing ended");
 
+    log_trace("png pixel writing started");
 
     int y;
     for (y = 0; y < fr->dim.height; y++) {
         png_write_row(png_ptr, fr->bitmap + 4 * fr->dim.width * y);
     }
     
+    log_trace("png pixel writing ended");
+
+
     // End write
     png_write_end(png_ptr, NULL);
 
     if (info_ptr != NULL) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
     if (png_ptr != NULL) png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+
+    log_debug("png io dump ended");
 
 }
 
