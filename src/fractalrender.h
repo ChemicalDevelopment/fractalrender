@@ -1,8 +1,8 @@
-/* fractalrender.h -- header file for fractalrender.c
+/* fractalrender.h -- header file for fractalrender
 
   Copyright 2016-2017 ChemicalDevelopment
 
-  This file is part of the FractalRender project.
+  This file is part of the fractalrender project.
 
   FractalRender source code, as well as any other resources in this project are
 free software; you are free to redistribute it and/or modify them under
@@ -22,9 +22,11 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifndef __FRACTALRENDER_H__
 #define __FRACTALRENDER_H__
 
-
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <getopt.h>
 #include <time.h>
 #include <sys/time.h>
 #include <stdbool.h>
@@ -33,151 +35,47 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include <math.h>
 #include <complex.h>
 #include <sys/stat.h>
+#include <ctype.h>
+#include <dlfcn.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#ifdef HAVE_CUDA
-#define HAVE_CUDA_H 1
-#endif
+#define FR_DFT_WIDTH             1920
+#define FR_DFT_HEIGHT            1080
+#define FR_DFT_MAXITER             50
+#define FR_DFT_ER                 4.0
+#define FR_DFT_CENTERX          "0.0"
+#define FR_DFT_CENTERY          "0.0"
+#define FR_DFT_ZOOM             "0.5"
+#define FR_DFT_COLORSCHEME      "red"
+#define FR_DFT_O            "out.bmp"
+#define FR_DFT_ENGINE             "c"
 
+#define FR_DFT_LIBPREFIX      "libfr"
 
-#undef malloc
-
-// for apple v other implementations
-#ifdef HAVE_OPENCL_OPENCL_H
-#include <OpenCL/opencl.h>
-#endif
-
-#ifdef HAVE_CL_CL_H
-#include <CL/cl.h>
-#endif
-
-
-
-#ifdef HAVE_OPENCL_CL_H
-#include <OpenCL/cl.h>
-#endif
-
-
-#ifdef HAVE_GMP_H
-#include <gmp.h>
-#endif
-
-
-#ifdef HAVE_CUDA_H
-#include <cuda.h>
-#endif
-
-#ifdef HAVE_CUDA_RUNTIME_H
-#include <cuda_runtime.h>
-#endif
-
-#ifdef HAVE_HELPER_FUNCTIONS_H
-#include <helper_functions.h>
-#endif
-
-#ifdef HAVE_HELPER_CUDA_H
-#include <helper_cuda.h>
-#endif
-
-
-#ifdef HAVE_MPI_H
-#include <mpi.h>
-#endif
-
-int mpi_err, mpi_rank, mpi_numprocs;
-
-struct timeval scl, ecl;
-
-
-#ifdef HAVE_CARGS_H
-#include <cargs.h>
+// static object out, maybe dll on windows
+#ifdef _WIN32
+#define FR_DFT_LIBO            ".dll"
 #else
-#error cargs.h required!
+#define FR_DFT_LIBO             ".so"
 #endif
 
-#ifdef HAVE_PNG_H
-#include <png.h>
-#endif
+#include "fractalrender_log.h"
 
 #define FR_FAIL exit(3);
 
-#if SIZEOF_DOUBLE != 8
-#warning sizeof(double) is not 64 bit!
-#endif
 
-#define CL_LOG_ENV "CL_LOG_ERRORS"
+#include "fractalrender_types.h"
 
-#define FR_MAX_PARAMSTRLEN (0x1000)
+#include "fractalrender_lib.h"
 
+#include "fractalrender_common.h"
 
-#include "fractalrender_defs.h"
-
-
-#define FR_COLOR_RED                 (0x0001)
-#define FR_COLOR_BLUE                (0x0002)
-#define FR_COLOR_GREEN               (0x0003)
-#define FR_COLOR_BW                  (0x0004)
-#define FR_COLOR_RAND                (0x0005)
-#define FR_COLOR_MOCHA               (0x0006)
-#define FR_COLOR_HAZEOCEAN           (0x0007)
-
-// todo
-#define FR_COLOR_FILE                (0x0101)
-
-
-#include "alloc_lib.h"
-#include "tofile.h"
-#include "jobs.h"
-
-// defaults that should always be included
-
-#include "io_bmp/io_bmp.h"
-
-#include "engine_c/engine_c.h"
-#include "engine_complex/engine_complex.h"
-
-//#include "color_c/color_c.h"
-
-
-// only if support is enabled
-
-#ifdef HAVE_PNG
-#include "io_png/io_png.h"
-#endif
-
-#ifdef HAVE_GMP
-#include "engine_mpf/engine_mpf.h"
-#endif
-
-#ifdef HAVE_MPC
-#include "engine_mpc/engine_mpc.h"
-#endif
-
-#ifdef HAVE_OPENCL
-#include "engine_opencl/engine_opencl.h"
-#endif
-
-#ifdef HAVE_CUDA
-#include "engine_cuda/engine_cuda.h"
-#include "engine_cuda/engine_cuda_impl.h"
-#endif
-
-
-// fractalrender.c defines
-
-void init_fillin();
-
-void init_from_cmdline(fractal_img_t *ret);
-
-void check_for_unused(fractal_img_t * ret);
-
-void do_engine_test(fractal_img_t * ret);
-
-int main(int argc, char *argv[]);
-
+#include "fractalrender_color.h"
 
 
 #endif
+
+

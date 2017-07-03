@@ -9,8 +9,20 @@ src/fractalrender
 *.so
 .vscode/
 *.flv
+*.o
+*.la
+
+*.dylib
+*.dll
+*.so
+*.do
+*.lo
+
+.dirstamp
 
 a.out.dSYM
+
+ltmain.sh
 
 *.raw
 *.meta
@@ -19,6 +31,11 @@ a.out.dSYM
 *.gif
 *.png
 *.bmp
+*.a
+*.la
+*.so
+*.dylib
+
 
 *.color
 !example_*
