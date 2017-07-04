@@ -47,6 +47,7 @@ void fr_print_help() {
     printf(FRPO FRPO FRPO FRPO "if <color> is a file that ends with .color, the color scheme is read in.\n" FRPO FRPO FRPO FRPO "Otherwise, some builtins, such as `red`, `green`, `mocha`, and `random` can be used.\n\n");
     printf(FRPO "-e <engine>                set compute engine to <engine>\n");
     printf(FRPO FRPO FRPO FRPO "This looks for libraries. If this is failing, try using `-e c` for the default engine.\n\n");
+    printf(FRPO "-A <args>                  set engine arguments to <args>\n");
     printf(FRPO "-Z <zoomps>                set animation zoom per second to <zoomps>\n");
     printf(FRPO "-F <fps>                   set animation frames per second to <fps>\n");
     printf(FRPO "-S <sec>                   set animation length to <sec>\n");
@@ -103,6 +104,8 @@ int main(int argc, char *argv[]) {
 
     char *color_scheme = FR_DFT_COLORSCHEME;
 
+    fr.engine_args = FR_DFT_ENGINEARGS;
+
     fr.anim.fps = FR_DFT_ANIMFPS;
     fr.anim.sec = FR_DFT_ANIMSEC;
 
@@ -128,7 +131,7 @@ int main(int argc, char *argv[]) {
 
     opterr = 0;
 
-    while ((c = getopt_long(argc, argv, "c:i:Z:F:S:T:E:G:x:y:w:h:z:o:e:v:sXQ", long_options, &long_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "c:i:Z:F:S:T:E:G:A:x:y:w:h:z:o:e:v:sXQ", long_options, &long_index)) != -1) {
         switch (c) {
             case 's':
                 // simple coloring
@@ -164,6 +167,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'v':
                 log_level = atoi(optarg);
+                break;
+            case 'A':
+                fr.engine_args = optarg;
                 break;
             case 'Z':
                 fr_set_prop(&fr, "zoomps", optarg, 0);

@@ -59,6 +59,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define FR_DFT_LOGLVL        LOG_INFO
 
 #define FR_DFT_LIBPREFIX      "libfr"
+#define FR_DFT_ENGINEARGS          ""
 
 #define FR_BYTEDEPTH                4
 
@@ -71,6 +72,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender_log.h"
 
+#define FR_FINISH exit(0);
 #define FR_FAIL exit(3);
 
 

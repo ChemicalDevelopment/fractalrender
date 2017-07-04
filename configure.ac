@@ -69,6 +69,56 @@ if test "x$with_png" != xno; then
     ])
 fi
 
+AC_ARG_WITH([opencl],
+    [AS_HELP_STRING([--with-opencl],
+    [use opencl @<:@default=check@:>@])],
+    [],
+    [with_opencl=check]
+)
+
+
+AS_IF([test "x${with_opencl}" != xno], [
+    AC_CHECK_HEADERS([OpenCL/opencl.h CL/cl.h OpenCL/cl.h])
+
+    OPENCL_LIBS="$LIBS -lOpenCL"
+], [
+    OPENCL_LIBS="$LIBS"
+])
+
+AS_IF([test "x${with_opencl}" != xno && test "x${with_opencl}" != xcheck && test "x${with_opencl}" != xyes], [
+  OPENCL_CFLAGS="$CFLAGS -I${with_opencl}"
+  OPENCL_LDFLAGS="$LDFLAGS -L${with_opencl}"
+], [
+  OPENCL_CFLAGS="$CFLAGS"
+  OPENCL_LDFLAGS="$LDFLAGS"
+])
+
+
+AS_IF([test "x${with_opencl}" != xno], [
+  AC_MSG_CHECKING([checking for -lOpenCL])
+  AS_IF([ ${CC} $OPENCL_CFLAGS $OPENCL_LDFLAGS test_opencl.c $OPENCL_LIBS 2> /dev/null ] ,[
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([HAVE_OPENCL], [1], [Use OPENCL])
+  ], [
+    AC_MSG_RESULT([no])
+    AC_MSG_CHECKING([checking for -framework OpenCL])
+    OPENCL_LIBS="$LIBS -framework OpenCL"
+      AS_IF([ ${CC} $OPENCL_CFLAGS $OPENCL_LDFLAGS test_opencl.c $OPENCL_LIBS 2> /dev/null ] ,[
+      AC_MSG_RESULT([yes])
+      AC_DEFINE([HAVE_OPENCL], [1], [Use OPENCL])
+    ],
+    [
+      AC_MSG_RESULT([no])
+      AS_IF([test "x${with_opencl}" != xcheck], [
+        AC_MSG_ERROR([--with-opencl was specified, but OpenCL not found])
+      ], [
+        AC_MSG_WARN([Check for OpenCL failed, so not using it])
+      ])
+    ])
+  ])
+  ], [
+])
+
 
 AC_ARG_WITH([sdl],
     [AS_HELP_STRING([--with-sdl],
@@ -101,12 +151,20 @@ if test "x$with_sdl" != xno; then
 fi
 
 
+
+
+
+
+
+AC_SUBST([OPENCL_LIBS], [$OPENCL_LIBS])
+AC_SUBST([OPENCL_CFLAGS], [$OPENCL_CFLAGS])
+AC_SUBST([OPENCL_LDFLAGS], [$OPENCL_LDFLAGS])
 AC_SUBST([SDL_CFLAGS], [$SDL_CFLAGS])
 AC_SUBST([SDL_LDFLAGS], [$SDL_LIBS])
 
 
-
 AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
+AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
 AM_CONDITIONAL([HAVE_SDL], [test x$with_sdl != xno])
 
 

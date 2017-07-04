@@ -32,6 +32,11 @@ if HAVE_SDL
 lib_LTLIBRARIES += libfrsdl.la
 endif
 
+if HAVE_OPENCL
+lib_LTLIBRARIES += libfropencl.la
+endif
+
+
 bin_PROGRAMS = fractalrender
 
 
@@ -42,11 +47,16 @@ libfrc_la_SOURCES = fractalrender_engine_c.h fractalrender_engine_c.c
 libfrc_la_LDFLAGS = 
 libfrc_la_LIBADD = libfrcommon.la 
 
-
 # C complex engine
 libfrcomplex_la_SOURCES = fractalrender_engine_complex.h fractalrender_engine_complex.c
 libfrcomplex_la_LDFLAGS =
 libfrcomplex_la_LIBADD = libfrcommon.la
+
+# OPENCL engine
+libfropencl_la_SOURCES = fractalrender_engine_opencl.h fractalrender_engine_opencl.c
+libfropencl_la_CFLAGS = @OPENCL_CFLAGS@
+libfropencl_la_LDFLAGS = @OPENCL_LDFLAGS@ @OPENCL_LIBS@
+libfropencl_la_LIBADD = libfrcommon.la
 
 # bmp io lib
 libfrbmp_la_SOURCES = fractalrender_io_bmp.c fractalrender_io_bmp.h
