@@ -25,16 +25,20 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender_interactive_sdl.h"
 
 
+#define SDL_HNDL(x) res = x; if (res < 0) { log_fatal("While executing %s, SDL error: %s", #x, SDL_GetError()); }
+
 fr_interactive_lib_export_t fr_interactive_sdl_export = {
     fr_interactive_sdl_init,
     fr_interactive_sdl_interactive
 };
 
+int res;
 
 SDL_Event cevent;
 
-SDL_Surface *screen;
+SDL_Window *window;
 SDL_Surface *surface;
+SDL_Surface *screen;
 
 void fr_interactive_sdl_init(fr_t * fr, fr_engine_t * fr_engine) {
     log_debug("SDL interactive init");
@@ -46,10 +50,14 @@ void fr_interactive_sdl_init(fr_t * fr, fr_engine_t * fr_engine) {
 
     atexit(SDL_Quit);
 
-    screen = SDL_SetVideoMode(fr->dim.width, fr->dim.height, 0, 0);
+    window = SDL_CreateWindow("fractalrender", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, fr->dim.width, fr->dim.height, 0);
+    screen = SDL_GetWindowSurface(window);
+
+    /*
+    screen = SDL_SetVideoMode(4 * fr->dim.width, 4 * fr->dim.height, 0, 0);
     if (screen == NULL) {
         log_error("SDL failed to create screen: %s", SDL_GetError());
-    }
+    }*/
 
     surface = SDL_CreateRGBSurface(SDL_SWSURFACE, fr->dim.width, fr->dim.height, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
     if (surface == NULL) {
@@ -65,14 +73,21 @@ void fr_interactive_sdl_init(fr_t * fr, fr_engine_t * fr_engine) {
 
     (*fr_engine->export->fr_init)(fr);
 
-
 }
 
 void _fr_interactive_sdl_recompute(fr_t * fr, fr_engine_t * fr_engine) {
+
+    screen = SDL_GetWindowSurface(window);
+
     (*fr_engine->export->fr_compute)(fr);
 
-    SDL_BlitSurface(surface, NULL, screen, NULL);
-    SDL_Flip(screen);
+    //SDL_Flip(screen);
+
+    SDL_HNDL(SDL_BlitScaled(surface, NULL, screen, NULL));
+    //SDL_BlitSurface(surface, NULL, screen, NULL);
+
+    SDL_HNDL(SDL_UpdateWindowSurface(window));
+
 
 }
 
@@ -82,59 +97,66 @@ void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine) {
     _fr_interactive_sdl_recompute(fr, fr_engine);
 
     bool keep_going = true;
+    bool inner_do = true;
     bool do_update = false;
 
     double zoomin_fact = 1.5;
+    double move_fact = .1;
+
 
     while (keep_going == true) {
+        inner_do = true;
         while (SDL_PollEvent(&cevent)) {
-            switch (cevent.type) {
-                case SDL_QUIT:
-                    log_debug("SDL quit event");
-                    keep_going = false;
-                    break;
-                case SDL_KEYDOWN:
-                    if (cevent.key.keysym.sym == ' ') {
-                        fr_set_prop(fr, "zoom", NULL, fr->prop.zoom * 1.5);
-                        do_update = true;
-                    } else if (cevent.key.keysym.sym == SDLK_LSHIFT || cevent.key.keysym.sym == SDLK_RSHIFT) {
-                       fr_set_prop(fr, "zoom", NULL, fr->prop.zoom / 1.5);
-                        do_update = true;
-                    } else if (cevent.key.keysym.sym == SDLK_LEFT) {
-                        fr_set_prop(fr, "center_x", NULL, fr->prop.center_x - .1 / fr->prop.zoom);
-                        do_update = true;
-                    } else if (cevent.key.keysym.sym == SDLK_RIGHT) {
-                        fr_set_prop(fr, "center_x", NULL, fr->prop.center_x + .1 / fr->prop.zoom);
-                        do_update = true;
-                    } else if (cevent.key.keysym.sym == SDLK_UP) {
-                        fr_set_prop(fr, "center_y", NULL, fr->prop.center_y + .1 / fr->prop.zoom);
-                        do_update = true;
-                    } else if (cevent.key.keysym.sym == SDLK_DOWN) {
-                        fr_set_prop(fr, "center_y", NULL, fr->prop.center_y - .1 / fr->prop.zoom);
-                        do_update = true;
-                    } else if (cevent.key.keysym.sym == SDLK_ESCAPE) {
+            if (inner_do) {
+                switch (cevent.type) {
+                    case SDL_QUIT:
+                        log_debug("SDL quit event");
                         keep_going = false;
-                    }
-                    break;
-                    /*
-                case SDL_MOUSEBUTTONDOWN:
-                    //fr_set_prop(fr, "center_x", NULL, );
-                    center = creal(center) + ((event.button.x - (WIDTH/2))/zoom) +
-                            ((cimag(center) + ((event.button.y - (HEIGHT/2))/zoom))
-                              *_Complex_I);
+                        break;
+                    case SDL_KEYDOWN:
+                        if (cevent.key.keysym.sym == ' ') {
+                            fr_set_prop(fr, "zoom", NULL, fr->prop.zoom * zoomin_fact);
+                            do_update = true;
+                        } else if (cevent.key.keysym.sym == SDLK_LSHIFT || cevent.key.keysym.sym == SDLK_RSHIFT) {
+                            fr_set_prop(fr, "zoom", NULL, fr->prop.zoom / zoomin_fact);
+                            do_update = true;
+                        } else if (cevent.key.keysym.sym == SDLK_LEFT) {
+                            fr_set_prop(fr, "center_x", NULL, fr->prop.center_x - move_fact / fr->prop.zoom);
+                            do_update = true;
+                        } else if (cevent.key.keysym.sym == SDLK_RIGHT) {
+                            fr_set_prop(fr, "center_x", NULL, fr->prop.center_x + move_fact / fr->prop.zoom);
+                            do_update = true;
+                        } else if (cevent.key.keysym.sym == SDLK_UP) {
+                            fr_set_prop(fr, "center_y", NULL, fr->prop.center_y + move_fact / fr->prop.zoom);
+                            do_update = true;
+                        } else if (cevent.key.keysym.sym == SDLK_DOWN) {
+                            fr_set_prop(fr, "center_y", NULL, fr->prop.center_y - move_fact / fr->prop.zoom);
+                            do_update = true;
+                        } else if (cevent.key.keysym.sym == SDLK_ESCAPE) {
+                            keep_going = false;
+                        }
+                        break;
+                        /*
+                    case SDL_MOUSEBUTTONDOWN:
+                        //fr_set_prop(fr, "center_x", NULL, );
+                        center = creal(center) + ((event.button.x - (WIDTH/2))/zoom) +
+                                ((cimag(center) + ((event.button.y - (HEIGHT/2))/zoom))
+                                *_Complex_I);
 
-                    if (event.button.button == 1)
-                        zoom *= ZOOM_FACTOR;
-                    else if (event.button.button == 3)
-                        zoom /= ZOOM_FACTOR;
+                        if (event.button.button == 1)
+                            zoom *= ZOOM_FACTOR;
+                        else if (event.button.button == 3)
+                            zoom /= ZOOM_FACTOR;
 
-                    sdl_draw_mandelbrot(surface, center, zoom);
-                    break;
-                    */
-                default:
-                    //
-                    break;
+                        sdl_draw_mandelbrot(surface, center, zoom);
+                        break;
+                        */
+                    default:
+                        //
+                        break;
+                }
             }
+            inner_do = false;
         }
         if (!keep_going) {
             break;
@@ -147,8 +169,6 @@ void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine) {
     }
 
     log_trace("SDL interactive main loop ended");
-
-    SDL_Delay(500);
 
     SDL_Quit();
     log_debug("SDL interactive ended");

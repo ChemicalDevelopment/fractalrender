@@ -21,9 +21,11 @@
 
 AC_PREREQ([2.55])
 AC_INIT([fractalrender], [0.4.1], [group@chemicaldevelopment.us])
-AM_INIT_AUTOMAKE([])
 
 AC_CONFIG_MACRO_DIR([m4])
+
+AM_INIT_AUTOMAKE([])
+
 
 AC_CONFIG_SRCDIR([src/fractalrender.h])
 AC_CONFIG_HEADERS([config.h])
@@ -120,36 +122,35 @@ AS_IF([test "x${with_opencl}" != xno], [
 ])
 
 
-AC_ARG_WITH([sdl],
-    [AS_HELP_STRING([--with-sdl],
-    [use sdl @<:@default=check@:>@])],
+AC_ARG_WITH([sdl2],
+    [AS_HELP_STRING([--with-sdl2],
+    [use sdl2 @<:@default=check@:>@])],
     [],
-    [with_sdl=check]
+    [with_sdl2=check]
 )
 
 
-if test "x$with_sdl" != xno; then
-    AS_IF([test "x$with_sdl" != xyes && test "x$with_sdl" != xcheck], [
-        LDFLAGS="$LDFLAGS -L$with_sdl/lib"
-        CFLAGS="$CFLAGS -I$with_sdl/include"
+if test "x$with_sdl2" != xno; then
+    AS_IF([test "x$with_sdl2" != xyes && test "x$with_sdl2" != xcheck], [
+        LDFLAGS="$LDFLAGS -L$with_sdl2/lib"
+        CFLAGS="$CFLAGS -I$with_sdl2/include"
     ])
 
-    SDL_VERSION=1.2.0
-    AM_PATH_SDL([$SDL_VERSION],[
-            AC_MSG_CHECKING([sdl])
+    SDL_VERSION=2.0.0
+    AM_PATH_SDL2([$SDL_VERSION],[
+            AC_MSG_CHECKING([sdl2])
             AC_MSG_RESULT([yes])
-            export with_sdl=yes
+            export with_sdl2=yes
         ], [
-            AC_MSG_CHECKING([sdl])
+            AC_MSG_CHECKING([sdl2])
             AC_MSG_RESULT([no])
-            if test "x$with_sdl" != xcheck; then
-                AC_MSG_FAILURE([--with-sdl was given, but test for libpng failed])
+            if test "x$with_sdl2" != xcheck; then
+                AC_MSG_FAILURE([--with-sdl2 was given, but test for libsdl failed])
             fi
-            export with_sdl=no
+            export with_sdl2=no
         ]
     )
 fi
-
 
 
 

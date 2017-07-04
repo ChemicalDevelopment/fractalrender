@@ -106,7 +106,10 @@ typedef struct fr_t {
 
     fr_anim_t anim;
 
-    char * engine_args;
+
+    int argc;
+
+    char ** argv;
     
 
     // R, G, B, A, 4 * dim.width * dim.height

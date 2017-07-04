@@ -25,11 +25,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #ifndef __FRACTALRENDER_INTERACTIVE_SDL_H__
 #define __FRACTALRENDER_INTERACTIVE_SDL_H__
 
-#ifdef _MSC_VER
-#include <SDL.h>
-#else
-#include <SDL/SDL.h>
-#endif
+#include <SDL2/SDL.h>
 
 SDL_Event cevent;
 

@@ -98,13 +98,15 @@ int main(int argc, char *argv[]) {
 
     char * engine_name = FR_DFT_ENGINE;
 
+    char * engine_args;
+
     fr_out.file_tmp_out = FR_DFT_ANIMTMP;
 
     fr_out.file_out = FR_DFT_O;
 
     char *color_scheme = FR_DFT_COLORSCHEME;
 
-    fr.engine_args = FR_DFT_ENGINEARGS;
+    engine_args = FR_DFT_ENGINEARGS;
 
     fr.anim.fps = FR_DFT_ANIMFPS;
     fr.anim.sec = FR_DFT_ANIMSEC;
@@ -169,7 +171,7 @@ int main(int argc, char *argv[]) {
                 log_level = atoi(optarg);
                 break;
             case 'A':
-                fr.engine_args = optarg;
+                engine_args = optarg;
                 break;
             case 'Z':
                 fr_set_prop(&fr, "zoomps", optarg, 0);
@@ -218,6 +220,51 @@ int main(int argc, char *argv[]) {
     }
 
     log_set_level(log_level);
+
+
+    fr.argc = 1;
+    fr.argv = NULL;
+
+    if (!STR_EQ(engine_args, "")) {
+        fr.argc++;
+    }
+
+    int i, j, k, ct;
+    for (i = 0; i < strlen(engine_args); ++i) {
+        if (engine_args[i] == ' ') {
+            fr.argc++;
+        }
+    }
+
+    fr.argv = (char **)malloc(sizeof(char *) * fr.argc);
+    fr.argv[0] = "__internal_opencl_args";
+
+    ct = 1;
+
+    for (i = 0; i < strlen(engine_args); ++i) {
+        k = -1;
+        for (j = i; j < strlen(engine_args); ++j) {
+            k = j - i + 1;
+            if (engine_args[j] == ' ') {
+                break;
+            }
+        }
+        if (k == -1) {
+            log_fatal("engine args (-A) was given incorrectly");
+        } else {
+            fr.argv[ct] = (char *)malloc(k);
+            strncpy(fr.argv[ct], engine_args + i, k);
+            fr.argv[ct][k] = 0;
+        }
+
+        i = j;
+        ct++;
+    }
+
+    log_trace("engine argc: %d", fr.argc);
+    for (i = 0; i < fr.argc; ++i) {
+        log_trace("engine argv[%d] = %s", i, fr.argv[i]);
+    }
 
 
 

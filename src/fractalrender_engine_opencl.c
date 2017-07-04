@@ -176,58 +176,14 @@ void engine_opencl_print_help() {
 }
 
 void engine_opencl_set_kernel(fr_t * fr) {
-
-    char ** _argv;
-    int _argc = 1;
     char c;
 
     char * kernel_file = NULL;
 
-    if (!STR_EQ(fr->engine_args, "")) {
-        _argc++;
-    }
-
-    int i, j, k, ct;
-    for (i = 0; i < strlen(fr->engine_args); ++i) {
-        if (fr->engine_args[i] == ' ') {
-            _argc++;
-        }
-    }
-
-    _argv = (char **)malloc(sizeof(char *) * _argc);
-    _argv[0] = "__internal_opencl_args";
-
-    ct = 1;
-
-    for (i = 0; i < strlen(fr->engine_args); ++i) {
-        k = -1;
-        for (j = i; j < strlen(fr->engine_args); ++j) {
-            k = j - i + 1;
-            if (fr->engine_args[j] == ' ') {
-                break;
-            }
-        }
-        if (k == -1) {
-            log_fatal("engine args (-A) was given incorrectly");
-        } else {
-            _argv[ct] = (char *)malloc(k);
-            strncpy(_argv[ct], fr->engine_args + i, k);
-            _argv[ct][k] = 0;
-        }
-
-        i = j;
-        ct++;
-    }
-
-    log_trace("_argc: %d", _argc);
-    for (i = 0; i < _argc; ++i) {
-        log_trace("_argv[%d] = %s", i, _argv[i]);
-    }
-
     optind = 1;    
 
-    if (_argc > 1) {
-        while ((c = getopt (_argc, _argv, "k:b:h")) != -1) {
+    if (fr->argc > 1) {
+        while ((c = getopt (fr->argc, fr->argv, "k:b:h")) != -1) {
             switch (c) {
                 case 'k':
                     kernel_file = optarg;
@@ -236,7 +192,7 @@ void engine_opencl_set_kernel(fr_t * fr) {
                     if (STR_EQ(optarg, "64")) {
                         cl_64 = true;
                     } else if (STR_EQ(optarg, "32")) {
-                        cl_64 = true;
+                        cl_32 = true;
                     } else {
                         printf("incorrect kernel bit size: %s\n", optarg);
                     }
@@ -251,16 +207,12 @@ void engine_opencl_set_kernel(fr_t * fr) {
                 default:
                     log_fatal("unknown getopt");
                     break;
-
             }
         }
-
     }
-
-
     if (!cl_32 && !cl_64) {
         cl_32 = true;
-        cl_32 = false;
+        cl_64 = true;
     }
 
     int platid;
@@ -273,7 +225,13 @@ void engine_opencl_set_kernel(fr_t * fr) {
         using_cl_32 = false;
     }
 
-    char * cl_dev_type = "CPU";
+
+    log_trace("kernel_file: %s", kernel_file);
+    log_trace("32b: %d, 64b: %d", cl_32, cl_64);
+
+
+
+    char * cl_dev_type = "GPU";
     long clgdif = CL_DEVICE_TYPE_DEFAULT;
 
 
@@ -335,59 +293,95 @@ void engine_opencl_set_kernel(fr_t * fr) {
 void fr_engine_opencl_init(fr_t * fr) {
     log_debug("opencl engine initialized");
     engine_opencl_set_kernel(fr);
+
+
+    global_item_size = (size_t *)malloc(sizeof(size_t) * 2);
+    local_item_size = (size_t *)malloc(sizeof(size_t) * 2);
+    global_item_size[0] = fr->dim.width;
+    global_item_size[1] = fr->dim.height;
+    local_item_size[0] = 16;
+    local_item_size[1] = 16;
+
+
+    CLGLBL_HNDL(color_pattern_m = clCreateBuffer(context, CL_MEM_READ_WRITE, fr->dim.byte_depth * fr->col.col_len, NULL, &res));
+
+    CLGLBL_HNDL(clEnqueueWriteBuffer(command_queue, color_pattern_m, CL_TRUE, 0, fr->dim.byte_depth * fr->col.col_len, fr->col.in_col, 0, NULL, NULL));
+
+    CLGLBL_HNDL(color_output_m = clCreateBuffer(context, CL_MEM_READ_WRITE, fr->dim.mem_width * fr->dim.height, NULL, &res));
+
+
 }
 
 void fr_engine_opencl_compute(fr_t * fr) {
     log_debug("opencl engine computing started");
 
-    int px, py;
+    double cX = fr->prop.center_x, cY = fr->prop.center_y, Z = fr->prop.zoom;
 
-    // result index to store in
-    int ri;
+    float cXf = (float)cX, cYf = (float)cY, Zf = (float)Z;
 
-    // current iter
-    int ci;
 
-    // starting imag
-    double start_c_i = fr->prop.center_y + fr->dim.height / (fr->dim.width * fr->prop.zoom);
+    float cdf, cmf;
 
-    // complex numbers, and their components squared
-    double z_r, z_i, z_r2, z_i2;
-    double c_r = fr->prop.center_x - 1.0 / fr->prop.zoom, 
-           c_i = start_c_i;
+    cdf = (float)fr->col.offset;
+    cmf = (float)fr->col.scale;
 
-    // delta per pixel, this is subtracted from Y, but added to X
-    double delta_ppx = 2.0 / (fr->dim.width * fr->prop.zoom);
-
+    //__kernel void mand(double center_x, double center_y, double zoom, int height, int width, int mem_width, double er2, int max_iter, int is_simple, double col_scale, double col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap)
 
     log_trace("opencl engine: center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
 
-    // temporary variable
-    double tmp;
 
-    for (px = 0; px < fr->dim.width; ++px) {
-        c_i = start_c_i;
-        for (py = 0; py < fr->dim.height; ++py) {
-            ri = py * fr->dim.mem_width + fr->dim.byte_depth * px;
-            z_r = c_r;
-            z_i = c_i;
-            z_r2 = z_r * z_r;
-            z_i2 = z_i * z_i;
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 0, sizeof(double), &fr->prop.center_x));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 1, sizeof(double), &fr->prop.center_y));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 2, sizeof(double), &fr->prop.zoom));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 3, sizeof(int), &fr->dim.height));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 4, sizeof(int), &fr->dim.width));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 5, sizeof(int), &fr->dim.mem_width));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 6, sizeof(double), &fr->prop.er2));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 7, sizeof(int), &fr->prop.max_iter));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 8, sizeof(int), &fr->col.is_simple));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 9, sizeof(double), &fr->col.scale));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 10, sizeof(double), &fr->col.offset));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 11, sizeof(int), &fr->dim.byte_depth));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 12, sizeof(int), &fr->col.col_len));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 13, sizeof(cl_mem), (void *)&color_pattern_m));
+    CLGLBL_HNDL(res = clSetKernelArg(kernel, 14, sizeof(cl_mem), (void *)&color_output_m));
 
-            for (ci = 0; z_r2 + z_i2 <= fr->prop.er2 && ci < fr->prop.max_iter; ++ci) {
-                tmp = 2 * z_r * z_i;
-                z_r = z_r2 - z_i2 + c_r;
-                z_i = tmp + c_i;
-                z_r2 = z_r * z_r;
-                z_i2 = z_i * z_i;
+
+    printf("trying local work size [%zu, %zu]...", local_item_size[0], local_item_size[1]);
+    CLGLBL_HNDL_S(res = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL),
+        if (res == -54) {
+            printf("failed\n");
+
+            if (!false) {
+                local_item_size[0] = 1;
+                local_item_size[1] = 1;
+
+                printf("trying local work size [%zu, %zu]...", local_item_size[0], local_item_size[1]);
+
+                CLGLBL_HNDL_S(res = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL),
+                    printf("failed\n");
+                    printf("size [1, 1] failed. Report this incident!\n");
+                    FR_FAIL
+                ,
+                    printf("worked\n");
+                );
+            } else {
+                printf("ERROR: Local item size (-CLsize) doesn't work! Try removing the option\n");
+                FR_FAIL
             }
-
-            fr_col_fillinidx(ci, z_r2 + z_i2, ri, fr);
-            
-            c_i -= delta_ppx;
+        } else {
+            CLGLBL_HNDL();
         }
-        c_r += delta_ppx;
-    }
+    ,
+        printf("worked\n");
+    );
+
+    log_trace("now reading from OpenCL buffer");
+
+    //fr->bitmap = (unsigned char *)malloc(fr->dim.mem_width * fr->dim.height);
+    CLGLBL_HNDL(res = clEnqueueReadBuffer(command_queue, color_output_m, CL_TRUE, 0, fr->dim.mem_width * fr->dim.height, fr->bitmap, 0, NULL, NULL));
+
+
     log_debug("opencl engine computing ended");
 }
 
