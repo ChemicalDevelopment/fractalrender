@@ -31,7 +31,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_LANG(C)
 AC_PROG_CC
-LT_INIT
+LT_INIT([disable-static])
 
 AC_CHECK_HEADERS([stdlib.h stdio.h stdbool.h string.h math.h sys/time.h sys/stat.h time.h unistd.h assert.h stdarg.h getopt.h ctype.h dlfcn.h])
 

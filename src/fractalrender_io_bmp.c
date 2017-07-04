@@ -24,7 +24,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender_io_bmp.h"
 
 
-fr_io_lib_export_t fr_io_export = {
+fr_io_lib_export_t fr_io_bmp_export = {
     fr_io_bmp_dump
 };
 

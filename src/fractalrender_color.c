@@ -35,6 +35,21 @@ void fr_col_gen_green(int idx, fr_col_t * fr) {
     fr->in_col[4 * idx + 3] = 255;
 }
 
+void fr_col_gen_blue(int idx, fr_col_t * fr) {
+    fr->in_col[4 * idx + 0] = 0;
+    fr->in_col[4 * idx + 1] = (255 * (idx + 1)) / fr->col_len;
+    fr->in_col[4 * idx + 2] = (255 * (idx + 1)) / fr->col_len;
+    fr->in_col[4 * idx + 3] = 255;
+}
+
+void fr_col_gen_random(int idx, fr_col_t * fr) {
+    fr->in_col[4 * idx + 0] = rand() & 0xFF;
+    fr->in_col[4 * idx + 1] = rand() & 0xFF;
+    fr->in_col[4 * idx + 2] = rand() & 0xFF;
+    fr->in_col[4 * idx + 3] = 255;
+}
+
+
 inline double fr_col_wrap(double fri, int len) {
     return fmod(fmod(fri, len) + len, len);
 }
@@ -48,7 +63,8 @@ void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
         if (zn2 < fr->prop.er2) {
             colci = 0;
         } else {
-            colci = fr->dim.byte_depth * (ci % fr->col.col_len);
+            colci = (int)floor(ci * fr->col.scale + fr->col.offset);
+            colci = fr->dim.byte_depth * (colci % fr->col.col_len);
         }
         fr->bitmap[ri + 0] = fr->col.in_col[colci + 0];
         fr->bitmap[ri + 1] = fr->col.in_col[colci + 1];

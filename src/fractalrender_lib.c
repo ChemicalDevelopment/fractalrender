@@ -48,6 +48,7 @@ bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * name) {
     lib->name = name;
     int i;
     void * ret_lib;
+
     // add 100 buffer
     char *csearch = (char *)malloc(libsearch->biggest_path + strlen(name) + strlen(FR_DFT_LIBO) + strlen(FR_DFT_LIBPREFIX) + 100);
     for (i = 0; i < libsearch->num_paths; ++i) {
@@ -75,16 +76,19 @@ void fr_find_interactive(fr_interactive_t * fr_interactive, fr_libsearch_t * lib
         log_info("found interactive library: %s", name);
     }
 
-    fr_interactive->export = (fr_interactive_lib_export_t *)dlsym(fr_interactive->lib._lib, "fr_interactive_export");
+    char * export_name = (char *)malloc(100 + strlen(name));
+    sprintf(export_name, "fr_interactive_%s_export", name);
+
+    fr_interactive->export = (fr_interactive_lib_export_t *)dlsym(fr_interactive->lib._lib, export_name);
 
     if (fr_interactive->export == NULL) {
-        log_error("couldn't find fr_interactive_export for interactive library %s", name);
+        log_error("couldn't find %s for interactive library %s", export_name, name);
     }
     if (fr_interactive->export->fr_init == NULL) {
-        log_error("couldn't find fr_init() in fr_interactive_export for interactive library %s", name);
+        log_error("couldn't find fr_init() in %s for interactive library %s", export_name, name);
     }
     if (fr_interactive->export->fr_interactive == NULL) {
-        log_error("couldn't find fr_interactive() in fr_interactive_export for interactive library %s", name);
+        log_error("couldn't find fr_interactive() in %s for interactive library %s", export_name, name);
     }
 
 }
@@ -99,13 +103,17 @@ void fr_find_io(fr_io_t * fr_io, fr_libsearch_t * libsearch, char * name) {
         log_info("found I/O library: %s", name);
     }
 
-    fr_io->export = (fr_io_lib_export_t *)dlsym(fr_io->lib._lib, "fr_io_export");
+    char * export_name = (char *)malloc(100 + strlen(name));
+    sprintf(export_name, "fr_io_%s_export", name);
+
+
+    fr_io->export = (fr_io_lib_export_t *)dlsym(fr_io->lib._lib, export_name);
 
     if (fr_io->export == NULL) {
-        log_error("couldn't find fr_io_export for I/O library %s", name);
+        log_error("couldn't find %s for I/O library %s", export_name, name);
     }
     if (fr_io->export->fr_dump == NULL) {
-        log_error("couldn't find fr_dump() in fr_io_export for I/O library %s", name);
+        log_error("couldn't find fr_dump() in %s for I/O library %s", export_name, name);
     }
 
 }
@@ -120,13 +128,17 @@ void fr_find_engine(fr_engine_t * fr_engine, fr_libsearch_t * libsearch, char * 
         log_info("found engine: %s", name);
     }
 
-    fr_engine->export = (fr_engine_lib_export_t *)dlsym(fr_engine->lib._lib, "fr_engine_export");
+    char * export_name = (char *)malloc(100 + strlen(name));
+    sprintf(export_name, "fr_engine_%s_export", name);
+
+    fr_engine->export = (fr_engine_lib_export_t *)dlsym(fr_engine->lib._lib, export_name);
+
 
     if (fr_engine->export == NULL) {
-        log_error("couldn't find fr_engine_export for engine library %s", name);
+        log_error("couldn't find %s for engine library %s", export_name, name);
     }
     if (fr_engine->export->fr_init == NULL || fr_engine->export->fr_compute == NULL) {
-        log_error("couldn't find required functions (fr_init() and fr_compute()) in fr_engine_export for engine %s", name);
+        log_error("couldn't find required functions (fr_init() and fr_compute()) in %s for engine %s", export_name, name);
     }
 }
 

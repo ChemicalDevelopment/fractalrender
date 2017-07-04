@@ -88,6 +88,10 @@ void log_set_fp(FILE *fp) {
     L.fp = fp;
 }
 
+int log_get_level() {
+    return L.level;
+}
+
 
 void log_set_level(int level) {
     L.level = level;

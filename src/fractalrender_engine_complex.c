@@ -24,7 +24,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender_engine_complex.h"
 
 
-fr_engine_lib_export_t fr_engine_export = {
+fr_engine_lib_export_t fr_engine_complex_export = {
     fr_engine_complex_init,
     fr_engine_complex_compute
 };
@@ -56,6 +56,8 @@ void fr_engine_complex_compute(fr_t * fr) {
 
     // delta per pixel, this is subtracted from Y, but added to X
     double delta_ppx = 2.0 / (fr->dim.width * fr->prop.zoom);
+
+    log_trace("complex engine: center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
 
     for (px = 0; px < fr->dim.width; ++px) {
         for (py = 0; py < fr->dim.height; ++py) {

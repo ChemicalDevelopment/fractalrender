@@ -39,16 +39,24 @@ bin_PROGRAMS = fractalrender
 
 # C engine
 libfrc_la_SOURCES = fractalrender_engine_c.h fractalrender_engine_c.c
+libfrc_la_LDFLAGS = 
+libfrc_la_LIBADD = libfrcommon.la 
+
 
 # C complex engine
 libfrcomplex_la_SOURCES = fractalrender_engine_complex.h fractalrender_engine_complex.c
+libfrcomplex_la_LDFLAGS =
+libfrcomplex_la_LIBADD = libfrcommon.la
 
 # bmp io lib
 libfrbmp_la_SOURCES = fractalrender_io_bmp.c fractalrender_io_bmp.h
+libfrbmp_la_LDFLAGS =
+libfrbmp_la_LIBADD = libfrcommon.la
 
 # png io lib
 libfrpng_la_SOURCES = fractalrender_io_png.c fractalrender_io_png.h
 libfrpng_la_LDFLAGS = -lpng
+libfrpng_la_LIBADD = libfrcommon.la
 
 # interactive library
 libfrsdl_la_SOURCES = fractalrender_interactive_sdl.c fractalrender_interactive_sdl.h
@@ -57,10 +65,15 @@ libfrsdl_la_LDFLAGS = @SDL_LDFLAGS@
 
 # shared library with common sources
 libfrcommon_la_SOURCES = fractalrender.h fractalrender_common.h fractalrender_log.h fractalrender_types.h fractalrender_color.h fractalrender_lib.h gen_image.h gen_interactive.h  fractalrender_common.c fractalrender_log.c fractalrender_color.c fractalrender_lib.c gen_image.c gen_interactive.c
+libfrcommon_la_CFLAGS = 
+libfrcommon_la_LDFLAGS =
+
 
 ##
 
-
-fractalrender_SOURCES = fractalrender.c
-fractalrender_LDADD = libfrcommon.la
+fractalrender_SOURCES = fractalrender.c fractalrender_engine_c.h
+# use static linking for the common library
+fractalrender_LDADD = $(lib_LTLIBRARIES)
+fractalrender_CFLAGS = 
+fractalrender_LDFLAGS = 
 

@@ -21,21 +21,21 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-#include "fractalrender_engine_c.h"
+#include "fractalrender_engine_opencl.h"
 
 
 
-fr_engine_lib_export_t fr_engine_c_export = {
-    fr_engine_c_init,
-    fr_engine_c_compute
+fr_engine_lib_export_t fr_engine_opencl_export = {
+    fr_engine_opencl_init,
+    fr_engine_opencl_compute
 };
 
-void fr_engine_c_init(fr_t * fr) {
-    log_debug("c engine initialized");
+void fr_engine_opencl_init(fr_t * fr) {
+    log_debug("opencl engine initialized");
 }
 
-void fr_engine_c_compute(fr_t * fr) {
-    log_debug("c engine computing started");
+void fr_engine_opencl_compute(fr_t * fr) {
+    log_debug("opencl engine computing started");
 
     int px, py;
 

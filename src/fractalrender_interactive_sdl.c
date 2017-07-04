@@ -25,7 +25,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 #include "fractalrender_interactive_sdl.h"
 
 
-fr_interactive_lib_export_t fr_interactive_export = {
+fr_interactive_lib_export_t fr_interactive_sdl_export = {
     fr_interactive_sdl_init,
     fr_interactive_sdl_interactive
 };
@@ -96,6 +96,21 @@ void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine) {
                 case SDL_KEYDOWN:
                     if (cevent.key.keysym.sym == ' ') {
                         fr_set_prop(fr, "zoom", NULL, fr->prop.zoom * 1.5);
+                        do_update = true;
+                    } else if (cevent.key.keysym.sym == SDLK_LSHIFT || cevent.key.keysym.sym == SDLK_RSHIFT) {
+                       fr_set_prop(fr, "zoom", NULL, fr->prop.zoom / 1.5);
+                        do_update = true;
+                    } else if (cevent.key.keysym.sym == SDLK_LEFT) {
+                        fr_set_prop(fr, "center_x", NULL, fr->prop.center_x - .1 / fr->prop.zoom);
+                        do_update = true;
+                    } else if (cevent.key.keysym.sym == SDLK_RIGHT) {
+                        fr_set_prop(fr, "center_x", NULL, fr->prop.center_x + .1 / fr->prop.zoom);
+                        do_update = true;
+                    } else if (cevent.key.keysym.sym == SDLK_UP) {
+                        fr_set_prop(fr, "center_y", NULL, fr->prop.center_y + .1 / fr->prop.zoom);
+                        do_update = true;
+                    } else if (cevent.key.keysym.sym == SDLK_DOWN) {
+                        fr_set_prop(fr, "center_y", NULL, fr->prop.center_y - .1 / fr->prop.zoom);
                         do_update = true;
                     } else if (cevent.key.keysym.sym == SDLK_ESCAPE) {
                         keep_going = false;

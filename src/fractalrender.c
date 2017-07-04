@@ -25,6 +25,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 // offset
 #define FRPO "  "
 
+
 void fr_print_help() {
     printf(PACKAGE_NAME " v" PACKAGE_VERSION "\n");
 
@@ -40,6 +41,8 @@ void fr_print_help() {
     printf(FRPO "-y <center y>              set image center to <center y>\n");
     printf(FRPO FRPO FRPO FRPO "the center of the image is x + iy\n\n");
     printf(FRPO "-c <color>                 set color scheme to <color>\n");
+    printf(FRPO "-E <color offset>          set color scheme offset to <color offset>\n");
+    printf(FRPO "-G <color scale>           set color scheme scale to <color scale>\n");
     printf(FRPO "-s                         do simple colorizing\n");
     printf(FRPO FRPO FRPO FRPO "if <color> is a file that ends with .color, the color scheme is read in.\n" FRPO FRPO FRPO FRPO "Otherwise, some builtins, such as `red`, `green`, `mocha`, and `random` can be used.\n\n");
     printf(FRPO "-e <engine>                set compute engine to <engine>\n");
@@ -125,7 +128,7 @@ int main(int argc, char *argv[]) {
 
     opterr = 0;
 
-    while ((c = getopt_long(argc, argv, "c:i:Z:F:S:T:x:y:w:h:z:o:e:v:sX", long_options, &long_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "c:i:Z:F:S:T:E:G:x:y:w:h:z:o:e:v:sXQ", long_options, &long_index)) != -1) {
         switch (c) {
             case 's':
                 // simple coloring
@@ -165,6 +168,12 @@ int main(int argc, char *argv[]) {
             case 'Z':
                 fr_set_prop(&fr, "zoomps", optarg, 0);
                 break;
+            case 'E':
+                col.offset = atof(optarg);
+                break;
+            case 'G':
+                col.scale = atof(optarg);
+                break;
             case 'F':
                 fr.anim.fps = atoi(optarg);
                 break;
@@ -203,6 +212,8 @@ int main(int argc, char *argv[]) {
     }
 
     log_set_level(log_level);
+
+
 
     fr_find_engine(&fr_engine, &libsearch, engine_name);
 

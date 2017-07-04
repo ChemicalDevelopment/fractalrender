@@ -165,13 +165,15 @@ void fr_set_col(fr_t * fr, fr_col_t col, char * color_scheme) {
     assert(col.scale != 0.0);
     fr->col = col;
 
+    int i;
+
     // if they give us NULL, then we need to try and allocate enough and use FR_COL_* to determine what these need
     if (fr->col.in_col == NULL && color_scheme != NULL) {
         if (STR_EQ(fr_get_ext(color_scheme), "color")) {
             log_info("reading color scheme from file: %s", color_scheme);
             // read from .color file
             FILE * fp = fr_sfopen(color_scheme, "r");
-            int R, G, B, A, i, ct;
+            int R, G, B, A, ct;
             for (ct = 0; fscanf(fp, "%d,%d,%d,%d\n", &R, &G, &B, &A) == 4; ++ct) {
                 if (!FR_VALID_RGBA(R, G, B, A)) {
                     fclose(fp);
@@ -184,11 +186,9 @@ void fr_set_col(fr_t * fr, fr_col_t col, char * color_scheme) {
             fr->col.in_col = (unsigned char *)malloc(4 * fr->col.col_len);
             fp = fr_sfopen(color_scheme, "r");
 
-            log_trace("now printing color results:");
 
             for (i = 0; i < ct; ++i) {
                 assert(fscanf(fp, "%d,%d,%d,%d\n", &R, &G, &B, &A) == 4);
-                log_trace("  %d,%d,%d,%d", R, G, B, A);
                 fr->col.in_col[4 * i + 0] = R;
                 fr->col.in_col[4 * i + 1] = G;
                 fr->col.in_col[4 * i + 2] = B;
@@ -205,16 +205,31 @@ void fr_set_col(fr_t * fr, fr_col_t col, char * color_scheme) {
                 color_gen_func = &fr_col_gen_red;
             } else if (STR_EQIC(color_scheme, "green")) {
                 color_gen_func = &fr_col_gen_green;
+            } else if (STR_EQIC(color_scheme, "blue")) {
+                color_gen_func = &fr_col_gen_blue;
+            } else if (STR_EQIC(color_scheme, "random")) {
+                color_gen_func = &fr_col_gen_random;
             } else {
                 log_error("Unknown color scheme: %s", color_scheme);
             }
             
             assert(color_gen_func != NULL);
-            fr->col.in_col = (unsigned char *)malloc(4 * fr->col.col_len);
+            fr->col.in_col = (unsigned char *)malloc(fr->dim.byte_depth * fr->col.col_len);
             assert(fr->col.in_col != NULL);
             int ci;
             for (ci = 0; ci < fr->col.col_len; ++ci) {
                 (*color_gen_func)(ci, &fr->col);
+            }
+        }
+
+        log_trace("printing out color scheme used:");
+
+        if (log_get_level() >= LOG_TRACE) {
+            unsigned char * tmp_col;
+            
+            for (i = 0; i < fr->col.col_len; ++i) {
+                tmp_col = fr->col.in_col + fr->dim.byte_depth * i;
+                printf("%d,%d,%d,%d\n", tmp_col[0], tmp_col[1], tmp_col[2], tmp_col[3]);
             }
         }
 

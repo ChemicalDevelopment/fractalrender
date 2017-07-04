@@ -25,7 +25,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include <png.h>
 
-fr_io_lib_export_t fr_io_export = {
+fr_io_lib_export_t fr_io_png_export = {
     fr_io_png_dump
 };
 
