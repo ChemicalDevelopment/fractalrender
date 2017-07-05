@@ -45,13 +45,14 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define FR_DFT_WIDTH             1920
 #define FR_DFT_HEIGHT            1080
 #define FR_DFT_MAXITER             50
-#define FR_DFT_ER                 4.0
+#define FR_DFT_ER               "4.0"
 #define FR_DFT_CENTERX          "0.0"
 #define FR_DFT_CENTERY          "0.0"
 #define FR_DFT_ZOOM             "0.5"
 #define FR_DFT_COLORSCHEME      "red"
 #define FR_DFT_O            "out.bmp"
 #define FR_DFT_ENGINE             "c"
+#define FR_DFT_PROP               "c"
 #define FR_DFT_ANIMTMP         "@TMP"
 #define FR_DFT_ANIMFPS             10
 #define FR_DFT_ANIMSEC           10.0
@@ -63,9 +64,13 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #define FR_BYTEDEPTH                4
 
+#define optstop ((char)-1)
+
 // static object out, maybe dll on windows
 #ifdef _WIN32
 #define FR_DFT_LIBO            ".dll"
+#elif __APPLE__
+#define FR_DFT_LIBO             ".dylib"
 #else
 #define FR_DFT_LIBO             ".so"
 #endif
@@ -90,5 +95,3 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 
 #endif
-
-

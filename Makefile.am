@@ -3,7 +3,8 @@
 ###
 
 AUTOMAKE_OPTIONS=foreign
-SUBDIRS=src 
+SUBDIRS=src
 
-EXTRA_DIST=test_opencl.c example_*
+ACLOCAL_AMFLAGS=-I m4
 
+EXTRA_DIST=test_opencl.c kernel.cl example_* 

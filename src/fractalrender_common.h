@@ -41,20 +41,12 @@ void fr_ctime(struct timeval *ret);
 double fr_diffsec(struct timeval a, struct timeval b);
 
 
-void fr_set_prop(fr_t * fr, char * name, char * val, double dval);
-
-void fr_get_prop(char **_target, double *_target_d, fr_t * fr, char * name);
-
 void fr_init(fr_t * ret, fr_dim_t dim);
 
 void fr_clear(fr_t * ret);
 
 void fr_set_col(fr_t * ret, fr_col_t col, char * color_scheme);
 
-void fr_conv_prop(fr_t * fr);
-
 FILE * fr_sfopen(char * fname, char * mode);
 
 #endif
-
-

@@ -31,7 +31,7 @@ fr_engine_lib_export_t fr_engine_c_export = {
 };
 
 void fr_engine_c_init(fr_t * fr) {
-    log_debug("c engine initialized");
+  log_debug("c engine initialized");
 }
 
 void fr_engine_c_compute(fr_t * fr) {
@@ -50,14 +50,14 @@ void fr_engine_c_compute(fr_t * fr) {
 
     // complex numbers, and their components squared
     double z_r, z_i, z_r2, z_i2;
-    double c_r = fr->prop.center_x - 1.0 / fr->prop.zoom, 
+    double c_r = fr->prop.center_x - 1.0 / fr->prop.zoom,
            c_i = start_c_i;
 
     // delta per pixel, this is subtracted from Y, but added to X
     double delta_ppx = 2.0 / (fr->dim.width * fr->prop.zoom);
 
 
-    log_trace("c engine: center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
+    log_trace("c engine: center_x: %s, center_y: %s, zoom: %s", fr->prop.center_x_str, fr->prop.center_y_str, fr->prop.zoom_str);
 
     // temporary variable
     double tmp;
@@ -80,11 +80,10 @@ void fr_engine_c_compute(fr_t * fr) {
             }
 
             fr_col_fillinidx(ci, z_r2 + z_i2, ri, fr);
-            
+
             c_i -= delta_ppx;
         }
         c_r += delta_ppx;
     }
     log_debug("c engine computing ended");
 }
-

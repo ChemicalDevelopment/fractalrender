@@ -20,7 +20,7 @@
 
 
 AC_PREREQ([2.55])
-AC_INIT([fractalrender], [0.4.1], [group@chemicaldevelopment.us])
+AC_INIT([fractalrender], [0.4.3], [group@chemicaldevelopment.us])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -33,6 +33,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_LANG(C)
 AC_PROG_CC
+PKG_PROG_PKG_CONFIG
 LT_INIT([disable-static])
 
 AC_CHECK_HEADERS([stdlib.h stdio.h stdbool.h string.h math.h sys/time.h sys/stat.h time.h unistd.h assert.h stdarg.h getopt.h ctype.h dlfcn.h])
@@ -41,12 +42,45 @@ AC_CHECK_LIB(m, log)
 AC_CHECK_LIB(dl, dlopen)
 
 
+
+AC_ARG_WITH([gmp],
+    [AS_HELP_STRING([--with-gmp],
+    [use gmp @<:@default=check@:>@])],
+    [],
+    [with_gmp=check]
+)
+
 AC_ARG_WITH([png],
     [AS_HELP_STRING([--with-png],
     [use png @<:@default=check@:>@])],
     [],
     [with_png=check]
 )
+
+
+if test "x$with_gmp" != xno; then
+    AS_IF([test "x$with_gmp" != xyes && test "x$with_gmp" != xcheck], [
+        LDFLAGS="$LDFLAGS -L$with_gmp/lib"
+        CFLAGS="$CFLAGS -I$with_gmp/include"
+    ])
+
+    AC_CHECK_LIB([gmp], [main], [
+        AC_CHECK_HEADERS([gmp.h])
+        AC_DEFINE([HAVE_GMP], [1], [Define if you have bmp])
+        export with_bmp=yes
+        AC_MSG_CHECKING([libgmp])
+        AC_MSG_RESULT([yes])
+
+    ], [
+        AC_MSG_CHECKING([libgmp])
+        AC_MSG_RESULT([no])
+        if test "x$with_gmp" != xcheck; then
+            AC_MSG_FAILURE([--with-gmp was given, but test for libgmp failed])
+        fi
+        export with_gmp=no
+    ])
+fi
+
 
 if test "x$with_png" != xno; then
     AS_IF([test "x$with_png" != xyes && test "x$with_png" != xcheck], [
@@ -67,7 +101,7 @@ if test "x$with_png" != xno; then
         if test "x$with_png" != xcheck; then
             AC_MSG_FAILURE([--with-png was given, but test for libpng failed])
         fi
-        export with_$1=no
+        export with_png=no
     ])
 fi
 
@@ -111,6 +145,8 @@ AS_IF([test "x${with_opencl}" != xno], [
     ],
     [
       AC_MSG_RESULT([no])
+      export with_opencl=no
+
       AS_IF([test "x${with_opencl}" != xcheck], [
         AC_MSG_ERROR([--with-opencl was specified, but OpenCL not found])
       ], [
@@ -164,6 +200,7 @@ AC_SUBST([SDL_CFLAGS], [$SDL_CFLAGS])
 AC_SUBST([SDL_LDFLAGS], [$SDL_LIBS])
 
 
+AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
 AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
 AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
 AM_CONDITIONAL([HAVE_SDL], [test x$with_sdl != xno])
@@ -185,5 +222,3 @@ AC_CHECK_SIZEOF([unsigned long])
 # todo, add tests
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
-
-

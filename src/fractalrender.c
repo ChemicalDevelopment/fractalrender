@@ -46,6 +46,8 @@ void fr_print_help() {
     printf(FRPO "-s                         do simple colorizing\n");
     printf(FRPO FRPO FRPO FRPO "if <color> is a file that ends with .color, the color scheme is read in.\n" FRPO FRPO FRPO FRPO "Otherwise, some builtins, such as `red`, `green`, `mocha`, and `random` can be used.\n\n");
     printf(FRPO "-e <engine>                set compute engine to <engine>\n");
+    printf(FRPO "-p <prec>                  set precision to <prec>\n");
+    printf(FRPO "-P <prop>                  set prop library to <prop>\n");
     printf(FRPO FRPO FRPO FRPO "This looks for libraries. If this is failing, try using `-e c` for the default engine.\n\n");
     printf(FRPO "-A <args>                  set engine arguments to <args>\n");
     printf(FRPO "-Z <zoomps>                set animation zoom per second to <zoomps>\n");
@@ -82,10 +84,12 @@ int main(int argc, char *argv[]) {
 
     fr_engine_t fr_engine;
 
+    fr_prop_lib_t fr_prop_lib;
+
 
     fr_dim_t dim = (fr_dim_t){ FR_DFT_WIDTH, FR_DFT_HEIGHT };
     fr_col_t col = (fr_col_t){ 30, 0.0, 1.0, false, NULL };
-    
+
     fr_libsearch_t libsearch;
 
     fr_libsearch_init(&libsearch);
@@ -98,6 +102,8 @@ int main(int argc, char *argv[]) {
 
     char * engine_name = FR_DFT_ENGINE;
 
+    char * prop_name = FR_DFT_PROP;
+
     char * engine_args;
 
     fr_out.file_tmp_out = FR_DFT_ANIMTMP;
@@ -106,23 +112,21 @@ int main(int argc, char *argv[]) {
 
     char *color_scheme = FR_DFT_COLORSCHEME;
 
+    fr.prop.zoom_str = NULL;
+
+
+    int prec = 64;
+
     engine_args = FR_DFT_ENGINEARGS;
 
     fr.anim.fps = FR_DFT_ANIMFPS;
     fr.anim.sec = FR_DFT_ANIMSEC;
 
-    fr.prop.center_x_str = NULL;
-    fr.prop.center_y_str = NULL;
-    fr.prop.base_zoom_str = NULL;
-    fr.prop.zoom_str = NULL;
-    fr.anim.zoomps_str = NULL;
-
-
-    fr_set_prop(&fr, "center_x", FR_DFT_CENTERX, 0);
-    fr_set_prop(&fr, "center_y", FR_DFT_CENTERY, 0);
-    fr_set_prop(&fr, "base_zoom", FR_DFT_ZOOM, 0);
-    fr_set_prop(&fr, "zoomps", FR_DFT_ANIMZPS, 0);
-    fr_set_prop(&fr, "er", NULL, FR_DFT_ER);
+    char * cX = FR_DFT_CENTERX;
+    char * cY = FR_DFT_CENTERY;
+    char * Z = FR_DFT_ZOOM;
+    char * Zps = FR_DFT_ANIMZPS;
+    char * er = FR_DFT_ER;
 
     fr.prop.max_iter = FR_DFT_MAXITER;
 
@@ -133,7 +137,7 @@ int main(int argc, char *argv[]) {
 
     opterr = 0;
 
-    while ((c = getopt_long(argc, argv, "c:i:Z:F:S:T:E:G:A:x:y:w:h:z:o:e:v:sXQ", long_options, &long_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "c:i:Z:F:S:T:E:G:A:P:p:x:y:w:h:z:o:e:v:sXQ", long_options, &long_index)) != optstop) {
         switch (c) {
             case 's':
                 // simple coloring
@@ -147,6 +151,9 @@ int main(int argc, char *argv[]) {
                 // engine
                 engine_name = optarg;
                 break;
+            case 'p':
+                prec = atoi(optarg);
+                break;
             case 'c':
                 //color scheme
                 color_scheme = optarg;
@@ -158,23 +165,25 @@ int main(int argc, char *argv[]) {
                 fr.prop.max_iter = atoi(optarg);
                 break;
             case 'x':
-                fr_set_prop(&fr, "center_x", optarg, 0);
+                cX = optarg;
                 break;
             case 'y':
-                fr_set_prop(&fr, "center_y", optarg, 0);
+                cY = optarg;
                 break;
             case 'z':
-                fr_set_prop(&fr, "base_zoom", optarg, 0);
-                fr_set_prop(&fr, "zoom", optarg, 0);
+                Z = optarg;
                 break;
             case 'v':
                 log_level = atoi(optarg);
+                break;
+            case 'P':
+                prop_name = optarg;
                 break;
             case 'A':
                 engine_args = optarg;
                 break;
             case 'Z':
-                fr_set_prop(&fr, "zoomps", optarg, 0);
+                Zps = optarg;
                 break;
             case 'E':
                 col.offset = atof(optarg);
@@ -214,13 +223,14 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             default:
-                log_fatal("Unknown getopt return val");
+                log_fatal("Unknown getopt return val: %c", c);
                 break;
         }
     }
 
-    log_set_level(log_level);
+    optind = 1;
 
+    log_set_level(log_level);
 
     fr.argc = 1;
     fr.argv = NULL;
@@ -266,14 +276,27 @@ int main(int argc, char *argv[]) {
         log_trace("engine argv[%d] = %s", i, fr.argv[i]);
     }
 
+    fr.prop.prec = prec;
 
+    fr_find_prop(&fr_prop_lib, &libsearch, prop_name);
+
+    fr_prop_lib.export->fr_prop_init(&fr);
+
+    fr_prop_lib.export->fr_set_prop(&fr, "center_x", cX, 0);
+    fr_prop_lib.export->fr_set_prop(&fr, "center_y", cY, 0);
+
+    fr_prop_lib.export->fr_set_prop(&fr, "base_zoom", Z, 0);
+    fr_prop_lib.export->fr_set_prop(&fr, "er", er, 0);
+
+    fr_prop_lib.export->fr_set_prop(&fr, "zoom", Z, 0);
+
+    fr_prop_lib.export->fr_set_prop(&fr, "zoomps", Zps, 0);
 
     fr_find_engine(&fr_engine, &libsearch, engine_name);
 
     fr_init(&fr, dim);
-    log_trace("past start_c_i");
 
-//    fr_conv_prop(&fr);
+    log_trace("past start_c_i");
 
     fr_set_col(&fr, col, color_scheme);
 
@@ -281,19 +304,12 @@ int main(int argc, char *argv[]) {
 
     if (do_interactive) {
         log_trace("using interactive");
-        gen_interactive(&fr, &libsearch, &fr_engine);
-        
+        gen_interactive(&fr, &fr_prop_lib,&libsearch, &fr_engine);
+
     } else {
         log_trace("generating image");
-        gen_image(&fr, &libsearch, &fr_engine, &fr_out);
+        gen_image(&fr, &fr_prop_lib, &libsearch, &fr_engine, &fr_out);
     }
-
-
-
-    fr_clear(&fr);
 
     return 0;
 }
-
-
-

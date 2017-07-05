@@ -22,18 +22,15 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-void gen_interactive(fr_t * fr, fr_libsearch_t * libsearch, fr_engine_t * fr_engine) {
+void gen_interactive(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_libsearch_t * libsearch, fr_engine_t * fr_engine) {
     log_debug("now in gen_interactive");
 
     fr_interactive_t fr_interactive;
     fr_find_interactive(&fr_interactive, libsearch, "sdl");
 
-    (*fr_interactive.export->fr_init)(fr, fr_engine);
+    (*fr_interactive.export->fr_init)(fr, fr_prop_lib, fr_engine);
 
-    (*fr_interactive.export->fr_interactive)(fr, fr_engine);
-    
+    (*fr_interactive.export->fr_interactive)(fr, fr_prop_lib, fr_engine);
+
 
 }
-
-
-

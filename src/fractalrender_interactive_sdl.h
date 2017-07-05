@@ -32,10 +32,9 @@ SDL_Event cevent;
 SDL_Surface *screen;
 SDL_Surface *surface;
 
-void fr_interactive_sdl_init(fr_t * fr, fr_engine_t * fr_engine);
+void fr_interactive_sdl_init(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_engine_t * fr_engine);
 
-void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine);
+void fr_interactive_sdl_interactive(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_engine_t * fr_engine);
 
 
 #endif
-

@@ -22,7 +22,7 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #include "fractalrender.h"
 
-void gen_image(fr_t * fr, fr_libsearch_t * libsearch, fr_engine_t * fr_engine, fr_out_t * fr_out) {
+void gen_image(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_libsearch_t * libsearch, fr_engine_t * fr_engine, fr_out_t * fr_out) {
     log_debug("now in gen_image");
 
     struct timeval compute_stime, compute_etime, io_stime, io_etime;
@@ -84,11 +84,13 @@ void gen_image(fr_t * fr, fr_libsearch_t * libsearch, fr_engine_t * fr_engine, f
 
     FILE *out;
 
+    double zoomin_fact = pow(fr->anim.zoomps, 1.0 / fr->anim.fps);
+
     for (c_frame = 0; c_frame < fr->anim.total_frames; ++c_frame) {
         fr->anim.c_frame = c_frame;
         fr->anim.c_time = (double)(1.0 * c_frame) / (1.0 * fr->anim.fps);
 
-        fr_set_prop(fr, "zoom", NULL, fr->prop.base_zoom * pow(fr->anim.zoomps, fr->anim.c_time));
+        fr_prop_lib->export->fr_zoomin(fr, zoomin_fact);
 
         fr_ctime(&compute_stime);
 
@@ -141,6 +143,3 @@ void gen_image(fr_t * fr, fr_libsearch_t * libsearch, fr_engine_t * fr_engine, f
     log_info("combined took %lfs (%lf Mpixels/s)", compute_time + io_time, total_pixels / (1e6 * (compute_time + io_time)));
 
 }
-
-
-

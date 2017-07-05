@@ -25,6 +25,9 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 #define MAX_SOURCE_SIZE (0x100000)
 
+#define ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT "\nvoid colorfunc(int ci, float zn2, float er2, int ri, int is_simple, float col_scale, float col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap);\n\n\nvoid colorfunc(int ci, float zn2, float er2, int ri, int is_simple, float col_scale, float col_offset, int byte_depth, int col_len, __global uchar *\nin_col, __global uchar * bitmap) {\n    if (is_simple) {\n        int colci;\n        if (zn2 < er2) {\n            colci = 0;\n        } else {\n            colci = (int)floor(ci * col_scale + col_offset);\n            colci = byte_depth * (colci % col_len);\n        }\n        bitmap[ri + 0] = in_col[colci + 0];\n        bitmap[ri + 1] = in_col[colci + 1];\n        bitmap[ri + 2] = in_col[colci + 2];\n        bitmap[ri + 3] = in_col[colci + 3];\n    } else {\n        // fractional index\n        float fri, mixfactor;\n        if (zn2 < er2) {\n            // index = 0, because it is inside the set\n            fri = 0;\n            mixfactor = 0;\n            bitmap[ri + 0] = in_col[0];\n            bitmap[ri + 1] = in_col[1];\n            bitmap[ri + 2] = in_col[2];\n            bitmap[ri + 3] = in_col[3];\n        } else {\n            fri = 1 + ci - log(log(sqrt(zn2))) / log(2.0f);\n            fri = fri * col_scale + col_offset;\n            fri = fmod(fmod(fri, col_len) + col_len, col_len);\n\n            mixfactor = fri - floor(fri);\n            int colci0, colci1;\n\n            colci0 = (int)floor(fri);\n\n            if (colci0 >= col_len - 1) {\n                colci1 = 0;\n            } else {\n                colci1 = colci0 + 1;\n            }\n\n            colci0 *= byte_depth;\n            colci1 *= byte_depth;\n\n\n            bitmap[ri + 0] = (int)floor(mixfactor * in_col[colci1 + 0] + (1 - mixfactor) * in_col[colci0 + 0]);\n            bitmap[ri + 1] = (int)floor(mixfactor * in_col[colci1 + 1] + (1 - mixfactor) * in_col[colci0 + 1]);\n            bitmap[ri + 2] = (int)floor(mixfactor * in_col[colci1 + 2] + (1 - mixfactor) * in_col[colci0 + 2]);\n            bitmap[ri + 3] = (int)floor(mixfactor * in_col[colci1 + 3] + (1 - mixfactor) * in_col[colci0 + 3]);\n            if (bitmap[ri + 3] == 0) {\n                bitmap[ri + 3] = 255;\n            }\n\n        }\n    }\n}\n\n\n#ifdef cl_khr_fp64\n\n__kernel void mand(double center_x, double center_y, double zoom, int height, int width, int mem_width, double er2, int max_iter, int is_simple, double col_scale, double col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap)\n{\n    int px = get_global_id(0), py = get_global_id(1);\n\n    double x = center_x + (2 * px - width) / (zoom * width), y = center_y + (height - 2 * py) / (zoom * width);\n\n    double sx = x, sy = y, xs = x * x, ys = y * y, tmp;\n\n    int col_dest = py * mem_width + px * byte_depth;\n\n    int ci;\n    for (ci = 0; ci < max_iter && xs + ys <= er2; ++ci) {\n        tmp = 2 * x * y;\n        x = xs - ys + sx;\n        y = tmp + sy;\n        xs = x * x;\n        ys = y * y;\n    }\n\n    colorfunc(ci, (float)xs + ys, (float)er2, col_dest, is_simple, (float)col_scale, (float)col_offset, byte_depth, col_len, in_col, bitmap);\n\n}\n\n#endif\n\n__kernel void mand_32(float center_x, float center_y, float zoom, int height, int width, int mem_width, float er2, int max_iter, int is_simple, float col_scale, float col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap)\n{\n    int px = get_global_id(0), py = get_global_id(1);\n\n    float x = center_x + (2 * px - width) / (zoom * width), y = center_y + (height - 2 * py) / (zoom * width);\n\n    float sx = x, sy = y, xs = x * x, ys = y * y, tmp;\n\n    int col_dest = py * mem_width + px * byte_depth;\n\n    int ci;\n    for (ci = 0; ci < max_iter && xs + ys <= er2; ++ci) {\n        tmp = 2 * x * y;\n        x = xs - ys + sx;\n        y = tmp + sy;\n        xs = x * x;\n        ys = y * y;\n    }\n\n    colorfunc(ci, xs + ys, er2, col_dest, is_simple, col_scale, col_offset, byte_depth, col_len, in_col, bitmap);\n\n}\n"
+
+
 #define CL_MAXPLATFORMS 10
 #define CL_MAXDEVICES 10
 
@@ -176,14 +179,12 @@ void engine_opencl_print_help() {
 }
 
 void engine_opencl_set_kernel(fr_t * fr) {
-    char c;
+  char c;
 
     char * kernel_file = NULL;
 
-    optind = 1;    
-
     if (fr->argc > 1) {
-        while ((c = getopt (fr->argc, fr->argv, "k:b:h")) != -1) {
+        while ((c = getopt (fr->argc, fr->argv, "k:b:h")) != optstop) {
             switch (c) {
                 case 'k':
                     kernel_file = optarg;
@@ -241,7 +242,7 @@ void engine_opencl_set_kernel(fr_t * fr) {
         source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
         fclose(fp);
     } else {
-        //source_str = ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT;
+        source_str = ENGINE_OPENCL_KERNEL_SOURCE_DEFAULT;
         source_size = strlen(source_str);
     }
 
@@ -299,8 +300,8 @@ void fr_engine_opencl_init(fr_t * fr) {
     local_item_size = (size_t *)malloc(sizeof(size_t) * 2);
     global_item_size[0] = fr->dim.width;
     global_item_size[1] = fr->dim.height;
-    local_item_size[0] = 16;
-    local_item_size[1] = 16;
+    local_item_size[0] = 4;
+    local_item_size[1] = 4;
 
 
     CLGLBL_HNDL(color_pattern_m = clCreateBuffer(context, CL_MEM_READ_WRITE, fr->dim.byte_depth * fr->col.col_len, NULL, &res));
@@ -319,32 +320,52 @@ void fr_engine_opencl_compute(fr_t * fr) {
 
     float cXf = (float)cX, cYf = (float)cY, Zf = (float)Z;
 
+    float er2f = (float)fr->prop.er2;
 
-    float cdf, cmf;
 
-    cdf = (float)fr->col.offset;
-    cmf = (float)fr->col.scale;
+    float cof, csf;
+
+    cof = (float)fr->col.offset;
+    csf = (float)fr->col.scale;
 
     //__kernel void mand(double center_x, double center_y, double zoom, int height, int width, int mem_width, double er2, int max_iter, int is_simple, double col_scale, double col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap)
 
-    log_trace("opencl engine: center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
+
+    if (using_cl_32) {
+        log_trace("opencl engine (32 bit kernel): center_x: %f, center_y: %f, zoom: %f", cXf, cYf, Zf);
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 0, sizeof(float), &cXf));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 1, sizeof(float), &cYf));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 2, sizeof(float), &Zf));
+
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 6, sizeof(float), &er2f));
 
 
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 0, sizeof(double), &fr->prop.center_x));
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 1, sizeof(double), &fr->prop.center_y));
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 2, sizeof(double), &fr->prop.zoom));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 9, sizeof(float), &csf));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 10, sizeof(float), &cof));
+    } else {
+        log_trace("opencl engine (64 bit kernel): center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 0, sizeof(double), &fr->prop.center_x));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 1, sizeof(double), &fr->prop.center_y));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 2, sizeof(double), &fr->prop.zoom));
+
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 6, sizeof(double), &fr->prop.er2));
+
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 9, sizeof(double), &fr->col.scale));
+        CLGLBL_HNDL(res = clSetKernelArg(kernel, 10, sizeof(double), &fr->col.offset));
+    }
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 3, sizeof(int), &fr->dim.height));
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 4, sizeof(int), &fr->dim.width));
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 5, sizeof(int), &fr->dim.mem_width));
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 6, sizeof(double), &fr->prop.er2));
+
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 7, sizeof(int), &fr->prop.max_iter));
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 8, sizeof(int), &fr->col.is_simple));
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 9, sizeof(double), &fr->col.scale));
-    CLGLBL_HNDL(res = clSetKernelArg(kernel, 10, sizeof(double), &fr->col.offset));
+
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 11, sizeof(int), &fr->dim.byte_depth));
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 12, sizeof(int), &fr->col.col_len));
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 13, sizeof(cl_mem), (void *)&color_pattern_m));
     CLGLBL_HNDL(res = clSetKernelArg(kernel, 14, sizeof(cl_mem), (void *)&color_output_m));
+
+    log_trace("opencl engine: center_x: %s, center_y: %s, zoom: %s", fr->prop.center_x_str, fr->prop.center_y_str, fr->prop.zoom_str);
 
 
     printf("trying local work size [%zu, %zu]...", local_item_size[0], local_item_size[1]);
@@ -384,4 +405,3 @@ void fr_engine_opencl_compute(fr_t * fr) {
 
     log_debug("opencl engine computing ended");
 }
-

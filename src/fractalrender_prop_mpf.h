@@ -1,4 +1,4 @@
-/* gen_interactive.h -- interactive
+/* fractalrender_prop_mpf.c -- the MPF implementation of the properties handler
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -19,12 +19,25 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 */
 
-
 #include "fractalrender.h"
 
-#ifndef __GEN_INTERACTIVE_H__
-#define __GEN_INTERACTIVE_H__
+#include <gmp.h>
 
-void gen_interactive(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_libsearch_t * libsearch, fr_engine_t * fr_engine);
+#ifndef __FRACTALRENDER_PROP_MPF_H__
+#define __FRACTALRENDER_PROP_MPF_H__
+
+void fr_prop_init(fr_t * fr);
+
+void fr_zoomin(fr_t * fr, double scale);
+
+void fr_movex(fr_t * fr, double scale);
+
+void fr_movey(fr_t * fr, double scale);
+
+void fr_set_prop(fr_t * fr, char * name, char * val, double dval);
+
+void fr_get_prop(char **_target, double *_target_d, fr_t * fr, char * name);
+
+void fr_set_prec(fr_t * fr, int prec);
 
 #endif

@@ -44,15 +44,15 @@ void fr_libsearch_addpath(fr_libsearch_t * libsearch, char * path) {
     }
 }
 
-bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * name) {
+bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * prefix, char * name) {
     lib->name = name;
     int i;
     void * ret_lib;
 
     // add 100 buffer
-    char *csearch = (char *)malloc(libsearch->biggest_path + strlen(name) + strlen(FR_DFT_LIBO) + strlen(FR_DFT_LIBPREFIX) + 100);
+    char *csearch = (char *)malloc(libsearch->biggest_path + strlen(name) + strlen(prefix) + strlen(FR_DFT_LIBO) + strlen(FR_DFT_LIBPREFIX) + 100);
     for (i = 0; i < libsearch->num_paths; ++i) {
-        sprintf(csearch, "%s%s%s%s", libsearch->paths[i], FR_DFT_LIBPREFIX, name, FR_DFT_LIBO);
+        sprintf(csearch, "%s%s_%s%s%s", libsearch->paths[i], FR_DFT_LIBPREFIX, prefix, name, FR_DFT_LIBO);
         log_debug("checking file %s", csearch);
         ret_lib = dlopen(csearch, RTLD_NOW);
         if (ret_lib == NULL) {
@@ -70,7 +70,7 @@ bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * name) {
 void fr_find_interactive(fr_interactive_t * fr_interactive, fr_libsearch_t * libsearch, char * name) {
     log_info("looking for interactive library: %s", name);
 
-    if (!fr_find_lib(&fr_interactive->lib, libsearch, name)) {
+    if (!fr_find_lib(&fr_interactive->lib, libsearch, "interactive_", name)) {
         log_error("could not find interactive library: %s", name);
     } else {
         log_info("found interactive library: %s", name);
@@ -97,7 +97,7 @@ void fr_find_interactive(fr_interactive_t * fr_interactive, fr_libsearch_t * lib
 void fr_find_io(fr_io_t * fr_io, fr_libsearch_t * libsearch, char * name) {
     log_info("looking for I/O library: %s", name);
 
-    if (!fr_find_lib(&fr_io->lib, libsearch, name)) {
+    if (!fr_find_lib(&fr_io->lib, libsearch, "io_", name)) {
         log_error("could not find I/O library: %s", name);
     } else {
         log_info("found I/O library: %s", name);
@@ -122,7 +122,7 @@ void fr_find_io(fr_io_t * fr_io, fr_libsearch_t * libsearch, char * name) {
 void fr_find_engine(fr_engine_t * fr_engine, fr_libsearch_t * libsearch, char * name) {
     log_info("looking for engine: %s", name);
 
-    if (!fr_find_lib(&fr_engine->lib, libsearch, name)) {
+    if (!fr_find_lib(&fr_engine->lib, libsearch, "engine_", name)) {
         log_error("could not find engine: %s", name);
     } else {
         log_info("found engine: %s", name);
@@ -142,5 +142,24 @@ void fr_find_engine(fr_engine_t * fr_engine, fr_libsearch_t * libsearch, char * 
     }
 }
 
+void fr_find_prop(fr_prop_lib_t * fr_prop, fr_libsearch_t * libsearch, char * name) {
+    log_info("looking for prop: %s", name);
 
+    if (!fr_find_lib(&fr_prop->lib, libsearch, "prop_", name)) {
+        log_error("could not find prop: %s", name);
+    } else {
+        log_info("found prop: %s", name);
+    }
 
+    char * export_name = (char *)malloc(100 + strlen(name));
+    sprintf(export_name, "fr_prop_%s_export", name);
+
+    fr_prop->export = (fr_prop_lib_export_t *)dlsym(fr_prop->lib._lib, export_name);
+
+    if (fr_prop->export == NULL) {
+        log_error("couldn't find %s for prop library %s", export_name, name);
+    }
+    if (fr_prop->export->fr_zoomin == NULL || fr_prop->export->fr_set_prop == NULL || fr_prop->export->fr_get_prop == NULL) {
+        log_error("couldn't find required functions (fr_zoomin() and fr_set_prop() and fr_get_prop()) in %s for prop %s", export_name, name);
+    }
+}

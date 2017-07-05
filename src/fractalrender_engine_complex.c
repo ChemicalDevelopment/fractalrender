@@ -57,7 +57,7 @@ void fr_engine_complex_compute(fr_t * fr) {
     // delta per pixel, this is subtracted from Y, but added to X
     double delta_ppx = 2.0 / (fr->dim.width * fr->prop.zoom);
 
-    log_trace("complex engine: center_x: %lf, center_y: %lf, zoom: %lf", fr->prop.center_x, fr->prop.center_y, fr->prop.zoom);
+    log_trace("complex engine: center_x: %s, center_y: %s, zoom: %s", fr->prop.center_x_str, fr->prop.center_y_str, fr->prop.zoom_str);
 
     for (px = 0; px < fr->dim.width; ++px) {
         for (py = 0; py < fr->dim.height; ++py) {
@@ -76,4 +76,3 @@ void fr_engine_complex_compute(fr_t * fr) {
     }
     log_debug("complex engine computing ended");
 }
-

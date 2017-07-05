@@ -39,7 +39,7 @@ Options:
 
   -X                         launch interactive viewer
   -o <file>                  save image to <file>
-        the extension determines which color I/O library to load. 
+        the extension determines which color I/O library to load.
         If your library is not loading, try using `.bmp` files
 
 
@@ -74,7 +74,7 @@ To report bugs, please email:
 
 ### From Development Sources
 
-First, run `autoreconf -i -Im4` to generate autotools files (`./configure`, etc).
+First, run `autoreconf` to generate autotools files (`./configure`, etc).
 
 Then, follow `From Release tarball` starting at the configure step.
 
@@ -99,6 +99,3 @@ You can also point them to non standard locations:
 
 
 Then, run `make && sudo make install`
-
-
-

@@ -26,20 +26,6 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define __FRACTALRENDER_LIB_H__
 
 
-// for a dynamically loaded library
-typedef struct fr_lib_t {
-    // should include 'lib' most of the time.
-    // So, for GMP, you would have `libgmp` as `lib_name`, 
-    // which would search for `libgmp.{so|dll}` .so  or .dll
-    // is chosen based on whether you are compiling on Windows or not.
-    char * name;
-
-    // call from dlopen();, representing the library memory location
-    void * _lib;
-
-} fr_lib_t;
-
-
 typedef struct fr_libsearch_t {
 
     int num_paths;
@@ -53,6 +39,18 @@ typedef struct fr_libsearch_t {
 } fr_libsearch_t;
 
 
+// for a dynamically loaded library
+typedef struct fr_lib_t {
+    // should include 'lib' most of the time.
+    // So, for GMP, you would have `libgmp` as `lib_name`,
+    // which would search for `libgmp.{so|dll}` .so  or .dll
+    // is chosen based on whether you are compiling on Windows or not.
+    char * name;
+
+    // call from dlopen();, representing the library memory location
+    void * _lib;
+
+} fr_lib_t;
 
 typedef struct fr_io_lib_export_t {
 
@@ -60,12 +58,13 @@ typedef struct fr_io_lib_export_t {
 
 } fr_io_lib_export_t;
 
+
 typedef struct fr_engine_lib_export_t {
     void (*fr_init)(fr_t *);
 
     void (*fr_compute)(fr_t *);
-} fr_engine_lib_export_t;
 
+} fr_engine_lib_export_t;
 
 
 
@@ -87,11 +86,39 @@ typedef struct fr_io_t {
 } fr_io_t;
 
 
+typedef struct fr_prop_lib_export_t {
+
+    void (*fr_prop_init)(fr_t * fr);
+
+    void (*fr_set_prop)(fr_t * fr, char * name, char * val, double dval);
+
+    void (*fr_get_prop)(char **_target, double *_target_d, fr_t * fr, char * name);
+
+    void (*fr_set_prec)(fr_t * fr, int prec);
+
+    void (*fr_zoomin)(fr_t * fr, double scale);
+
+    void (*fr_movex)(fr_t * fr, double scale);
+
+    void (*fr_movey)(fr_t * fr, double scale);
+
+
+} fr_prop_lib_export_t;
+
+
+typedef struct fr_prop_lib_t {
+
+  fr_lib_t lib;
+
+  fr_prop_lib_export_t * export;
+
+} fr_prop_lib_t;
+
 typedef struct fr_interactive_lib_export_t {
 
-    void (*fr_init)(fr_t * fr, fr_engine_t * fr_engine);
+    void (*fr_init)(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_engine_t * fr_engine);
 
-    void (*fr_interactive)(fr_t * fr, fr_engine_t * fr_engine);
+    void (*fr_interactive)(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_engine_t * fr_engine);
 
 } fr_interactive_lib_export_t;
 
@@ -111,10 +138,12 @@ void fr_libsearch_addpath(fr_libsearch_t * libsearch, char * path);
 
 void fr_find_interactive(fr_interactive_t * fr_interactive, fr_libsearch_t * libsearch, char * name);
 
-bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * name);
+bool fr_find_lib(fr_lib_t * lib, fr_libsearch_t * libsearch, char * prefix, char * name);
 
 void fr_find_io(fr_io_t * fr_io, fr_libsearch_t * libsearch, char * name);
 
 void fr_find_engine(fr_engine_t * fr_engine, fr_libsearch_t * libsearch, char * name);
+
+void fr_find_prop(fr_prop_lib_t * fr_prop, fr_libsearch_t * libsearch, char * name);
 
 #endif

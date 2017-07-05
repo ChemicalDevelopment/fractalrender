@@ -40,10 +40,10 @@ SDL_Window *window;
 SDL_Surface *surface;
 SDL_Surface *screen;
 
-void fr_interactive_sdl_init(fr_t * fr, fr_engine_t * fr_engine) {
+void fr_interactive_sdl_init(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_engine_t * fr_engine) {
     log_debug("SDL interactive init");
-  
-    
+
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         log_error("SDL failed to init: %s", SDL_GetError());
     }
@@ -91,7 +91,7 @@ void _fr_interactive_sdl_recompute(fr_t * fr, fr_engine_t * fr_engine) {
 
 }
 
-void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine) {
+void fr_interactive_sdl_interactive(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_engine_t * fr_engine) {
     log_debug("SDL interactive starting");
 
     _fr_interactive_sdl_recompute(fr, fr_engine);
@@ -115,22 +115,22 @@ void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine) {
                         break;
                     case SDL_KEYDOWN:
                         if (cevent.key.keysym.sym == ' ') {
-                            fr_set_prop(fr, "zoom", NULL, fr->prop.zoom * zoomin_fact);
+                            fr_prop_lib->export->fr_zoomin(fr, zoomin_fact);
                             do_update = true;
                         } else if (cevent.key.keysym.sym == SDLK_LSHIFT || cevent.key.keysym.sym == SDLK_RSHIFT) {
-                            fr_set_prop(fr, "zoom", NULL, fr->prop.zoom / zoomin_fact);
+                            fr_prop_lib->export->fr_zoomin(fr, 1.0 / zoomin_fact);
                             do_update = true;
                         } else if (cevent.key.keysym.sym == SDLK_LEFT) {
-                            fr_set_prop(fr, "center_x", NULL, fr->prop.center_x - move_fact / fr->prop.zoom);
+                            fr_prop_lib->export->fr_movex(fr, -move_fact);
                             do_update = true;
                         } else if (cevent.key.keysym.sym == SDLK_RIGHT) {
-                            fr_set_prop(fr, "center_x", NULL, fr->prop.center_x + move_fact / fr->prop.zoom);
+                            fr_prop_lib->export->fr_movex(fr, move_fact);
                             do_update = true;
                         } else if (cevent.key.keysym.sym == SDLK_UP) {
-                            fr_set_prop(fr, "center_y", NULL, fr->prop.center_y + move_fact / fr->prop.zoom);
+                            fr_prop_lib->export->fr_movey(fr, move_fact);
                             do_update = true;
                         } else if (cevent.key.keysym.sym == SDLK_DOWN) {
-                            fr_set_prop(fr, "center_y", NULL, fr->prop.center_y - move_fact / fr->prop.zoom);
+                            fr_prop_lib->export->fr_movey(fr, -move_fact);
                             do_update = true;
                         } else if (cevent.key.keysym.sym == SDLK_ESCAPE) {
                             keep_going = false;
@@ -175,6 +175,3 @@ void fr_interactive_sdl_interactive(fr_t * fr, fr_engine_t * fr_engine) {
 
     return;
 }
-
-
-

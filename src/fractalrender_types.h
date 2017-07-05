@@ -51,6 +51,7 @@ typedef struct fr_col_t {
 typedef struct fr_prop_t {
     // store string representations of some properties, so that multi-precision libraries can read them in.
 
+
     char * center_x_str, * center_y_str;
     double center_x, center_y;
 
@@ -58,6 +59,10 @@ typedef struct fr_prop_t {
     double base_zoom, zoom;
 
     unsigned int max_iter;
+    int prec;
+
+
+    char *er_str;
 
     double er, er2;
 
@@ -97,7 +102,7 @@ typedef struct fr_anim_t {
 
 // fractal type
 typedef struct fr_t {
-    
+
     fr_dim_t dim;
 
     fr_col_t col;
@@ -110,7 +115,7 @@ typedef struct fr_t {
     int argc;
 
     char ** argv;
-    
+
 
     // R, G, B, A, 4 * dim.width * dim.height
     unsigned char * bitmap;
@@ -118,5 +123,3 @@ typedef struct fr_t {
 } fr_t;
 
 #endif
-
-

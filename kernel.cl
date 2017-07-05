@@ -1,9 +1,9 @@
 
+void colorfunc(int ci, float zn2, float er2, int ri, int is_simple, float col_scale, float col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap);
 
 
-#pragma cl_khr_fp64
-
-void colorfunc(int ci, double zn2, double er2, int ri, int is_simple, double col_scale, double col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap) {
+void colorfunc(int ci, float zn2, float er2, int ri, int is_simple, float col_scale, float col_offset, int byte_depth, int col_len, __global uchar *
+in_col, __global uchar * bitmap) {
     if (is_simple) {
         int colci;
         if (zn2 < er2) {
@@ -18,7 +18,7 @@ void colorfunc(int ci, double zn2, double er2, int ri, int is_simple, double col
         bitmap[ri + 3] = in_col[colci + 3];
     } else {
         // fractional index
-        double fri, mixfactor;
+        float fri, mixfactor;
         if (zn2 < er2) {
             // index = 0, because it is inside the set
             fri = 0;
@@ -28,13 +28,13 @@ void colorfunc(int ci, double zn2, double er2, int ri, int is_simple, double col
             bitmap[ri + 2] = in_col[2];
             bitmap[ri + 3] = in_col[3];
         } else {
-            fri = 1 + ci - log(log(sqrt(zn2))) / log(2.0);
+            fri = 1 + ci - log(log(sqrt(zn2))) / log(2.0f);
             fri = fri * col_scale + col_offset;
             fri = fmod(fmod(fri, col_len) + col_len, col_len);
 
             mixfactor = fri - floor(fri);
             int colci0, colci1;
-            
+
             colci0 = (int)floor(fri);
 
             if (colci0 >= col_len - 1) {
@@ -60,6 +60,7 @@ void colorfunc(int ci, double zn2, double er2, int ri, int is_simple, double col
 }
 
 
+#ifdef cl_khr_fp64
 
 __kernel void mand(double center_x, double center_y, double zoom, int height, int width, int mem_width, double er2, int max_iter, int is_simple, double col_scale, double col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap)
 {
@@ -68,6 +69,31 @@ __kernel void mand(double center_x, double center_y, double zoom, int height, in
     double x = center_x + (2 * px - width) / (zoom * width), y = center_y + (height - 2 * py) / (zoom * width);
 
     double sx = x, sy = y, xs = x * x, ys = y * y, tmp;
+
+    int col_dest = py * mem_width + px * byte_depth;
+
+    int ci;
+    for (ci = 0; ci < max_iter && xs + ys <= er2; ++ci) {
+        tmp = 2 * x * y;
+        x = xs - ys + sx;
+        y = tmp + sy;
+        xs = x * x;
+        ys = y * y;
+    }
+
+    colorfunc(ci, (float)xs + ys, (float)er2, col_dest, is_simple, (float)col_scale, (float)col_offset, byte_depth, col_len, in_col, bitmap);
+
+}
+
+#endif
+
+__kernel void mand_32(float center_x, float center_y, float zoom, int height, int width, int mem_width, float er2, int max_iter, int is_simple, float col_scale, float col_offset, int byte_depth, int col_len, __global uchar * in_col, __global uchar * bitmap)
+{
+    int px = get_global_id(0), py = get_global_id(1);
+
+    float x = center_x + (2 * px - width) / (zoom * width), y = center_y + (height - 2 * py) / (zoom * width);
+
+    float sx = x, sy = y, xs = x * x, ys = y * y, tmp;
 
     int col_dest = py * mem_width + px * byte_depth;
 

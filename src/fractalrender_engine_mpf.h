@@ -1,4 +1,4 @@
-/* gen_interactive.h -- interactive
+/* fractalrender_engine_mpf.h -- GMP mpf engine
 
   Copyright 2016-2017 ChemicalDevelopment
 
@@ -19,12 +19,32 @@ can also find a copy at http://www.gnu.org/licenses/.
 
 */
 
-
 #include "fractalrender.h"
 
-#ifndef __GEN_INTERACTIVE_H__
-#define __GEN_INTERACTIVE_H__
+#include <gmp.h>
 
-void gen_interactive(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_libsearch_t * libsearch, fr_engine_t * fr_engine);
+
+#ifndef __FRACTALRENDER_ENGINE_MPF_H__
+#define __FRACTALRENDER_ENGINE_MPF_H__
+
+typedef struct e_mpf_fr_t {
+    mpf_t cX, cY, Z;
+
+    mpf_t s_c_i;
+
+    mpf_t c_r, c_i;
+    mpf_t z_r, z_i;
+    mpf_t z_r2, z_i2;
+
+    mpf_t tmp;
+
+    mpf_t delta_ppx;
+
+} e_mpf_fr_t;
+
+
+void fr_engine_mpf_init(fr_t * fractal);
+
+void fr_engine_mpf_compute(fr_t * fractal);
 
 #endif

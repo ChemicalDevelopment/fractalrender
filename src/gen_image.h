@@ -26,6 +26,6 @@ can also find a copy at http://www.gnu.org/licenses/.
 #define __GEN_IMAGE_H__
 
 
-void gen_image(fr_t * fr, fr_libsearch_t * libsearch, fr_engine_t * fr_engine, fr_out_t * fr_out);
+void gen_image(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_libsearch_t * libsearch, fr_engine_t * fr_engine, fr_out_t * fr_out);
 
 #endif
