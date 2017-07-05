@@ -10,7 +10,7 @@ fractalrender also plans to support Windows.
 ## Usage
 
 ```
-fractalrender v0.4.1
+fractalrender v0.4.3
 Usage: fractalrender [options] -o file...
 Options:
   --help                     show help and exit
@@ -24,13 +24,18 @@ Options:
         the center of the image is x + iy
 
   -c <color>                 set color scheme to <color>
+  -E <color offset>          set color scheme offset to <color offset>
+  -G <color scale>           set color scheme scale to <color scale>
   -s                         do simple colorizing
         if <color> is a file that ends with .color, the color scheme is read in.
         Otherwise, some builtins, such as `red`, `green`, `mocha`, and `random` can be used.
 
   -e <engine>                set compute engine to <engine>
+  -p <prec>                  set precision to <prec>
+  -P <prop>                  set prop library to <prop>
         This looks for libraries. If this is failing, try using `-e c` for the default engine.
 
+  -A <args>                  set engine arguments to <args>
   -Z <zoomps>                set animation zoom per second to <zoomps>
   -F <fps>                   set animation frames per second to <fps>
   -S <sec>                   set animation length to <sec>
@@ -60,7 +65,7 @@ To report bugs, please email:
 
 `fractalrender -X` will start an interactive viewer (still WIP)
 
-`fractalrender -X -x.2821 -y.01 -z100` will start an interactive viewer at the specified coordinates and zoom.
+`fractalrender -X -x.2821 -y.01 -z100 -v5` will start an interactive viewer at the specified coordinates and zoom, and print out lots of info in the console.
 
 
 ## Common Problems
@@ -91,7 +96,7 @@ If you'd like to require support, use `--with-PKG`.
 
 Example:
 
-`./configure --with-png --with-sdl` will require libpng and SDL to be found and built, or the configure script will fail.
+`./configure --with-png --with-sdl2` will require libpng and SDL to be found and built, or the configure script will fail.
 
 You can also point them to non standard locations:
 
