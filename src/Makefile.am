@@ -40,6 +40,11 @@ if HAVE_OPENCL
 lib_LTLIBRARIES += libfr_engine_opencl.la
 endif
 
+if HAVE_CUDA
+lib_LTLIBRARIES += libfr_engine_cuda.la
+endif
+
+
 
 bin_PROGRAMS = fractalrender
 
@@ -50,7 +55,6 @@ bin_PROGRAMS = fractalrender
 libfr_engine_c_la_SOURCES = fractalrender_engine_c.h fractalrender_engine_c.c
 libfr_engine_c_la_LDFLAGS =
 libfr_engine_c_la_LIBADD = libfr_common.la
-
 
 # C prop lib
 libfr_prop_c_la_SOURCES = fractalrender_prop_c.h fractalrender_prop_c.c
@@ -78,6 +82,21 @@ libfr_engine_opencl_la_CFLAGS = @OPENCL_CFLAGS@
 libfr_engine_opencl_la_LDFLAGS = @OPENCL_LDFLAGS@ @OPENCL_LIBS@
 libfr_engine_opencl_la_LIBADD = libfr_common.la
 
+# CUDA engine
+libfr_engine_cuda_la_SOURCES = fractalrender_engine_cuda.h fractalrender_engine_cuda_helper.h fractalrender_engine_cuda.c
+libfr_engine_cuda_la_CFLAGS = -lcudart -lcuda -lcudadevrt
+libfr_engine_cuda_la_LDFLAGS =
+libfr_engine_cuda_la_LIBADD = libfr_common.la fr_cuda_kernel.o
+
+NVCC_CFLAGS = -gencode arch=compute_53,code=sm_53 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_62,code=compute_62
+CUDA_CFLAGS = @CUDA_CFLAGS@
+CUDA_LDFLAGS = @CUDA_LDFLAGS@
+
+fr_cuda_kernel.o: fractalrender_engine_cuda_kernel.cu
+	$(NVCC) $(CUDA_CFLAGS) $(NVCC_CFLAGS) -Xcompiler -fPIC -I. -I.. -DHAVE_CONFIG_H -m64 $(CUDA_LDFLAGS) -lib -o $@ -c $<
+
+
+
 # bmp io lib
 libfr_io_bmp_la_SOURCES = fractalrender_io_bmp.c fractalrender_io_bmp.h
 libfr_io_bmp_la_LDFLAGS =
@@ -97,6 +116,7 @@ libfr_interactive_sdl_la_LDFLAGS = @SDL_LDFLAGS@
 libfr_common_la_SOURCES = fractalrender.h fractalrender_common.h fractalrender_log.h fractalrender_types.h fractalrender_color.h fractalrender_lib.h gen_image.h gen_interactive.h  fractalrender_common.c fractalrender_log.c fractalrender_color.c fractalrender_lib.c gen_image.c gen_interactive.c
 libfr_common_la_CFLAGS =
 libfr_common_la_LDFLAGS =
+
 
 
 ##

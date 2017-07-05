@@ -179,9 +179,9 @@ void engine_opencl_print_help() {
 }
 
 void engine_opencl_set_kernel(fr_t * fr) {
-  char c;
 
     char * kernel_file = NULL;
+    char c;
 
     if (fr->argc > 1) {
         while ((c = getopt (fr->argc, fr->argv, "k:b:h")) != optstop) {

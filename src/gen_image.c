@@ -89,8 +89,9 @@ void gen_image(fr_t * fr, fr_prop_lib_t * fr_prop_lib, fr_libsearch_t * libsearc
     for (c_frame = 0; c_frame < fr->anim.total_frames; ++c_frame) {
         fr->anim.c_frame = c_frame;
         fr->anim.c_time = (double)(1.0 * c_frame) / (1.0 * fr->anim.fps);
-
-        fr_prop_lib->export->fr_zoomin(fr, zoomin_fact);
+        if (c_frame > 0) {
+            fr_prop_lib->export->fr_zoomin(fr, zoomin_fact);
+        }
 
         fr_ctime(&compute_stime);
 
