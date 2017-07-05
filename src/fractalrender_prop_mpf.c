@@ -47,6 +47,14 @@ void fr_prop_init(fr_t * fr) {
     mpf_init2(tmp_mpf[2], fr->prop.prec);
     mpf_init2(tmp_mpf[3], fr->prop.prec);
     mpf_init2(tmp_mpf[4], fr->prop.prec);
+    fr->prop.center_x_str = NULL;
+    fr->prop.center_y_str = NULL;
+    fr->prop.zoom_str = NULL;
+    fr->prop.er_str = NULL;
+    fr->prop.base_zoom_str = NULL;
+    fr->anim.zoomps_str = NULL;
+
+
 }
 
 void fr_zoomin(fr_t * fr, double scale) {

@@ -43,6 +43,8 @@ typedef struct fr_ocl_t {
     int plat_id;
     int dev_id;
 
+    int cl_width, cl_height;
+
 } fr_ocl_t;
 
 void fr_engine_opencl_init(fr_t * fr);

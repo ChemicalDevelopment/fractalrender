@@ -32,13 +32,39 @@ fr_engine_lib_export_t fr_engine_complex_export = {
 #define __FR_COMPLEX_NORMSQR(x) creal(x) * creal(x) + cimag(x) * cimag(x)
 #define FR_COMPLEX_NORMSQR(x) (__FR_COMPLEX_NORMSQR((x)))
 
+void engine_complex_print_help() {
+    printf("Complex Engine Help\n");
+    printf("  -h             print help\n");
+    printf("\n");
+}
+
+
 
 void fr_engine_complex_init(fr_t * fr) {
     log_debug("complex engine initialized");
+
+    char c;
+
+    while ((c = getopt (fr->argc, fr->argv, "h")) != optstop) {
+        switch (c) {
+            case 'h':
+                engine_complex_print_help();
+                FR_FINISH
+                break;
+            case '?':
+                engine_complex_print_help();
+                break;
+            default:
+                log_fatal("unknown getopt");
+                break;
+        }
+    }
 }
 
 void fr_engine_complex_compute(fr_t * fr) {
     log_debug("complex engine computing started");
+
+    struct timeval stime, etime;
 
     int px, py;
 
@@ -59,6 +85,8 @@ void fr_engine_complex_compute(fr_t * fr) {
 
     log_trace("complex engine: center_x: %s, center_y: %s, zoom: %s", fr->prop.center_x_str, fr->prop.center_y_str, fr->prop.zoom_str);
 
+    fr_ctime(&stime);
+
     for (px = 0; px < fr->dim.width; ++px) {
         for (py = 0; py < fr->dim.height; ++py) {
             ri = 4 * (py * fr->dim.width + px);
@@ -74,5 +102,11 @@ void fr_engine_complex_compute(fr_t * fr) {
 
         }
     }
-    log_debug("complex engine computing ended");
+    fr_ctime(&etime);
+
+
+    double mpxs = (fr->dim.width * fr->dim.height) / (1e6 * fr_diffsec(etime, stime));
+
+
+    log_debug("complex engine computing ended, took %lf s, %lf Mpx/s", fr_diffsec(etime, stime), mpxs);
 }

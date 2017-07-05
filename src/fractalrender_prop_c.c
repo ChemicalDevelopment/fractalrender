@@ -35,6 +35,13 @@ fr_prop_lib_export_t fr_prop_c_export = {
 
 void fr_prop_init(fr_t * fr) {
     log_debug("c prop init");
+    fr->prop.center_x_str = NULL;
+    fr->prop.center_y_str = NULL;
+    fr->prop.zoom_str = NULL;
+    fr->prop.er_str = NULL;
+    fr->prop.base_zoom_str = NULL;
+    fr->anim.zoomps_str = NULL;
+
 }
 
 void fr_zoomin(fr_t * fr, double scale) {

@@ -33,6 +33,7 @@ cuda_fr_t * cuda_fr;
 
 
 void engine_cuda_print_help() {
+    printf("Cuda Engine Help\n");
     printf("  -n             x dimension\n");
     printf("  -m             y dimension\n");
     printf("  -h             print help\n");
@@ -73,5 +74,6 @@ void fr_engine_cuda_init(fr_t * fr) {
 
 void fr_engine_cuda_compute(fr_t * fr) {
     cuda_fr->fr = fr;
+    
     mand_cuda(cuda_fr);
 }

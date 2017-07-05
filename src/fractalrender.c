@@ -112,9 +112,6 @@ int main(int argc, char *argv[]) {
 
     char *color_scheme = FR_DFT_COLORSCHEME;
 
-    fr.prop.zoom_str = NULL;
-
-
     int prec = 64;
 
     engine_args = FR_DFT_ENGINEARGS;

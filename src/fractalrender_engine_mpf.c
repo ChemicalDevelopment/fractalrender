@@ -34,8 +34,9 @@ fr_engine_lib_export_t fr_engine_mpf_export = {
 int prec;
 
 void engine_mpf_print_help() {
-    printf("  -p             precision in bits");
-    printf("  -h             print this help menu");
+    printf("MPF Engine Help\n");
+    printf("  -p             precision in bits\n");
+    printf("  -h             print this help menu\n");
     printf("\n");
 }
 

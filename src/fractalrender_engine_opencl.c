@@ -170,47 +170,9 @@ bool engine_opencl_set_kernel__plat(int platid, bool doexit, int clgdif) {
     }
 }
 
+void engine_opencl_set_kernel(fr_t * fr, char * kernel_file) {
 
-void engine_opencl_print_help() {
-    printf("  -k             kernel");
-    printf("  -b             bit kernel (32 or 64)");
-    printf("  -h             print help");
-    printf("\n");
-}
-
-void engine_opencl_set_kernel(fr_t * fr) {
-
-    char * kernel_file = NULL;
-    char c;
-
-    if (fr->argc > 1) {
-        while ((c = getopt (fr->argc, fr->argv, "k:b:h")) != optstop) {
-            switch (c) {
-                case 'k':
-                    kernel_file = optarg;
-                    break;
-                case 'b':
-                    if (STR_EQ(optarg, "64")) {
-                        cl_64 = true;
-                    } else if (STR_EQ(optarg, "32")) {
-                        cl_32 = true;
-                    } else {
-                        printf("incorrect kernel bit size: %s\n", optarg);
-                    }
-                    break;
-                case 'h':
-                    engine_opencl_print_help();
-                    FR_FINISH
-                    break;
-                case '?':
-                    engine_opencl_print_help();
-                    break;
-                default:
-                    log_fatal("unknown getopt");
-                    break;
-            }
-        }
-    }
+    
     if (!cl_32 && !cl_64) {
         cl_32 = true;
         cl_64 = true;
@@ -288,12 +250,63 @@ void engine_opencl_set_kernel(fr_t * fr) {
 }
 
 
+void engine_opencl_print_help() {
+    printf("OpenCL Engine Help\n");
+    printf("  -k             kernel\n");
+    printf("  -b             bit kernel (32 or 64)\n");
+    printf("  -n             block size width\n");
+    printf("  -m             block size height\n");
+    printf("  -h             print help\n");
+    printf("\n");
+}
 
 
 
 void fr_engine_opencl_init(fr_t * fr) {
     log_debug("opencl engine initialized");
-    engine_opencl_set_kernel(fr);
+
+
+    char * kernel_file = NULL;
+    char c;
+
+    fr_ocl.cl_width = 4;
+    fr_ocl.cl_height = 4;
+
+    while ((c = getopt (fr->argc, fr->argv, "k:b:n:m:h")) != optstop) {
+        switch (c) {
+            case 'k':
+                kernel_file = optarg;
+                break;
+            case 'n':
+                fr_ocl.cl_width = atoi(optarg);
+                break;
+            case 'm':
+                fr_ocl.cl_height = atoi(optarg);
+                break;
+            case 'b':
+                if (STR_EQ(optarg, "64")) {
+                    cl_64 = true;
+                } else if (STR_EQ(optarg, "32")) {
+                    cl_32 = true;
+                } else {
+                    printf("incorrect kernel bit size: %s\n", optarg);
+                }
+                break;
+            case 'h':
+                engine_opencl_print_help();
+                FR_FINISH
+                break;
+            case '?':
+                engine_opencl_print_help();
+                break;
+            default:
+                log_fatal("unknown getopt");
+                break;
+        }
+    }
+
+
+    engine_opencl_set_kernel(fr, kernel_file);
 
 
     global_item_size = (size_t *)malloc(sizeof(size_t) * 2);
@@ -315,6 +328,8 @@ void fr_engine_opencl_init(fr_t * fr) {
 
 void fr_engine_opencl_compute(fr_t * fr) {
     log_debug("opencl engine computing started");
+
+    struct timeval stime, etime;
 
     double cX = fr->prop.center_x, cY = fr->prop.center_y, Z = fr->prop.zoom;
 
@@ -369,39 +384,42 @@ void fr_engine_opencl_compute(fr_t * fr) {
 
 
     printf("trying local work size [%zu, %zu]...", local_item_size[0], local_item_size[1]);
+
+    fr_ctime(&stime);
+
     CLGLBL_HNDL_S(res = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL),
         if (res == -54) {
             printf("failed\n");
 
-            if (!false) {
-                local_item_size[0] = 1;
-                local_item_size[1] = 1;
+            local_item_size[0] = 1;
+            local_item_size[1] = 1;
 
-                printf("trying local work size [%zu, %zu]...", local_item_size[0], local_item_size[1]);
+            printf("trying local work size [%zu, %zu]...", local_item_size[0], local_item_size[1]);
 
-                CLGLBL_HNDL_S(res = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL),
-                    printf("failed\n");
-                    printf("size [1, 1] failed. Report this incident!\n");
-                    FR_FAIL
-                ,
-                    printf("worked\n");
-                );
-            } else {
-                printf("ERROR: Local item size (-CLsize) doesn't work! Try removing the option\n");
+            CLGLBL_HNDL_S(res = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_item_size, local_item_size, 0, NULL, NULL),
+                printf("failed\n");
+                printf("size [1, 1] failed. Report this incident!\n");
                 FR_FAIL
-            }
+            ,
+                printf("worked\n");
+            );
         } else {
             CLGLBL_HNDL();
         }
     ,
+    
         printf("worked\n");
     );
+
 
     log_trace("now reading from OpenCL buffer");
 
     //fr->bitmap = (unsigned char *)malloc(fr->dim.mem_width * fr->dim.height);
     CLGLBL_HNDL(res = clEnqueueReadBuffer(command_queue, color_output_m, CL_TRUE, 0, fr->dim.mem_width * fr->dim.height, fr->bitmap, 0, NULL, NULL));
 
+    fr_ctime(&etime);
 
-    log_debug("opencl engine computing ended");
+    double mpxs = (fr->dim.width * fr->dim.height) / (1e6 * fr_diffsec(etime, stime));
+
+    log_debug("opencl engine computing ended, took %lf s, %lf Mpx/s", fr_diffsec(etime, stime), mpxs);
 }

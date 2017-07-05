@@ -313,7 +313,7 @@ AC_SUBST([SDL_LDFLAGS], [$SDL_LIBS])
 AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
 AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
 AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
-AM_CONDITIONAL([HAVE_CUDA], [test x$with_cuda != xno])
+AM_CONDITIONAL([HAVE_CUDA], [test x$VALID_CUDA == xyes])
 AM_CONDITIONAL([HAVE_SDL], [test x$with_sdl != xno])
 
 
