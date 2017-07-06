@@ -20,7 +20,7 @@
 
 
 AC_PREREQ([2.55])
-AC_INIT([fractalrender], [0.4.3], [group@chemicaldevelopment.us])
+AC_INIT([fractalrender], [0.4.4], [group@chemicaldevelopment.us])
 
 AC_CONFIG_MACRO_DIRS([m4 custom_m4])
 

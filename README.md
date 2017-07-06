@@ -79,7 +79,7 @@ To report bugs, please email:
 
 ### From Development Sources
 
-First, run `autoreconf` to generate autotools files (`./configure`, etc).
+First, run `autoreconf -iv` to generate autotools files (`./configure`, etc).
 
 Then, follow `From Release tarball` starting at the configure step.
 
