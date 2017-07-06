@@ -18,6 +18,8 @@ src/fractalrender
 *.do
 *.lo
 
+/m4/
+
 .dirstamp
 
 a.out.dSYM

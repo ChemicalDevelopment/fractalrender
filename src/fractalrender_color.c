@@ -42,6 +42,14 @@ void fr_col_gen_blue(int idx, fr_col_t * fr) {
     fr->in_col[4 * idx + 3] = 255;
 }
 
+void fr_col_gen_mocha(int idx, fr_col_t * fr) {
+    double port = (double)(idx + 1.0) / fr->col_len;
+    fr->in_col[4 * idx + 0] = (int)floor(255 * port);
+    fr->in_col[4 * idx + 1] = (int)floor(255 * port * port);
+    fr->in_col[4 * idx + 2] = (int)floor(255 * port * port * port);
+    fr->in_col[4 * idx + 3] = 255;
+}
+
 void fr_col_gen_random(int idx, fr_col_t * fr) {
     fr->in_col[4 * idx + 0] = rand() & 0xFF;
     fr->in_col[4 * idx + 1] = rand() & 0xFF;
@@ -55,7 +63,7 @@ inline double fr_col_wrap(double fri, int len) {
 }
 
 // a generic method for filling in colors that other programs can use
-// ci is the current index, zn2 is the square of the absolute value, 
+// ci is the current index, zn2 is the square of the absolute value,
 // and ri is the result index to store it in
 void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
     if (fr->col.is_simple) {
@@ -88,7 +96,7 @@ void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
 
             mixfactor = fri - floor(fri);
             int colci0, colci1;
-            
+
             colci0 = (int)floor(fri);
 
             if (colci0 >= fr->col.col_len - 1) {
@@ -112,4 +120,3 @@ void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
         }
     }
 }
-

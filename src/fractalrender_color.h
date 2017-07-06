@@ -35,6 +35,8 @@ void fr_col_gen_green(int idx, fr_col_t * fr);
 
 void fr_col_gen_blue(int idx, fr_col_t * fr);
 
+void fr_col_gen_mocha(int idx, fr_col_t * fr);
+
 void fr_col_gen_random(int idx, fr_col_t * fr);
 
 void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr);

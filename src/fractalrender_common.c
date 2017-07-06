@@ -121,6 +121,8 @@ void fr_set_col(fr_t * fr, fr_col_t col, char * color_scheme) {
                 color_gen_func = &fr_col_gen_green;
             } else if (STR_EQIC(color_scheme, "blue")) {
                 color_gen_func = &fr_col_gen_blue;
+            } else if (STR_EQIC(color_scheme, "mocha")) {
+                  color_gen_func = &fr_col_gen_mocha;
             } else if (STR_EQIC(color_scheme, "random")) {
                 color_gen_func = &fr_col_gen_random;
             } else {

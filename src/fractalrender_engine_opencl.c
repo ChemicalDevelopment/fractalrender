@@ -93,13 +93,13 @@ bool engine_opencl_set_kernel__dev(int platid, int devid, bool doexit) {
     CLGLBL_HNDL_S(kernel = clCreateKernel(program, kernelname, &res),
 
         if (cl_32 && !cl_64) {
-            log_error("Couldn't find kernel `mand_32`, try omitting all `-CLXX` arguments\n");
+            log_error("Couldn't find kernel `mand_32`, try omitting all `-bXX` arguments\n");
             if (doexit) {
                 FR_FAIL
             }
             return false;
         } else if (cl_64 && !cl_32) {
-            log_error("You requested 64 bit (using `-CL64`), but could not find a 64 bit kernel\n");
+            log_error("You requested 64 bit (using `-b64`), but could not find a 64 bit kernel\n");
             if (doexit) {
                 FR_FAIL
             }
@@ -112,7 +112,7 @@ bool engine_opencl_set_kernel__dev(int platid, int devid, bool doexit) {
 
             CLGLBL_HNDL_S(kernel = clCreateKernel(program, kernelname, &res),
 
-                log_fatal("Couldn't find kernel `mand_32`, try omitting all `-CLXX` arguments\n");
+                log_fatal("Couldn't find kernel `mand_32`, try omitting all `-bXX` arguments\n");
                 if (doexit) {
                     FR_FAIL
                 }
@@ -170,9 +170,9 @@ bool engine_opencl_set_kernel__plat(int platid, bool doexit, int clgdif) {
     }
 }
 
-void engine_opencl_set_kernel(fr_t * fr, char * kernel_file) {
+void engine_opencl_set_kernel(fr_t * fr, char * cl_dev_type, char * kernel_file) {
 
-    
+
     if (!cl_32 && !cl_64) {
         cl_32 = true;
         cl_64 = true;
@@ -194,7 +194,6 @@ void engine_opencl_set_kernel(fr_t * fr, char * kernel_file) {
 
 
 
-    char * cl_dev_type = "GPU";
     long clgdif = CL_DEVICE_TYPE_DEFAULT;
 
 
@@ -253,6 +252,7 @@ void engine_opencl_set_kernel(fr_t * fr, char * kernel_file) {
 void engine_opencl_print_help() {
     printf("OpenCL Engine Help\n");
     printf("  -k             kernel\n");
+    printf("  -d             device type (CPU, GPU, ALL, ACCELERATOR, DEFAULT)\n");
     printf("  -b             bit kernel (32 or 64)\n");
     printf("  -n             block size width\n");
     printf("  -m             block size height\n");
@@ -265,17 +265,21 @@ void engine_opencl_print_help() {
 void fr_engine_opencl_init(fr_t * fr) {
     log_debug("opencl engine initialized");
 
-
+    char * cl_dev_type = "GPU";
     char * kernel_file = NULL;
+
     char c;
 
     fr_ocl.cl_width = 4;
     fr_ocl.cl_height = 4;
 
-    while ((c = getopt (fr->argc, fr->argv, "k:b:n:m:h")) != optstop) {
+    while ((c = getopt (fr->argc, fr->argv, "k:b:n:m:d:h")) != optstop) {
         switch (c) {
             case 'k':
                 kernel_file = optarg;
+                break;
+            case 'd':
+                cl_dev_type = optarg;
                 break;
             case 'n':
                 fr_ocl.cl_width = atoi(optarg);
@@ -306,7 +310,7 @@ void fr_engine_opencl_init(fr_t * fr) {
     }
 
 
-    engine_opencl_set_kernel(fr, kernel_file);
+    engine_opencl_set_kernel(fr, cl_dev_type, kernel_file);
 
 
     global_item_size = (size_t *)malloc(sizeof(size_t) * 2);
@@ -407,7 +411,7 @@ void fr_engine_opencl_compute(fr_t * fr) {
             CLGLBL_HNDL();
         }
     ,
-    
+
         printf("worked\n");
     );
 
