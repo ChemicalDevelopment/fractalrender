@@ -299,8 +299,31 @@ if test "x$with_sdl2" != xno; then
 fi
 
 
+ AC_ARG_WITH([gtk3],
+     [AS_HELP_STRING([--with-gtk3],
+     [use gtk3 @<:@default=check@:>@])],
+     [],
+     [with_gtk3=check]
+ )
 
 
+ if test "x$with_gtk3" != xno; then
+     AS_IF([test "x$with_gtk3" != xyes && test "x$with_gtk3" != xcheck], [
+         LDFLAGS="$LDFLAGS -L$with_gtk3/lib"
+         CFLAGS="$CFLAGS -I$with_gtk3/include"
+     ])
+
+     GTK_VERSION=3.0.0
+     PKG_CHECK_MODULES([GTK_VAR], [gtk+-3.0 >= $GTK_VERSION], [
+             export with_gtk3=yes
+         ], [
+             if test "x$with_gtk3" != xcheck; then
+                 AC_MSG_FAILURE([--with-gtk3 was given, but test for libgtk3.0 failed])
+             fi
+             export with_gtk3=no
+         ]
+     )
+ fi
 
 
 AC_SUBST([OPENCL_LIBS], [$OPENCL_LIBS])
@@ -308,13 +331,16 @@ AC_SUBST([OPENCL_CFLAGS], [$OPENCL_CFLAGS])
 AC_SUBST([OPENCL_LDFLAGS], [$OPENCL_LDFLAGS])
 AC_SUBST([SDL_CFLAGS], [$SDL_CFLAGS])
 AC_SUBST([SDL_LDFLAGS], [$SDL_LIBS])
+AC_SUBST([GTK_CFLAGS], [$GTK_VAR_CFLAGS])
+AC_SUBST([GTK_LDFLAGS], [$GTK_VAR_LIBS])
 
 
 AM_CONDITIONAL([HAVE_GMP], [test x$with_gmp != xno])
 AM_CONDITIONAL([HAVE_PNG], [test x$with_png != xno])
 AM_CONDITIONAL([HAVE_OPENCL], [test x$with_opencl != xno])
 AM_CONDITIONAL([HAVE_CUDA], [test x$VALID_CUDA == xyes])
-AM_CONDITIONAL([HAVE_SDL], [test x$with_sdl != xno])
+AM_CONDITIONAL([HAVE_SDL], [test x$with_sdl2 != xno])
+AM_CONDITIONAL([HAVE_GTK], [test x$with_gtk3 != xno])
 
 
 

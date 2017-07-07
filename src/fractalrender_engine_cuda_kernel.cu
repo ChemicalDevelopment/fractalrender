@@ -118,6 +118,8 @@ void mand_cuda(cuda_fr_t * cuda_fr) {
     dim3 dimBlock(cuda_fr->dimx, cuda_fr->dimy);
     dim3 dimGrid(cuda_fr->fr->dim.width / cuda_fr->dimx, cuda_fr->fr->dim.height / cuda_fr->dimy);
 
+    printf("CUDA: doing kernel with block %d,%d\n", dimBlock.x, dimBlock.y);
+
     mand_cuda_internal<<<dimGrid,dimBlock>>>(*cuda_fr->fr, cuda_fr->fr->dim.width, cuda_fr->fr->dim.height, cuda_fr->_gpu_in, cuda_fr->_gpu_out);
 
     gpuErrchk(cudaDeviceSynchronize());

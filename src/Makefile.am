@@ -36,6 +36,10 @@ if HAVE_SDL
 lib_LTLIBRARIES += libfr_interactive_sdl.la
 endif
 
+if HAVE_GTK
+lib_LTLIBRARIES += libfr_interactive_gtk.la
+endif
+
 if HAVE_OPENCL
 lib_LTLIBRARIES += libfr_engine_opencl.la
 endif
@@ -112,6 +116,11 @@ libfr_interactive_sdl_la_SOURCES = fractalrender_interactive_sdl.c fractalrender
 libfr_interactive_sdl_la_CFLAGS = @SDL_CFLAGS@
 libfr_interactive_sdl_la_LDFLAGS = @SDL_LDFLAGS@
 
+# interactive library
+libfr_interactive_gtk_la_SOURCES = fractalrender_interactive_gtk.c fractalrender_interactive_gtk.h
+libfr_interactive_gtk_la_CFLAGS = @GTK_CFLAGS@
+libfr_interactive_gtk_la_LDFLAGS = @GTK_LDFLAGS@
+
 # shared library with common sources
 libfr_common_la_SOURCES = fractalrender.h fractalrender_common.h fractalrender_log.h fractalrender_types.h fractalrender_color.h fractalrender_lib.h gen_image.h gen_interactive.h  fractalrender_common.c fractalrender_log.c fractalrender_color.c fractalrender_lib.c gen_image.c gen_interactive.c
 libfr_common_la_CFLAGS =
@@ -123,6 +132,6 @@ libfr_common_la_LDFLAGS =
 
 fractalrender_SOURCES = fractalrender.c fractalrender_engine_c.h
 # use static linking for the common library
-fractalrender_LDADD = $(lib_LTLIBRARIES)
+fractalrender_LDADD = libfr_common.la
 fractalrender_CFLAGS =
 fractalrender_LDFLAGS =

@@ -90,7 +90,7 @@ void fr_col_fillinidx(int ci, double zn2, int ri, fr_t * fr) {
             fr->bitmap[ri + 2] = fr->col.in_col[2];
             fr->bitmap[ri + 3] = fr->col.in_col[3];
         } else {
-            fri = 1 + ci - log(log(sqrt(zn2))) / log(2.0);
+            fri = 2 + ci - log(log(zn2)) / log(2.0);
             fri = fri * fr->col.scale + fr->col.offset;
             fri = fmod(fmod(fri, fr->col.col_len) + fr->col.col_len, fr->col.col_len);
 
