@@ -29,16 +29,15 @@ void mand_cuda_internal(fr_t fr, int width, int height, unsigned char * color_in
 
     double x = fr.prop.center_x - (width - 2 * px) / (fr.prop.zoom * fr.dim.width), y = fr.prop.center_y + (height - 2 * py) / (fr.prop.zoom * fr.dim.width);
 
-    double sx = x, sy = y, xs = x * x, ys = y * y, tmp;
+    double sx = x, sy = y, xs = x * x, ys = y * y;
 
 
     int ri = fr.dim.mem_width * py + fr.dim.byte_depth * px;
 
     int ci;
     for (ci = 0; ci < fr.prop.max_iter && xs + ys <= fr.prop.er2; ++ci) {
-        tmp = 2 * x * y;
+        y = 2 * x * y + sy;
         x = xs - ys + sx;
-        y = tmp + sy;
         xs = x * x;
         ys = y * y;
     }

@@ -144,11 +144,11 @@ void fr_engine_mpf_compute(fr_t * fr) {
             mpf_add(mpf_fr.tmp, mpf_fr.z_r2, mpf_fr.z_i2);
 
             for (ci = 0; mpf_cmp_d(mpf_fr.tmp, fr->prop.er2) <= 0 && ci < fr->prop.max_iter; ++ci) {
-                mpf_mul(mpf_fr.tmp, mpf_fr.z_r, mpf_fr.z_i);
-                mpf_mul_ui(mpf_fr.tmp, mpf_fr.tmp, 2);
+                mpf_mul(mpf_fr.z_i, mpf_fr.z_r, mpf_fr.z_i);
+                mpf_mul_ui(mpf_fr.z_i, mpf_fr.z_i, 2);
+                mpf_add(mpf_fr.z_i, mpf_fr.z_i, mpf_fr.c_i);
                 mpf_sub(mpf_fr.z_r, mpf_fr.z_r2, mpf_fr.z_i2);
                 mpf_add(mpf_fr.z_r, mpf_fr.z_r, mpf_fr.c_r);
-                mpf_add(mpf_fr.z_i, mpf_fr.tmp, mpf_fr.c_i);
                 mpf_mul(mpf_fr.z_r2, mpf_fr.z_r, mpf_fr.z_r);
                 mpf_mul(mpf_fr.z_i2, mpf_fr.z_i, mpf_fr.z_i);
                 mpf_add(mpf_fr.tmp, mpf_fr.z_r2, mpf_fr.z_i2);

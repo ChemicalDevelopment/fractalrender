@@ -85,9 +85,6 @@ void fr_engine_c_compute(fr_t * fr) {
 
     log_trace("c engine: center_x: %s, center_y: %s, zoom: %s", fr->prop.center_x_str, fr->prop.center_y_str, fr->prop.zoom_str);
 
-    // temporary variable
-    double tmp;
-    
     fr_ctime(&stime);
 
     for (px = 0; px < fr->dim.width; ++px) {
@@ -100,9 +97,8 @@ void fr_engine_c_compute(fr_t * fr) {
             z_i2 = z_i * z_i;
 
             for (ci = 0; z_r2 + z_i2 <= fr->prop.er2 && ci < fr->prop.max_iter; ++ci) {
-                tmp = 2 * z_r * z_i;
+                z_i = 2 * z_r * z_i + c_i;
                 z_r = z_r2 - z_i2 + c_r;
-                z_i = tmp + c_i;
                 z_r2 = z_r * z_r;
                 z_i2 = z_i * z_i;
             }

@@ -68,15 +68,14 @@ __kernel void mand(double center_x, double center_y, double zoom, int height, in
 
     double x = center_x + (2 * px - width) / (zoom * width), y = center_y + (height - 2 * py) / (zoom * width);
 
-    double sx = x, sy = y, xs = x * x, ys = y * y, tmp;
+    double sx = x, sy = y, xs = x * x, ys = y * y;
 
     int col_dest = py * mem_width + px * byte_depth;
 
     int ci;
     for (ci = 0; ci < max_iter && xs + ys <= er2; ++ci) {
-        tmp = 2 * x * y;
+        y = 2 * x * y + sy;
         x = xs - ys + sx;
-        y = tmp + sy;
         xs = x * x;
         ys = y * y;
     }
@@ -99,9 +98,8 @@ __kernel void mand_32(float center_x, float center_y, float zoom, int height, in
 
     int ci;
     for (ci = 0; ci < max_iter && xs + ys <= er2; ++ci) {
-        tmp = 2 * x * y;
+        y = 2 * x * y + sy;
         x = xs - ys + sx;
-        y = tmp + sy;
         xs = x * x;
         ys = y * y;
     }
