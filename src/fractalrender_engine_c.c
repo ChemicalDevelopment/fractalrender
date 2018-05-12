@@ -91,18 +91,22 @@ void fr_engine_c_compute(fr_t * fr) {
         c_i = start_c_i;
         for (py = 0; py < fr->dim.height; ++py) {
             ri = py * fr->dim.mem_width + fr->dim.byte_depth * px;
+            // compute the initial z, and precompute the squared values
             z_r = c_r;
             z_i = c_i;
             z_r2 = z_r * z_r;
             z_i2 = z_i * z_i;
 
             for (ci = 0; z_r2 + z_i2 <= fr->prop.er2 && ci < fr->prop.max_iter; ++ci) {
+                // this is instructions to emulate complex multiplication, and recompute
+                // z_r2 and z_i2 to reduce the total loop by 2 multiplies (for speed)
                 z_i = 2 * z_r * z_i + c_i;
                 z_r = z_r2 - z_i2 + c_r;
                 z_r2 = z_r * z_r;
                 z_i2 = z_i * z_i;
             }
 
+            // color in the pixel using a utility function
             fr_col_fillinidx(ci, z_r2 + z_i2, ri, fr);
 
             c_i -= delta_ppx;
