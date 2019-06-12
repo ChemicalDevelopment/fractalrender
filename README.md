@@ -9,6 +9,7 @@ fractalrender also plans to support Windows.
 
 ## Examples
 
+`fractalrender -w1024 -h1024 -c example_sorbet.color -x.2821 -y.01 -z1990 -i1000`
 
 ![ex1](ex1.jpg)
 
