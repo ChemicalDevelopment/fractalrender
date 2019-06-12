@@ -95,7 +95,7 @@ compileopencl.sh
 *.o
 
 *.png
-*.jpg
+#*.jpg
 *.jpeg
 *.gif
 *.avi
