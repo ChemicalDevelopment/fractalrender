@@ -7,6 +7,12 @@ It will also (still WIP) support an interactive viewer (using SDL).
 fractalrender also plans to support Windows.
 
 
+## Examples
+
+
+![ex1](ex1.jpg)
+
+
 ## Usage
 
 ```
