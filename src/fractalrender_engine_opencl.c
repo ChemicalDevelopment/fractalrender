@@ -317,8 +317,8 @@ void fr_engine_opencl_init(fr_t * fr) {
     local_item_size = (size_t *)malloc(sizeof(size_t) * 2);
     global_item_size[0] = fr->dim.width;
     global_item_size[1] = fr->dim.height;
-    local_item_size[0] = 4;
-    local_item_size[1] = 4;
+    local_item_size[0] = fr_ocl.cl_width;
+    local_item_size[1] = fr_ocl.cl_height;
 
 
     CLGLBL_HNDL(color_pattern_m = clCreateBuffer(context, CL_MEM_READ_WRITE, fr->dim.byte_depth * fr->col.col_len, NULL, &res));
