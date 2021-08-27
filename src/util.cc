@@ -12,6 +12,21 @@
 
 namespace fr {
 
+std::string readfile(const std::string& fname) {
+    std::ifstream ifs(fname);
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+    return ss.str();
+}
+
+std::string replace(const std::string& str, const std::string& from, const std::string& to) {
+    std::string text = str;
+    for (auto at = text.find(from, 0); at != std::string::npos; at = text.find(from, at + to.length())) {
+        text.replace(at, from.length(), to);
+    }
+    return text;
+}
+
 // Writes an image out to a file name. Throws a runtime exception if there was no valid format writer
 void writeimg(const std::string& fname, const IMG& img) {
     const char* fns = fname.c_str();
@@ -27,6 +42,17 @@ void writeimg(const std::string& fname, const IMG& img) {
     } else {
         throw std::runtime_error("No valid extension for filename (expected '.png'): " + fname);
     }
+}
+
+complex<double> parsecomplex(const std::string& s) {
+    char sign;
+    double re, im;
+    sscanf(s.c_str(), "%lf%c%lfi", &re, &sign, &im);
+    if (sign == '-') im = -im;
+    return complex<double>(
+        re,
+        im
+    );
 }
 
 std::vector<PIX> parsescheme(const std::string& s) {

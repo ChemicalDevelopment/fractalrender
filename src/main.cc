@@ -34,10 +34,16 @@ int main(int argc, char** argv) {
     // Output filename
     std::string fname = "out.png";
 
+    // Animation parameters
+    fr::Anim* anim = NULL;
+
     // Now, parse the arguments given
     char opt;
-    while ((opt = getopt(argc, argv, "s:c:z:o:h")) != -1) {
+    while ((opt = getopt(argc, argv, "a:s:c:z:o:h")) != -1) {
         switch ( opt ) {
+            case 'a':
+                anim = new fr::Anim(fr::readfile(optarg));
+                break;
             case 's':
                 sscanf(optarg, "%dx%d", &w, &h);
                 break;
@@ -92,10 +98,32 @@ int main(int argc, char** argv) {
     // Construct an empty image
     fr::IMG img = fr::IMG(w, h);
 
-    // Perform computation
-    eng->render(img, fr::complex<double>(center_r, center_i), zoom);
+    if (anim) {
+        for (int frame = 0; frame < 48; ++frame) {
+            double t = frame / 24.0;
+            // Get the keyframe at this point in time
+            fr::Anim::KeyFrame kf = anim->sample(t);
 
-    // Now, output it
-    fr::writeimg(fname, img);
+            // Now, render to the temporary image
+            eng->render(img, kf.pos, kf.zoom);
+
+            
+            // Temporary buffer to create integer counter
+            char tmp[64];
+            snprintf(tmp, sizeof(tmp) - 1, "%05i", frame);
+
+            // Current filename (replacing)
+            std::string cur_fname = fr::replace(fname, ":NUM:", tmp);
+            fr::writeimg(cur_fname, img);
+
+        }
+    } else {
+        // Perform computation
+        eng->render(img, fr::complex<double>(center_r, center_i), zoom);
+
+        // Now, output it
+        fr::writeimg(fname, img);
+    }
+
 }
 

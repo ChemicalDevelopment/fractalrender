@@ -11,8 +11,10 @@
 #include <complex>
 #include <string>
 #include <string.h>
+#include <map>
 #include <unordered_map>
 #include <iostream>
+#include <fstream>
 
 
 namespace fr {
@@ -81,6 +83,98 @@ struct IMG {
     }
 };
 
+/// Utilioty Functions
+
+// Parse complex number from string
+complex<double> parsecomplex(const std::string& s);
+
+// Parses a colorscheme (from ',' delimited hex codes) and return it
+std::vector<PIX> parsescheme(const std::string& s);
+
+// Read entire file contents
+std::string readfile(const std::string& fname);
+
+// Writes an image out to a file name. Throws a runtime exception if there was no valid format writer
+void writeimg(const std::string& fname, const IMG& img);
+
+// Replace occurances of 'from' to 'to'. Sad that C++ doesn't have this by default. Just another reason
+//   that if I were a hiring manager, anyone who brags that they worked on the C++ spec would get exactly
+//   0.0f calls back.
+std::string replace(const std::string& str, const std::string& from, const std::string& to);
+
+
+// fr::Anim - Animation structure, storing keyframes
+struct Anim {
+
+    // fr::Anim::KeyFrame - Stores a single position
+    struct KeyFrame {
+
+        complex<double> pos;
+
+        double zoom;
+
+        KeyFrame(complex<double> pos_=complex<double>(), double zoom_=0.0) : pos(pos_), zoom(zoom_) {
+
+        }
+    };
+
+
+    // Map of keyframes, keyed on time in seconds
+    std::map<double, KeyFrame> frames;
+
+    Anim(const std::string& src) {
+        std::string line, tok;
+        std::vector<std::string> toks;
+
+        std::istringstream iss(src);
+        while (std::getline(iss, line)) {
+            // Parse line
+            if (line.size() == 0 || line[0] == '#') continue;
+
+            std::istringstream isst(line);
+            toks.resize(0);
+            while (isst >> tok) {
+                toks.push_back(tok);
+            }
+
+            if (toks.size() != 3) {
+                throw std::runtime_error("Expected exactly 3 tokens per line of animation");
+            }
+
+            // Now, parse the tokens
+            double t = std::atof(toks[0].c_str());
+            complex<double> pos = parsecomplex(toks[1]);
+            double zoom = std::atof(toks[2].c_str());
+            frames[t] = KeyFrame(pos, zoom);
+        }
+    }
+    
+
+    // Samples a keyframe at a given time
+    KeyFrame sample(double t) const {
+        // Get lo and hi, to blend between
+        auto lo = frames.upper_bound(t);
+        auto hi = frames.upper_bound(t);
+
+        // If only one exists, return the other one
+        if (lo == frames.end()) return hi->second;
+        lo--;
+        if (lo == frames.end()) return hi->second;
+        if (hi == frames.end()) return lo->second;
+
+
+        // Blending proportion
+        double prop = (t - lo->first) / (hi->first - lo->first);
+
+        return KeyFrame(
+            (1 - t) * lo->second.pos + t * hi->second.pos,
+            exp((1 - t) * log(lo->second.zoom) + t * log(hi->second.zoom))
+        );
+    }
+
+};
+
+
 // fr::Engine - Base class of a rendering engine capable of producing a fractal image
 struct Engine {
 
@@ -99,7 +193,6 @@ struct Engine {
     // Overide this to actually implement rendering
     virtual void render(IMG& img, complex<double> center, double zoom) = 0;
 
-
 };
 
 // fr::EngineMandelbrot - Example implementation of the mandelbrot fractal (z**2+c)
@@ -113,8 +206,8 @@ struct EngineMandelbrot : public Engine {
 
 
 
-// Utility functions
 
+// Utility functions
 
 // Returns |x|^2
 template<typename T=double>
@@ -142,15 +235,6 @@ static PIX samplescheme(const std::vector<PIX>& scheme, double idx) {
         (1.0 - mixfac) * p0.b + mixfac * p1.b
     );
 }
-
-
-
-// Parses a colorscheme (from ',' delimited hex codes) and return it
-std::vector<PIX> parsescheme(const std::string& s);
-
-
-// Writes an image out to a file name. Throws a runtime exception if there was no valid format writer
-void writeimg(const std::string& fname, const IMG& img);
 
 
 }
