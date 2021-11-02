@@ -7,11 +7,10 @@
 *.dylib
 *.exe
 
-fractalrender
+# main binary
+fr
 
 *.png
 *.jpg
 *.jpeg
-
-!examples/*.png
 

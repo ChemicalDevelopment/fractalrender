@@ -1,21 +1,20 @@
 # fractalrender
 
-fractalrender is a utility to generate visuals of fractals (for example, the [Mandelbrot fractal](https://en.wikipedia.org/wiki/Mandelbrot_set))
+fractalrender is a utility to generate visuals of fractals of the [Mandelbrot fractal](https://en.wikipedia.org/wiki/Mandelbrot_set)
 
 ## Running
 
-You can run the program via `fractalrender` (or via `./fractalrender` if not installed globally). You can run with `-h` or `--help` to give the help menu:
+You can run the program via `./fr`. you can run with `-h` or `--help` to give the help menu:
 
 ```shell
-Usage: ./fractalrender -oOUT [-sWxH] [-cR+Ii] [-zZOOM] [name=val ...]
+usage: ./fractalrender -oOUT [-sWxH] [-cR+Ii] [-zZOOM] [name=val ...]
     -o OUT            Can be .png, .bmp, or .jpg file
     -s WxH            Size (in pixels) width by height
     -c R+Ii           Center of the image in the complex plane
     -z ZOOM           Zoom of the image in the complex plane (higher zoom is more zoomed in)
     name=val          A key (string) and value (scalar) pair, which is passed along to the fractal. Common examples are `iter=100` `colscale=2.5`, etc
 
-fractalrender (C++ version), written by Cade Brown <cade@cade.site>
-Version 1.0
+fractalrender (C++ version), written by Cade Brown <me@cade.site>
 ```
 
 See `EXAMPLES.md` for example images that you can generate that look cool! (and tweak from there)
