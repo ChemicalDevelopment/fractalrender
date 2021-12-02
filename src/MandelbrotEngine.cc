@@ -13,10 +13,10 @@ void MandelbrotEngine::render(Image& img, Anim::Snap& snap) {
     int w = img.w, h = img.h;
 
     // get maximum iteration count
-    int maxiter = 100; //snap.geti("maxiter");
+    int maxiter = 1000; //snap.geti("maxiter");
 
     // center values
-    double czre = 0.2821, czim = 0.01;
+    double czre = 0.2821, czim = -0.01;
 
     // current zoom level
     //double zoom = 0.5;
@@ -32,11 +32,13 @@ void MandelbrotEngine::render(Image& img, Anim::Snap& snap) {
     // epsilon to check convergence for periods/cycles
     double eps_old = 1e-6;
 
-    std::vector<pixf> scheme = {
-        pixf(1.0f, 0, 0),
-        pixf(0, 1.0f, 0),
-        pixf(0, 0, 1.0f),
-    };
+    //std::vector<pixf> scheme = {
+    //    pixf(1.0f, 0, 0),
+    //    pixf(0, 1.0f, 0),
+    //    pixf(0, 0, 1.0f),
+    //};
+
+    std::vector<pixf> scheme = pixf::scheme("f9c80e,f86624,ea3546,662e9b,43bccd");
 
     // Binary splitting (binary decomposition based on last coordinates)
     //bool do_bsr = std::stoi(defs["bsr"]), do_bsi = std::stoi(defs["bsi"]);
@@ -98,7 +100,7 @@ void MandelbrotEngine::render(Image& img, Anim::Snap& snap) {
                 //if (do_bsi && z.imag() > 0) fri += 2.0;
 
                 // Apply color & scale
-                //fri = 0.25f * fri + 0.0f;
+                fri = 0.10f * fri + 0.0f;
 
                 // break up into components
                 float frif = fmodf(fri, 1.0);

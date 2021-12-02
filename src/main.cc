@@ -21,11 +21,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // input animation description
-    std::string src;
-    std::getline(std::ifstream(argv[1]), src, '\0');
-    fr::Anim anim = fr::Anim(src);
-    anim.dur = 1.0;
+
+    // zoom per frame, as a rate
+    double zpf = 1.618;
+
+    // width and height of each frame
+    int w = 1920, h = 1080;
+
+    // 'z' coordinate
+    double zre = 0.2821, zim = 0.01;
+
+
 
     // create new engine to execute
     fr::Engine* eng = new fr::MandelbrotEngine();
@@ -50,7 +56,8 @@ int main(int argc, char** argv) {
         // get current snapshot for animation
         anim.snaps.push_back(fr::Anim::Snap({}));
         fr::Anim::Snap& snap = anim.snaps[i];
-        snap.vals.insert({ "zoom", std::to_string(pow(1.8, t) * 0.5) });
+        //snap.vals.insert({ "zoom", std::to_string(pow(1.8, t) * 0.5) });
+        snap.vals.insert({ "zoom", std::to_string(pow(30, t) * 100) });
 
         char tmp[PATH_MAX];
         snprintf(tmp, sizeof(tmp), "%s/frame_%05d.png", outdir.c_str(), i);
