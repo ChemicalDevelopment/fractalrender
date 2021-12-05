@@ -148,8 +148,8 @@ struct Image {
 // represents an engine structure, which can be used to render a fractal
 struct Engine {
 
-    // render a single image
-    virtual void render(Image& img, Anim::Snap& snap) = 0;
+    // render a single image, given center position, zoom and maximum iteration count
+    virtual void render(Image& img, double Cx, double Cy, double zoom, int maxiter) = 0;
 
 };
 
@@ -157,8 +157,8 @@ struct Engine {
 struct MandelbrotEngine : public Engine {
 
     // implementation
-    void render(Image& img, Anim::Snap& snap);
-
+    void render(Image& img, double Cx, double Cy, double zoom, int maxiter);
+    
 };
 
 

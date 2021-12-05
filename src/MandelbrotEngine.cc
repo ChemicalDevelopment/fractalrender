@@ -9,18 +9,8 @@
 
 namespace fr {
 
-void MandelbrotEngine::render(Image& img, Anim::Snap& snap) {
+void MandelbrotEngine::render(Image& img, double Cx, double Cy, double zoom, int maxiter) {
     int w = img.w, h = img.h;
-
-    // get maximum iteration count
-    int maxiter = 1000; //snap.geti("maxiter");
-
-    // center values
-    double czre = 0.2821, czim = -0.01;
-
-    // current zoom level
-    //double zoom = 0.5;
-    double zoom = snap.getd("zoom");
 
     // precompute, so we don't have to do it in the loop
     double invzoom = 1.0 / zoom;
@@ -47,8 +37,8 @@ void MandelbrotEngine::render(Image& img, Anim::Snap& snap) {
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             // get initial value '
-            double cre = czre + invzoom * (2.0 * x - w) / h;
-            double cim = czim + invzoom * (h - 2.0 * y) / h;
+            double cre = Cx + invzoom * (2.0 * x - w) / h;
+            double cim = Cy + invzoom * (h - 2.0 * y) / h;
 
             // z := c
             double zre = cre;
