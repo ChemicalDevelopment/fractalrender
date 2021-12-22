@@ -1,6 +1,6 @@
-/* Mandelbrot.cc - implementation of fr::MandelbrotEngine
+/* BurningShipEngine.cc - implementation of fr::BurningShipEngine
  *
- * z**2 + c
+ * (abs(re(z))+i*abs(im(z)))**2 + c
  *
  * @author: Cade Brown <cade@cade.site>
  */
@@ -9,7 +9,7 @@
 
 namespace fr {
 
-void MandelbrotEngine::render(Image& img, double Cx, double Cy, double zoom, int maxiter) {
+void BurningShipEngine::render(Image& img, double Cx, double Cy, double zoom, int maxiter) {
     int w = img.w, h = img.h;
 
     // precompute, so we don't have to do it in the loop
@@ -28,8 +28,8 @@ void MandelbrotEngine::render(Image& img, double Cx, double Cy, double zoom, int
     //    pixf(0, 0, 1.0f),
     //};
 
-    std::vector<pixf> scheme = pixf::scheme("f9c80e,f86624,ea3546,662e9b,43bccd");
-    //std::vector<pixf> scheme = pixf::scheme("5fad56,a9b752,f2c14e,f5a151,f78154,a28966,4d9078,816a72,b4436c");
+    //std::vector<pixf> scheme = pixf::scheme("f9c80e,f86624,ea3546,662e9b,43bccd");
+    std::vector<pixf> scheme = pixf::scheme("5fad56,a9b752,f2c14e,f5a151,f78154,a28966,4d9078,816a72,b4436c");
 
 
     // Binary splitting (binary decomposition based on last coordinates)
@@ -40,7 +40,7 @@ void MandelbrotEngine::render(Image& img, double Cx, double Cy, double zoom, int
         for (int x = 0; x < w; ++x) {
             // get initial value '
             double cre = Cx + invzoom * (2.0 * x - w) / h;
-            double cim = Cy + invzoom * (h - 2.0 * y) / h;
+            double cim = Cy - invzoom * (h - 2.0 * y) / h;
 
             // z := c
             double zre = cre;
@@ -50,31 +50,23 @@ void MandelbrotEngine::render(Image& img, double Cx, double Cy, double zoom, int
             int per = 0;
             double old_zre = 0.0, old_zim = 0.0;
 
+
             int i;
             for (i = 0; i < maxiter && zre*zre + zim*zim < err2; ++i) {
-                // on each iteration, compute:
-                // z := z**2 + c
-                // which is:
-                // z.re = z.re**2 - z.im**2 + c.re
-                // z.im = 2*z.re*z.im + c.im
-                double tmp = 2 * zre * zim + cim;
-                zre = zre * zre - zim * zim + cre;
-                zim = tmp;
 
-                // check similar value
-                if (fabs(zre - old_zre) < eps_old && fabs(zim - old_zim) < eps_old) {
-                    // skip ahead, since we are sure we are in a cycle
-                    i = maxiter;
-                    break;
-                }
+                double tmp = zre * zre - zim * zim + cre;
+                zim = fabs(2 * zre * zim) + cim;
+                zre = tmp;
 
                 // now, update period
+                /*
                 per++;
                 if (per > 20) {
                     per = 0;
                     old_zre = zre;
                     old_zim = zim;
                 }
+                */
             }
 
             if (i == maxiter) {
@@ -85,15 +77,15 @@ void MandelbrotEngine::render(Image& img, double Cx, double Cy, double zoom, int
                 //int c = (i * 255) / maxiter;
                 //img.set(x, y, Color(c, c, c));
 
-                float fri = 2 + i - logf(logf((float)(zre*zre + zim*zim))) / logf(2.0);
+                float fri = (float)i;
+                //float fri = 2 + i - logf(logf((float)(zre*zre + zim*zim))) / logf(2.0);
 
                 // Binary splitting on final coordinate (real/imag)
                 //if (do_bsr && z.real() > 0) fri += 1.0;
                 //if (do_bsi && z.imag() > 0) fri += 2.0;
 
                 // Apply color & scale
-                fri = 0.2f * fri + 0.0f;
-                //fri = 1.5f * fri + 0.0f;
+                fri = 0.10f * fri + 0.0f;
 
                 // break up into components
                 float frif = fmodf(fri, 1.0);

@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv) {
 
-    if (argc != 2) {
+    if (argc != 2 || argv[1][0] == '-') {
         std::cerr << "usage: " << argv[0] << " <outdir>" << std::endl;
         std::cerr << "fractalrender (fr) version 0.0.1" << std::endl;
         std::cerr << "author: Cade Brown <me@cade.site>" << std::endl;
@@ -27,16 +27,20 @@ int main(int argc, char** argv) {
 
 
     // width and height of each frame
-    int w = 1920, h = 1080;
+    int dpi = 300;
+    //int dpi = 300;
+    int w = 16 * dpi, h = 16 * dpi;
 
     // center coordinate
-    double Cx = 0.2821, Cy = 0.01;
+    //double Cx = -1.618, Cy = 0.0;
+    double Cx = -.745428, Cy = .113009;
+    //double Cx = -0.75, Cy = 0.0;
 
     // max iteration count
     int maxiter = 1000;
 
     // initial zoom (at t=0)
-    double z0 = 1.0;
+    double z0 = 0.4;
 
     // zoom per second
     double zps = 15.0;
@@ -50,6 +54,7 @@ int main(int argc, char** argv) {
 
     // create new engine to execute
     fr::Engine* eng = new fr::MandelbrotEngine();
+    //fr::Engine* eng = new fr::BurningShipEngine();
 
 
     // make directory for output
@@ -67,6 +72,10 @@ int main(int argc, char** argv) {
     int i;
     double t;
     for (i = 0, t = 0.0; t < dur; t += tpf, i++) {
+        
+        // if we want to compute a single frame
+        if (i != 20) continue;
+
 
         // calculate output path
         char tmp[PATH_MAX];

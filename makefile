@@ -18,7 +18,7 @@ src_HH     := $(wildcard include/*.hh)
 
 src_O      := $(patsubst %.cc,%.o,$(src_CC))
 
-EXE        := fr
+EXE        := fractalrender
 
 
 .PHONY: all clean FORCE

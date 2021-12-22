@@ -160,7 +160,13 @@ struct MandelbrotEngine : public Engine {
     void render(Image& img, double Cx, double Cy, double zoom, int maxiter);
     
 };
+// burning ship fractal
+struct BurningShipEngine : public Engine {
 
+    // implementation
+    void render(Image& img, double Cx, double Cy, double zoom, int maxiter);
+    
+};
 
 /*
 
